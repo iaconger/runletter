@@ -17,7 +17,7 @@ Phase 1 scaffold. Everything renders from `lib/sample.ts`; nothing reads the dat
 - `/studio` programs list and `/studio/programs/<id>` static editor
 - `/api/fit?week=3&day=4` returns a valid .FIT workout (tested)
 - `/login` magic-link form, `/auth/callback`, `/auth/signout`, session refresh in `proxy.ts`
-- `supabase/migrations` schema + RLS from `02-product/data-model.md`
+- `supabase/migrations` schema + RLS from `02-product/data-model.md`, applied to the live project; `lib/database.types.ts` generated from it
 
 Next: phase 2 in `03-build/build-plan.md` (real programs in the studio, saved to Supabase).
 
@@ -42,15 +42,17 @@ npm run build
 
 ## Wire up Supabase
 
-Personal Supabase account, project named `runletter`.
+Personal Supabase account, project `runletter` (ref `nbpcfuzkmmhstanaliod`, us-west-2). Migrations 0001 to 0004 were applied on Sept 11, 2026 through the Supabase connector, so the tables, RLS, functions and `covers` bucket already exist. For future migrations:
 
 ```bash
 npm i -g supabase
 supabase login
-supabase link --project-ref <your-project-ref>   # Settings → General in the Supabase dashboard
-npm run db:push                                   # applies supabase/migrations in order
-npm run db:types                                  # writes lib/database.types.ts
+supabase link --project-ref nbpcfuzkmmhstanaliod
+npm run db:push                                   # applies any new file in supabase/migrations
+npm run db:types                                  # regenerates lib/database.types.ts
 ```
+
+The project URL and publishable key (`sb_publishable_...`) are the two `NEXT_PUBLIC_` values in `.env.local`; they are safe in the browser. The secret key is not.
 
 Then in the Supabase dashboard: Authentication → URL Configuration → add `http://localhost:3000/auth/callback` and your Render URL `/auth/callback` to redirect URLs. Authentication → Providers → Email: keep "Confirm email" on; magic links are the only sign-in.
 

@@ -2,11 +2,12 @@
 // Reads/writes the auth cookies through next/headers. Anon key + RLS; never the service role key here.
 
 import { createServerClient } from "@supabase/ssr";
+import type { Database } from "@/lib/database.types";
 import { cookies } from "next/headers";
 
 export async function createClient() {
   const cookieStore = await cookies();
-  return createServerClient(
+  return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {

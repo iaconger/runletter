@@ -47,6 +47,8 @@ begin
 end;
 $$;
 
+revoke execute on function handle_new_user() from public, anon, authenticated;
+
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function handle_new_user();
@@ -179,18 +181,18 @@ create or replace function can_read_program(p_program_id uuid)
 returns boolean
 language sql
 stable
-security definer set search_path = public
+security invoker set search_path = public
 as $$
   select exists (
     select 1 from programs p
     where p.id = p_program_id
       and (
-        p.creator_id = auth.uid()
+        p.creator_id = (select auth.uid())
         or (
           p.status = 'published'
           and (
-            exists (select 1 from subscriptions s where s.follower_id = auth.uid() and s.creator_id = p.creator_id and s.status = 'active')
-            or exists (select 1 from purchases pu where pu.follower_id = auth.uid() and pu.program_id = p.id)
+            exists (select 1 from subscriptions s where s.follower_id = (select auth.uid()) and s.creator_id = p.creator_id and s.status = 'active')
+            or exists (select 1 from purchases pu where pu.follower_id = (select auth.uid()) and pu.program_id = p.id)
           )
         )
       )

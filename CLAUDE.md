@@ -15,6 +15,8 @@ Two-sided running app. Creators build training programs in a web studio (`/studi
 - Schema is `supabase/migrations`; `lib/types.ts` mirrors it with zod. Change both.
 - Supabase via `lib/supabase/{client,server}.ts`; session refresh in `proxy.ts`. Anon key + RLS everywhere; service role only in webhooks.
 - FIT export in `lib/fit/encode.ts`, tested with a decoder round-trip. Keep that test green.
+- Supabase project ref `nbpcfuzkmmhstanaliod` (personal org). Use the Supabase connector for migrations and advisors when the sandbox has it; add the same SQL as a file in `supabase/migrations` so the repo stays the source of truth. Run security + performance advisors after DDL.
+- Skills in `.agents/skills/` (Supabase, Postgres best practices) are installed via `npx skills`; read the Supabase one before auth or RLS work.
 - Tests: `npm test` (vitest, `lib/**/*.test.ts`). CI runs typecheck, lint, test, build.
 
 ## Phase 1 state
