@@ -1,6 +1,7 @@
 // One form, two doors. Magic link either way (no passwords), but sign-up asks for a name and which side you're on,
 // and the copy says "create", because "sign in" to an account you don't have is a wall.
 import Link from "next/link";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Mark } from "@/components/ui/Logo";
 import { Ink } from "@/components/ui/Ink";
@@ -21,7 +22,12 @@ async function sendLink(formData: FormData) {
   if (!isConfigured()) redirect(`${path}?${q}&error=${encodeURIComponent("Sign-in is not configured yet")}`);
 
   const supabase = await createClient();
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  // The link in the email must come back to wherever this form was served from. Prefer the request's own
+  // origin (Render sets x-forwarded-*), then the configured URL, then localhost for dev.
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  const proto = h.get("x-forwarded-proto") ?? (host?.startsWith("localhost") ? "http" : "https");
+  const base = host ? `${proto}://${host}` : (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000");
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
