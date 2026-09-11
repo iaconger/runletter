@@ -466,16 +466,11 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 .rl-blockrow-tools .rl-btn { min-width: 26px; }
 
 
-/* Scroll lane: the ink runner on a rule at the foot of the viewport. Scroll turns the flipbook page. */
-.rl-lane { position: fixed; left: 0; right: 0; bottom: 0; height: 128px; pointer-events: none; z-index: 5; mix-blend-mode: exclusion; opacity: 0.22; }
-.rl-lane::after { content: ""; position: absolute; left: 24px; right: 24px; bottom: 22px; height: 1px; background: #fff; }
-.rl-lane-runner { position: absolute; left: 0; bottom: 18px; overflow: hidden; will-change: transform; }
-.rl-lane-strip { position: absolute; inset: 0; width: 800%; background-repeat: no-repeat; background-position: 0 0; }
-@media (max-width: 720px) { .rl-lane { height: 84px; opacity: 0.18; } .rl-lane-runner { transform-origin: left bottom; scale: 0.66; } }
-@media print { .rl-lane { display: none; } }
-
 /* Parallax ink: faint sketches on the paper under the page, drifting at their own rates with scroll. */
 .rl-parallax { position: fixed; inset: 0; pointer-events: none; z-index: -1; overflow: hidden; mix-blend-mode: exclusion; opacity: 0.11; }
 .rl-parallax img { position: absolute; top: 0; height: auto; will-change: transform; }
 @media (max-width: 720px) { .rl-parallax { opacity: 0.09; } .rl-parallax img { width: 60vw !important; } }
 @media print { .rl-parallax { display: none; } }
+
+/* Inline text button, for "email me a link" style toggles inside help copy. */
+.rl-linkbtn { background: none; border: 0; padding: 0; font: inherit; color: var(--rl-accent, var(--rl-cobalt-600)); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }

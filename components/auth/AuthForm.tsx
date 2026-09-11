@@ -1,5 +1,6 @@
-// One form, two doors. Magic link either way (no passwords), but sign-up asks for a name and which side you're on,
-// and the copy says "create", because "sign in" to an account you don't have is a wall.
+// One form, two doors. Email and password by default; a magic link as the "forgot password" path.
+// Sign-up asks for a name and which side you're on, and the copy says "create", because "sign in"
+// to an account you don't have is a wall.
 import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -41,6 +42,37 @@ async function sendLink(formData: FormData) {
   redirect(`${path}?${q}&sent=${encodeURIComponent(email)}`);
 }
 
+async function withPassword(formData: FormData) {
+  "use server";
+  const mode = (String(formData.get("mode")) === "signin" ? "signin" : "signup") as Mode;
+  const path = mode === "signin" ? "/login" : "/signup";
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const password = String(formData.get("password") ?? "");
+  const name = String(formData.get("name") ?? "").trim().slice(0, 60);
+  const role = String(formData.get("role") ?? "runner") === "creator" ? "creator" : "runner";
+  const next = String(formData.get("next") ?? "") || (role === "creator" ? "/studio" : "/app");
+  const q = new URLSearchParams({ next, role });
+  const fail = (msg: string) => redirect(`${path}?${q}&error=${encodeURIComponent(msg)}`);
+  if (!email) fail("Enter your email");
+  if (password.length < 8) fail("Password needs at least 8 characters");
+  if (!isConfigured()) fail("Sign-in is not configured yet");
+
+  const supabase = await createClient();
+  if (mode === "signup") {
+    const { data, error } = await supabase.auth.signUp({ email, password, options: { data: name ? { display_name: name, role } : { role } } });
+    if (error) fail(/already registered/i.test(error.message) ? "That email already has an account. Sign in instead." : error.message);
+    // With email confirmation off (build phase) there is a session right away. With it on, they get an email.
+    if (!data.session) redirect(`${path}?${q}&sent=${encodeURIComponent(email)}`);
+    redirect(`/welcome?next=${encodeURIComponent(next)}&role=${role}`);
+  }
+
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error || !data.user) fail(error && !/invalid/i.test(error.message) ? error.message : "Wrong email or password.");
+  const { data: profile } = await supabase.from("profiles").select("handle").eq("id", data.user!.id).maybeSingle();
+  if (profile && profile.handle.startsWith("u_")) redirect(`/welcome?next=${encodeURIComponent(next)}&role=${role}`);
+  redirect(next.startsWith("/") && !next.startsWith("//") ? next : "/app");
+}
+
 export function AuthForm({ mode, sent, error, next, role }: { mode: Mode; sent?: string; error?: string; next?: string; role?: string }) {
   const signup = mode === "signup";
   const initialRole: Role = role === "creator" ? "creator" : "runner";
@@ -60,7 +92,7 @@ export function AuthForm({ mode, sent, error, next, role }: { mode: Mode; sent?:
           </div>
         </>
       ) : (
-        <AuthFormClient mode={mode} action={sendLink} error={error} next={next} initialRole={initialRole} configured={isConfigured()} />
+        <AuthFormClient mode={mode} action={withPassword} linkAction={sendLink} error={error} next={next} initialRole={initialRole} configured={isConfigured()} />
       )}
     </main>
   );
