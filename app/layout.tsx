@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { ScrollRunner } from "@/components/ui/ScrollRunner";
+import { ParallaxInk } from "@/components/ui/ParallaxInk";
 
 // Self-hosted, per foundations.md. No third-party font CDN in the app.
 const display = localFont({
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${display.variable} ${sans.variable}`}>
       <body>
+        <ParallaxInk />
         {children}
         <ScrollRunner />
       </body>

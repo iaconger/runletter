@@ -473,3 +473,9 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 .rl-lane-strip { position: absolute; inset: 0; width: 800%; background-repeat: no-repeat; background-position: 0 0; }
 @media (max-width: 720px) { .rl-lane { height: 84px; opacity: 0.18; } .rl-lane-runner { transform-origin: left bottom; scale: 0.66; } }
 @media print { .rl-lane { display: none; } }
+
+/* Parallax ink: faint sketches on the paper under the page, drifting at their own rates with scroll. */
+.rl-parallax { position: fixed; inset: 0; pointer-events: none; z-index: -1; overflow: hidden; mix-blend-mode: exclusion; opacity: 0.11; }
+.rl-parallax img { position: absolute; top: 0; height: auto; will-change: transform; }
+@media (max-width: 720px) { .rl-parallax { opacity: 0.09; } .rl-parallax img { width: 60vw !important; } }
+@media print { .rl-parallax { display: none; } }
