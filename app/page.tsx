@@ -50,7 +50,7 @@ export default function Landing() {
         </Link>
         <nav className="rl-row">
           <Link href="/c/sarah" className="rl-btn rl-btn-ghost rl-btn-sm rl-nav-secondary">Example creator</Link>
-          <Link href="/studio" className="rl-btn rl-btn-ghost rl-btn-sm rl-nav-secondary">For creators</Link>
+          <Link href="/creators" className="rl-btn rl-btn-ghost rl-btn-sm rl-nav-secondary">For creators</Link>
           <Link href="/login" className="rl-btn rl-btn-primary rl-btn-sm">Sign in</Link>
         </nav>
       </header>
@@ -71,17 +71,17 @@ export default function Landing() {
               <Link href="/c/sarah" className="rl-btn rl-btn-lg" style={{ background: "var(--rl-paper-100)", color: "var(--rl-ink-900)" }}>
                 Follow a creator
               </Link>
-              <Link href="/studio" className="rl-btn rl-btn-lg rl-btn-ghost" style={{ color: "inherit", borderColor: "rgba(255,255,255,.3)" }}>
-                Build a plan
+              <Link href="/creators" className="rl-btn rl-btn-lg rl-btn-ghost" style={{ color: "inherit", borderColor: "rgba(255,255,255,.3)" }}>
+                I make plans
               </Link>
             </div>
             <p className="rl-help" style={{ color: "inherit", opacity: 0.6, margin: 0 }}>Works with Garmin and Coros today. Free runs are free to follow.</p>
           </div>
-          <div className="rl-stack" style={{ gap: "var(--rl-space-5)", alignItems: "flex-end" }}>
-            <Flipbook tone="paper" width={260} />
-            <div className="rl-tt-wrap">
-              <p className="t-label" style={{ opacity: 0.6, margin: "0 0 var(--rl-space-2)" }}>Week 3 · Base building for busy people</p>
-              <Timetable light />
+          <div>
+            <p className="t-label" style={{ opacity: 0.6, margin: "0 0 var(--rl-space-2)" }}>Week 3 · Base building for busy people</p>
+            <div className="rl-track">
+              <Flipbook tone="paper" width={120} className="rl-runner" />
+              <div className="rl-tt-wrap"><Timetable light /></div>
             </div>
           </div>
         </div>
@@ -161,21 +161,14 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ---------- for creators ---------- */}
-      <section className="rl-atmo rl-atmo-dawn" style={{ padding: "var(--rl-space-12) 0", overflow: "hidden" }}>
-        <div className="rl-page rl-wide" style={{ paddingBlock: 0, display: "grid", gap: "var(--rl-space-8)", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", alignItems: "center" }} data-reveal>
-          <div className="rl-stack" style={{ gap: "var(--rl-space-4)" }}>
-            <span className="t-label" style={{ opacity: 0.7 }}>For creators</span>
-            <h2 className="t-display-lg" style={{ margin: 0 }}>You already coach your followers. Now they can follow the plan.</h2>
-            <p style={{ margin: 0, maxWidth: "46ch", opacity: 0.85 }}>
-              Build a program in the studio in an afternoon. Publish it. Your followers subscribe to you, not to an app, and you keep 80 percent. The first cohort keeps all of it for 90 days.
-            </p>
-            <div className="rl-row">
-              <Link href="/studio" className="rl-btn rl-btn-lg" style={{ background: "var(--rl-ink-900)", color: "var(--rl-paper-100)" }}>Open the studio</Link>
-              <Link href="/c/sarah" className="rl-btn rl-btn-lg rl-btn-ghost" style={{ color: "inherit" }}>See a creator page</Link>
-            </div>
+      {/* ---------- creators cross-link ---------- */}
+      <section className="rl-hairline">
+        <div className="rl-page rl-wide rl-band" data-reveal>
+          <div className="rl-stack" style={{ gap: 2 }}>
+            <span className="t-label c-muted">Coach a following?</span>
+            <span className="t-title">Your followers can follow the plan. You keep 80 percent.</span>
           </div>
-          <Ink name="pace-group" style={{ width: "min(100%, 440px)", justifySelf: "end", opacity: 0.9 }} />
+          <Link href="/creators" className="rl-btn rl-btn-secondary">For creators →</Link>
         </div>
       </section>
 
@@ -186,7 +179,7 @@ export default function Landing() {
           <h2 className="t-display-xl" style={{ margin: 0, maxWidth: "14ch" }}>Your first week is waiting.</h2>
           <div className="rl-row">
             <Link href="/c/sarah" className="rl-btn rl-btn-lg" style={{ background: "var(--rl-paper-100)", color: "var(--rl-ink-900)" }}>Follow a creator</Link>
-            <Link href="/studio" className="rl-btn rl-btn-lg rl-btn-ghost" style={{ color: "inherit", borderColor: "rgba(255,255,255,.3)" }}>I make plans</Link>
+            <Link href="/creators" className="rl-btn rl-btn-lg rl-btn-ghost" style={{ color: "inherit", borderColor: "rgba(255,255,255,.3)" }}>I make plans</Link>
           </div>
         </div>
       </section>

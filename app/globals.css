@@ -343,3 +343,23 @@ textarea.rl-input { height: auto; min-height: 96px; padding: var(--rl-space-3); 
 .rl-timetable[data-light="true"] .m { color: rgba(247,244,238,.7); }
 .rl-timetable[data-light="true"] [data-rest="true"] .k { color: rgba(247,244,238,.45); }
 .rl-timetable[data-light="true"] [data-today="true"] { box-shadow: inset 0 3px 0 var(--rl-accent-bright); }
+
+/* ---------- hero animation: the week posts in, the runner runs the week ---------- */
+.rl-track { position: relative; padding-top: 104px; }
+.rl-track > .rl-runner { position: absolute; left: 0; bottom: calc(100% - 104px + 2px); animation: rl-run 14s linear infinite; }
+@keyframes rl-run { from { left: 0; } to { left: calc(100% - 120px); } }
+.rl-track .rl-timetable > div { animation: rl-post 520ms var(--rl-ease) both; }
+.rl-track .rl-timetable > div:nth-child(1) { animation-delay: 200ms; }
+.rl-track .rl-timetable > div:nth-child(2) { animation-delay: 320ms; }
+.rl-track .rl-timetable > div:nth-child(3) { animation-delay: 440ms; }
+.rl-track .rl-timetable > div:nth-child(4) { animation-delay: 560ms; }
+.rl-track .rl-timetable > div:nth-child(5) { animation-delay: 680ms; }
+.rl-track .rl-timetable > div:nth-child(6) { animation-delay: 800ms; }
+.rl-track .rl-timetable > div:nth-child(7) { animation-delay: 920ms; }
+@keyframes rl-post { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.rl-track .rl-timetable { animation: rl-rule 700ms var(--rl-ease) both; transform-origin: left; }
+@keyframes rl-rule { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@media (prefers-reduced-motion: reduce) {
+  .rl-track > .rl-runner, .rl-track .rl-timetable, .rl-track .rl-timetable > div { animation: none; }
+}
+.rl-band { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--rl-space-4); padding: var(--rl-space-6) 0; }
