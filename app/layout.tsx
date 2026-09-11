@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { ScrollRunner } from "@/components/ui/ScrollRunner";
 
 // Self-hosted, per foundations.md. No third-party font CDN in the app.
 const display = localFont({
@@ -41,7 +42,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${display.variable} ${sans.variable}`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <ScrollRunner />
+      </body>
     </html>
   );
 }
