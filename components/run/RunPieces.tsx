@@ -93,12 +93,15 @@ export function WeekStrip({
   done,
   selectedDay,
   hrefFor,
+  onPick,
 }: {
   days: ProgramDay[];
   todayDay?: number;
   done?: Set<number>;
   selectedDay?: number;
   hrefFor?: (day: ProgramDay) => string;
+  /** Editor mode: every cell is clickable, including empty ones. */
+  onPick?: (day: number) => void;
 }) {
   return (
     <div className="rl-week" role="list">
@@ -116,6 +119,14 @@ export function WeekStrip({
             <span className="k">{d ? dayShort(d) : "Rest"}</span>
           </>
         );
+        if (onPick) {
+          return (
+            <button key={name} type="button" role="listitem" className="rl-day" {...attrs} data-kind={d?.kind ?? "empty"} onClick={() => onPick(idx + 1)} style={{ font: "inherit" }}>
+              <span className="d">{name}</span>
+              <span className="k" style={!d ? { color: "var(--rl-text-disabled)" } : undefined}>{d ? dayShort(d) : "+"}</span>
+            </button>
+          );
+        }
         return hrefFor && d ? (
           <a key={name} role="listitem" className="rl-day" href={hrefFor(d)} {...attrs} style={{ color: "inherit", textDecoration: "none" }}>
             {inner}
