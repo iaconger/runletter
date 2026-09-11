@@ -63,6 +63,7 @@ export const Profile = z.object({
   handle: z.string().regex(/^[a-z0-9_]{3,24}$/),
   displayName: z.string().min(1).max(60),
   avatarUrl: z.string().url().nullable(),
+  coverUrl: z.string().url().nullable().default(null),
   bio: z.string().default(""),
   isCreator: z.boolean(),
   links: z.record(z.string(), z.string().url()).default({}),

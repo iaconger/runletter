@@ -34,18 +34,18 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
 
   return (
     <main>
-      <div className="rl-atmo rl-atmo-dawn" style={{ padding: "var(--rl-space-12) 0", overflow: "hidden" }}>
+      <div className={`rl-atmo ${c.coverUrl ? "rl-atmo-night" : "rl-atmo-dawn"}`} style={{ padding: "var(--rl-space-12) 0", overflow: "hidden", ...(c.coverUrl ? { backgroundImage: `linear-gradient(180deg, rgba(20,19,17,.35) 0%, rgba(20,19,17,.85) 100%), url(${c.coverUrl})`, backgroundSize: "cover", backgroundPosition: "center" } : {}) }}>
         <div className="rl-page rl-stack" style={{ paddingBlock: 0, gap: "var(--rl-space-4)", position: "relative" }}>
-          <Ink name="pace-group" style={{ position: "absolute", right: "-6%", top: "-10%", width: "min(52%, 300px)", opacity: 0.85, pointerEvents: "none" }} />
+          {!c.coverUrl && <Ink name="pace-group" style={{ position: "absolute", right: "-6%", top: "-10%", width: "min(52%, 300px)", opacity: 0.85, pointerEvents: "none" }} />}
           <Link href="/" className="rl-logo" style={{ color: "inherit" }} aria-label="RunLetter"><Mark size={28} /></Link>
           <div className="rl-row">
-            {example ? <Portrait name="sarah" size={64} /> : c.avatarUrl ? <Portrait name="sarah" size={64} /> : <span aria-hidden="true" style={{ width: 64, height: 64, borderRadius: "50%", background: "var(--rl-ink-900)", color: "var(--rl-paper-100)", display: "grid", placeItems: "center", font: "400 28px/1 var(--rl-font-display)" }}>{(c.displayName || c.handle)[0]?.toUpperCase()}</span>}
+            {example ? <Portrait name="sarah" size={64} /> : c.avatarUrl ? <span aria-hidden="true" style={{ width: 64, height: 64, borderRadius: "50%", overflow: "hidden", flex: "none", border: "2px solid var(--rl-paper-100)" }}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src={c.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /></span> : <span aria-hidden="true" style={{ width: 64, height: 64, borderRadius: "50%", background: "var(--rl-ink-900)", color: "var(--rl-paper-100)", display: "grid", placeItems: "center", font: "400 28px/1 var(--rl-font-display)" }}>{(c.displayName || c.handle)[0]?.toUpperCase()}</span>}
             <span className="t-label" style={{ opacity: 0.7 }}>@{c.handle}</span>
           </div>
           <h1 className="t-display-xl" style={{ margin: 0 }}>{c.displayName || `@${c.handle}`}</h1>
           {c.bio && <p className="t-body" style={{ margin: 0, maxWidth: "48ch" }}>{c.bio}</p>}
           <div className="rl-row">
-            <Link href={`/signup?next=/c/${c.handle}`} className="rl-btn rl-btn-lg rl-btn-ink">Subscribe · $7/mo</Link>
+            <Link href={`/signup?next=/c/${c.handle}`} className={`rl-btn rl-btn-lg ${c.coverUrl ? "rl-btn-paper" : "rl-btn-ink"}`}>Subscribe · $7/mo</Link>
             <span className="rl-help" style={{ color: "inherit", opacity: 0.7 }}>Cancel any time. Sold on the web.</span>
           </div>
           {Object.keys(c.links).length > 0 && (

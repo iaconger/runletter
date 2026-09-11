@@ -10,6 +10,7 @@ export const sampleCreator: Profile = {
   handle: "sarah",
   displayName: "Sarah Okafor",
   avatarUrl: null,
+  coverUrl: null,
   bio: "Marathoner, coach, and the person who will make you do your long run. Chicago.",
   isCreator: true,
   links: { instagram: "https://instagram.com/", strava: "https://strava.com/" },

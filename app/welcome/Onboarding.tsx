@@ -1,0 +1,177 @@
+"use client";
+// Three steps after the magic link: who you are, where people find you, what you look like.
+// Each step saves on its own so nothing is lost if they bail halfway.
+
+import { useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { saveIdentityAction, saveImagesAction, saveSocialsAction } from "./actions";
+import type { Profile } from "@/lib/types";
+
+const SOCIALS: { key: string; label: string; prefix: string; hint: string }[] = [
+  { key: "instagram", label: "Instagram", prefix: "instagram.com/", hint: "yourname" },
+  { key: "strava", label: "Strava", prefix: "strava.com/athletes/", hint: "your athlete id or name" },
+  { key: "youtube", label: "YouTube", prefix: "youtube.com/@", hint: "channel" },
+  { key: "tiktok", label: "TikTok", prefix: "tiktok.com/@", hint: "yourname" },
+];
+
+function usernameFrom(url: string | undefined): string {
+  if (!url) return "";
+  return url.replace(/^https?:\/\/(www\.)?[^/]+\//, "").replace(/^(athletes\/|@)/, "").replace(/\/.*$/, "");
+}
+
+export function Onboarding({ profile, userId, next, role }: { profile: Profile; userId: string; next: string; role: "creator" | "runner" }) {
+  const router = useRouter();
+  const [step, setStep] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, start] = useTransition();
+  const isCreator = role === "creator" || profile.isCreator;
+
+  // step 1
+  const [handle, setHandle] = useState(profile.handle.startsWith("u_") ? "" : profile.handle);
+  const [name, setName] = useState(profile.displayName);
+  const [bio, setBio] = useState(profile.bio);
+  // step 2
+  const [socials, setSocials] = useState<Record<string, string>>(Object.fromEntries(SOCIALS.map((s) => [s.key, usernameFrom(profile.links[s.key])])));
+  // step 3
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(profile.avatarUrl);
+  const [coverUrl, setCoverUrl] = useState<string | null>(profile.coverUrl);
+  const [uploading, setUploading] = useState<"avatar" | "cover" | null>(null);
+  const avatarInput = useRef<HTMLInputElement>(null);
+  const coverInput = useRef<HTMLInputElement>(null);
+
+  const steps = isCreator ? ["You", "Socials", "Photos"] : ["You", "Socials", "Photo"];
+
+  function go(fn: () => Promise<{ ok: boolean; error?: string }>, then: () => void) {
+    setError(null);
+    start(async () => {
+      const r = await fn();
+      if (!r.ok) return setError(r.error ?? "Something went wrong");
+      then();
+    });
+  }
+
+  async function upload(kind: "avatar" | "cover", file: File) {
+    setUploading(kind);
+    setError(null);
+    try {
+      const supabase = createClient();
+      const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+      const path = `${userId}/${kind}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+      const url = data.publicUrl;
+      const r = await saveImagesAction(kind === "avatar" ? { avatarUrl: url } : { coverUrl: url });
+      if (!r.ok) throw new Error(r.error);
+      if (kind === "avatar") setAvatarUrl(url);
+      else setCoverUrl(url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(null);
+    }
+  }
+
+  const finish = () => router.push(next || (isCreator ? "/studio" : "/app"));
+
+  return (
+    <div className="rl-stack" style={{ gap: "var(--rl-space-6)" }}>
+      <ol className="rl-row" style={{ listStyle: "none", margin: 0, padding: 0, gap: "var(--rl-space-2)" }} aria-label="Steps">
+        {steps.map((s, i) => (
+          <li key={s} className={`rl-chip ${i === step ? "rl-chip-on" : i < step ? "rl-chip-success" : ""}`}>{i + 1}. {s}</li>
+        ))}
+      </ol>
+
+      {step === 0 && (
+        <form className="rl-stack" style={{ gap: "var(--rl-space-5)" }} onSubmit={(e) => { e.preventDefault(); go(() => saveIdentityAction({ handle, displayName: name, bio, isCreator }), () => setStep(1)); }}>
+          <div className="rl-stack" style={{ gap: 4 }}>
+            <h1 className="t-display-lg" style={{ margin: 0 }}>{isCreator ? "Your page starts here." : "First, the basics."}</h1>
+            <p className="c-secondary" style={{ margin: 0 }}>{isCreator ? "This is what followers see when they land from your bio link." : "So your creator knows who's running with them."}</p>
+          </div>
+          <div className="rl-field">
+            <label htmlFor="handle">Handle</label>
+            <div className="rl-row" style={{ gap: 6, flexWrap: "nowrap" }}>
+              <span className="c-muted" style={{ whiteSpace: "nowrap" }}>runletter.com/c/</span>
+              <input id="handle" className="rl-input" value={handle} onChange={(e) => setHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 24))} placeholder="yourname" required minLength={3} autoFocus />
+            </div>
+            <span className="rl-help">{isCreator ? "This goes in your bio, so pick it once." : "Lowercase, no spaces."}</span>
+          </div>
+          <div className="rl-field">
+            <label htmlFor="name">Name</label>
+            <input id="name" className="rl-input" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} required placeholder={isCreator ? "What your followers call you" : "Your name"} />
+          </div>
+          <div className="rl-field">
+            <label htmlFor="bio">{isCreator ? "One line about you" : "Anything you want your creator to know (optional)"}</label>
+            <textarea id="bio" className="rl-input" value={bio} onChange={(e) => setBio(e.target.value)} maxLength={500} placeholder={isCreator ? "Marathoner, coach, and the person who will make you do your long run. Chicago." : "Coming back from a knee thing, aiming for a spring half."} />
+          </div>
+          {error && <span className="rl-help" role="alert" style={{ color: "var(--rl-danger, #b3261e)" }}>{error}</span>}
+          <button type="submit" className="rl-btn rl-btn-primary rl-btn-lg" disabled={pending} style={{ alignSelf: "flex-start" }}>{pending ? "Saving…" : "Continue"}</button>
+        </form>
+      )}
+
+      {step === 1 && (
+        <form className="rl-stack" style={{ gap: "var(--rl-space-5)" }} onSubmit={(e) => { e.preventDefault(); go(() => saveSocialsAction(socials), () => setStep(2)); }}>
+          <div className="rl-stack" style={{ gap: 4 }}>
+            <h1 className="t-display-lg" style={{ margin: 0 }}>Where do people find you?</h1>
+            <p className="c-secondary" style={{ margin: 0 }}>Usernames only. We build the links. Skip any you don&rsquo;t use.</p>
+          </div>
+          {SOCIALS.map((s) => (
+            <div key={s.key} className="rl-field">
+              <label htmlFor={s.key}>{s.label}</label>
+              <div className="rl-row" style={{ gap: 6, flexWrap: "nowrap" }}>
+                <span className="c-muted" style={{ whiteSpace: "nowrap", fontSize: 14 }}>{s.prefix}</span>
+                <input id={s.key} className="rl-input" value={socials[s.key] ?? ""} onChange={(e) => setSocials({ ...socials, [s.key]: e.target.value.replace(/^@/, "") })} placeholder={s.hint} autoCapitalize="none" autoCorrect="off" />
+              </div>
+            </div>
+          ))}
+          {error && <span className="rl-help" role="alert" style={{ color: "var(--rl-danger, #b3261e)" }}>{error}</span>}
+          <div className="rl-row">
+            <button type="submit" className="rl-btn rl-btn-primary rl-btn-lg" disabled={pending}>{pending ? "Saving…" : "Continue"}</button>
+            <button type="button" className="rl-btn rl-btn-ghost rl-btn-lg" onClick={() => setStep(2)}>Skip</button>
+          </div>
+        </form>
+      )}
+
+      {step === 2 && (
+        <div className="rl-stack" style={{ gap: "var(--rl-space-5)" }}>
+          <div className="rl-stack" style={{ gap: 4 }}>
+            <h1 className="t-display-lg" style={{ margin: 0 }}>{isCreator ? "Put a face on it." : "Add a photo."}</h1>
+            <p className="c-secondary" style={{ margin: 0 }}>{isCreator ? "A photo of you and a wide shot for the top of your page. Phone photos are fine; running photos are better." : "So your creator sees a person, not a handle."}</p>
+          </div>
+
+          <div className="rl-row" style={{ alignItems: "center", gap: "var(--rl-space-4)" }}>
+            <span aria-hidden="true" style={{ width: 88, height: 88, borderRadius: "50%", overflow: "hidden", background: "var(--rl-surface-sunken)", border: "var(--rl-border-hairline) solid var(--rl-hairline)", flex: "none" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {avatarUrl && <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+            </span>
+            <div className="rl-stack" style={{ gap: 6 }}>
+              <span className="t-body-medium">Profile photo</span>
+              <input ref={avatarInput} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => e.target.files?.[0] && upload("avatar", e.target.files[0])} />
+              <button type="button" className="rl-btn rl-btn-secondary rl-btn-sm" onClick={() => avatarInput.current?.click()} disabled={uploading !== null}>{uploading === "avatar" ? "Uploading…" : avatarUrl ? "Replace" : "Choose photo"}</button>
+            </div>
+          </div>
+
+          {isCreator && (
+            <div className="rl-stack" style={{ gap: 6 }}>
+              <span className="t-body-medium">Cover photo</span>
+              <div style={{ aspectRatio: "21 / 9", borderRadius: "var(--rl-radius-md)", overflow: "hidden", background: "var(--rl-surface-sunken)", border: "var(--rl-border-hairline) solid var(--rl-hairline)" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {coverUrl && <img src={coverUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />}
+              </div>
+              <input ref={coverInput} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => e.target.files?.[0] && upload("cover", e.target.files[0])} />
+              <button type="button" className="rl-btn rl-btn-secondary rl-btn-sm" onClick={() => coverInput.current?.click()} disabled={uploading !== null} style={{ alignSelf: "flex-start" }}>{uploading === "cover" ? "Uploading…" : coverUrl ? "Replace" : "Choose cover"}</button>
+              <span className="rl-help">Wide, landscape. Up to 5 MB. If you skip it, your page gets an ink sketch instead, which is not a bad look.</span>
+            </div>
+          )}
+
+          {error && <span className="rl-help" role="alert" style={{ color: "var(--rl-danger, #b3261e)" }}>{error}</span>}
+          <div className="rl-row">
+            <button type="button" className="rl-btn rl-btn-primary rl-btn-lg" onClick={finish} disabled={uploading !== null}>{isCreator ? "Open the studio" : "Find a creator"}</button>
+            <button type="button" className="rl-btn rl-btn-ghost rl-btn-lg" onClick={finish}>Skip for now</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

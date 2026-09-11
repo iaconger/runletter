@@ -50,7 +50,7 @@ export default async function YourPage({ searchParams }: { searchParams: Promise
         {error && <span className="rl-help" role="alert" style={{ color: "var(--rl-danger, #b3261e)" }}>{error}</span>}
         {saved && <span className="rl-help" role="status" style={{ color: "var(--rl-success)" }}>Saved.</span>}
         <button type="submit" className="rl-btn rl-btn-primary rl-btn-lg" style={{ alignSelf: "flex-start" }}>Save page</button>
-        <p className="rl-help">Photo upload and Stripe payouts come with the next build. Programs you publish show on this page automatically.</p>
+        <p className="rl-help">Photos and cover: <Link href="/welcome?role=creator&next=/studio/page">update them here</Link>. Programs you publish show on this page automatically.</p>
       </form>
     </main>
   );

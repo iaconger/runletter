@@ -58,12 +58,12 @@ export function mapProgram(r: ProgramRow, days: DayRow[] = [], blocks: BlockRow[
   };
 }
 
-export function mapProfile(r: Pick<ProfileRow, "id" | "handle" | "display_name" | "avatar_url" | "bio" | "is_creator" | "links">): Profile {
+export function mapProfile(r: Pick<ProfileRow, "id" | "handle" | "display_name" | "avatar_url" | "cover_url" | "bio" | "is_creator" | "links">): Profile {
   const links = (r.links && typeof r.links === "object" && !Array.isArray(r.links) ? r.links : {}) as Record<string, string>;
-  return { id: r.id, handle: r.handle, displayName: r.display_name, avatarUrl: r.avatar_url, bio: r.bio, isCreator: r.is_creator, links };
+  return { id: r.id, handle: r.handle, displayName: r.display_name, avatarUrl: r.avatar_url, coverUrl: r.cover_url, bio: r.bio, isCreator: r.is_creator, links };
 }
 
-const PROFILE_COLS = "id, handle, display_name, avatar_url, bio, is_creator, links";
+const PROFILE_COLS = "id, handle, display_name, avatar_url, cover_url, bio, is_creator, links";
 
 // ---------- reads ----------
 
@@ -212,7 +212,7 @@ export async function duplicateWeek(programId: string, from: number, to: number)
   }
 }
 
-export async function updateMyProfile(patch: Partial<Pick<Profile, "handle" | "displayName" | "bio" | "links" | "avatarUrl">>) {
+export async function updateMyProfile(patch: Partial<Pick<Profile, "handle" | "displayName" | "bio" | "links" | "avatarUrl" | "coverUrl" | "isCreator">>) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not signed in");
@@ -222,6 +222,8 @@ export async function updateMyProfile(patch: Partial<Pick<Profile, "handle" | "d
   if (patch.bio !== undefined) row.bio = patch.bio;
   if (patch.links !== undefined) row.links = patch.links;
   if (patch.avatarUrl !== undefined) row.avatar_url = patch.avatarUrl;
+  if (patch.coverUrl !== undefined) row.cover_url = patch.coverUrl;
+  if (patch.isCreator !== undefined) row.is_creator = patch.isCreator;
   const { error } = await supabase.from("profiles").update(row).eq("id", user.id);
   if (error) throw error;
 }
