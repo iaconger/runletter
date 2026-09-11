@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BlockBar } from "@/components/run/BlockBar";
+import { Cover, coverFor } from "@/components/ui/Ink";
 import { CreatorNote, WeekStrip, dayTitle } from "@/components/run/RunPieces";
 import { sampleCreator, sampleProgram, sampleWeek } from "@/lib/sample";
 import { dayDurationS, fmtMinutes } from "@/lib/types";
@@ -16,6 +17,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ handle
 
   return (
     <main className="rl-page rl-stack" style={{ gap: "var(--rl-space-8)" }}>
+      <Cover name={coverFor(p)} ratio={21 / 9} />
       <div className="rl-stack" style={{ gap: "var(--rl-space-2)" }}>
         <Link href={`/c/${handle}`} className="t-label">← {sampleCreator.displayName}</Link>
         <h1 className="t-display-xl" style={{ margin: 0 }}>{p.title}</h1>

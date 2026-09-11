@@ -18,7 +18,7 @@ export function BlockBar({ blocks, currentIndex, legend = true }: { blocks: Bloc
             key={i}
             data-effort={b.targetEffort ?? "easy"}
             data-current={currentIndex === i ? "true" : undefined}
-            style={{ flex: `${blockSeconds(b)} 0 0`, minWidth: 3 }}
+            style={{ flex: `${blockSeconds(b)} 0 0`, minWidth: 3, ["--i" as string]: i }}
           />
         ))}
       </div>

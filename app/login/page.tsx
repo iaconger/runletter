@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Mark } from "@/components/ui/Logo";
+import { Ink } from "@/components/ui/Ink";
 import { createClient, isConfigured } from "@/lib/supabase/server";
 
 export const metadata = { title: "Sign in" };
@@ -29,6 +30,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<Re
       <Link href="/" className="rl-logo" style={{ color: "var(--rl-text)" }} aria-label="RunLetter home">
         <Mark size={36} />
       </Link>
+      <Ink name="stride" style={{ width: 200, opacity: 0.85, marginBottom: "calc(-1 * var(--rl-space-3))" }} />
       {sent ? (
         <div className="rl-stack" style={{ gap: "var(--rl-space-2)" }}>
           <h1 className="t-display-lg" style={{ margin: 0 }}>

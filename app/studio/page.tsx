@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { sampleProgram } from "@/lib/sample";
+import { Cover, coverFor } from "@/components/ui/Ink";
 
 export default function Programs() {
   return (
@@ -9,6 +10,9 @@ export default function Programs() {
         <button className="rl-btn rl-btn-primary" type="button" disabled>New program</button>
       </div>
       <Link href={`/studio/programs/${sampleProgram.id}`} className="rl-card" style={{ color: "inherit", textDecoration: "none" }}>
+        <div className="rl-cover-row">
+        <Cover name={coverFor(sampleProgram)} ratio={4 / 3} />
+        <div className="rl-stack" style={{ gap: "var(--rl-space-3)" }}>
         <div className="rl-between">
           <span className="t-heading">{sampleProgram.title}</span>
           <span className="rl-chip rl-chip-success">Published</span>
@@ -19,6 +23,8 @@ export default function Programs() {
           <span className="rl-chip">{sampleProgram.level}</span>
           <span className="rl-chip">{sampleProgram.goal}</span>
         </span>
+        </div>
+        </div>
       </Link>
       <p className="rl-help">Example program. Creating and saving programs lands in phase 2.</p>
     </main>
