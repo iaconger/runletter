@@ -45,52 +45,78 @@ export default function Landing() {
   return (
     <main>
       <RevealObserver />
-      <header className="rl-page rl-wide rl-between" style={{ paddingBlock: "var(--rl-space-5)", alignItems: "center" }}>
-        <Link href="/" className="rl-logo" style={{ color: "var(--rl-text)" }} aria-label="RunLetter home">
-          <Lockup height={26} />
-        </Link>
-        <nav className="rl-row">
-          <Link href="/c/sarah" className="rl-btn rl-btn-ghost rl-btn-sm rl-nav-secondary">Example creator</Link>
-          <Link href="/creators" className="rl-btn rl-btn-ghost rl-btn-sm rl-nav-secondary">For creators</Link>
-          <Link href="/login" className="rl-btn rl-btn-primary rl-btn-sm">Sign in</Link>
-        </nav>
+      <Link href="/creators" className="rl-announce">
+        <span className="dot" aria-hidden="true" />
+        <span>First creator cohort now open. Keep 100 percent for 90 days.</span>
+        <span className="arrow" aria-hidden="true">→</span>
+      </Link>
+      <header className="rl-header">
+        <div className="rl-page rl-wide rl-between" style={{ paddingBlock: "var(--rl-space-3)", alignItems: "center" }}>
+          <Link href="/" className="rl-logo" style={{ color: "var(--rl-text)" }} aria-label="RunLetter home">
+            <Lockup height={26} />
+          </Link>
+          <nav className="rl-row">
+            <Link href="/c/sarah" className="rl-btn rl-btn-ghost rl-btn-sm rl-nav-secondary">Example creator</Link>
+            <Link href="/creators" className="rl-btn rl-btn-ghost rl-btn-sm rl-nav-secondary">For creators</Link>
+            <Link href="/login" className="rl-btn rl-btn-primary rl-btn-sm">Sign in</Link>
+          </nav>
+        </div>
       </header>
 
       {/* ---------- hero ---------- */}
-      <section className="rl-atmo rl-atmo-night" style={{ padding: "var(--rl-space-16) 0 var(--rl-space-12)", overflow: "hidden" }}>
+      <section className="rl-atmo rl-atmo-night rl-hero-photo" style={{ padding: "var(--rl-space-16) 0 var(--rl-space-12)", overflow: "hidden" }}>
         <div className="rl-page rl-wide rl-hero" style={{ paddingBlock: 0 }}>
           <div className="rl-stack" style={{ gap: "var(--rl-space-6)" }}>
-            <p className="t-label" style={{ opacity: 0.7, margin: 0 }}>Training plans from the runners you follow</p>
-            <h1 className="t-display-xl" style={{ maxWidth: "13ch", margin: 0 }}>
-              Your week of runs, written by someone who runs.
+            <p className="t-label rl-rise" style={{ opacity: 0.7, margin: 0 }}>Find the runners who inspire you</p>
+            <h1 className="t-display-xl rl-rise" style={{ maxWidth: "14ch", margin: 0, ["--rise-delay" as string]: "80ms" }}>
+              Train alongside the runners who inspire you.
             </h1>
-            <p className="t-body" style={{ maxWidth: "46ch", opacity: 0.85, margin: 0 }}>
-              Creators build the plan. It lands in your app Sunday night. Each morning there is one run to do,
-              already on your watch, marked done the moment it hits Strava.
+            <p className="t-title rl-rise" style={{ margin: 0, maxWidth: "30ch", ["--rise-delay" as string]: "160ms" }}>
+              This week, run with a{" "}
+              <span className="rl-rotate" aria-hidden="true">
+                <span>marathon coach.</span>
+                <span>trail runner.</span>
+                <span>run club captain.</span>
+                <span>comeback runner.</span>
+                <span>5K speed freak.</span>
+              </span>
+              <span className="sr-only">runner you admire.</span>
             </p>
-            <div className="rl-row">
-              <Link href="/c/sarah" className="rl-btn rl-btn-lg" style={{ background: "var(--rl-paper-100)", color: "var(--rl-ink-900)" }}>
-                Follow a creator
+            <p className="t-body rl-rise" style={{ maxWidth: "46ch", opacity: 0.85, margin: 0, ["--rise-delay" as string]: "240ms" }}>
+              Pick a creator whose running you admire. Their week lands in your app Sunday night, one run a day, already on
+              your watch, marked done the moment it hits Strava. You&rsquo;re not following a plan. You&rsquo;re running with them.
+            </p>
+            <div className="rl-row rl-rise" style={{ ["--rise-delay" as string]: "320ms" }}>
+              <Link href="/c/sarah" className="rl-btn rl-btn-lg rl-btn-shine" style={{ background: "var(--rl-paper-100)", color: "var(--rl-ink-900)" }}>
+                Find your runner
               </Link>
               <Link href="/creators" className="rl-btn rl-btn-lg rl-btn-ghost" style={{ color: "inherit", borderColor: "rgba(255,255,255,.3)" }}>
-                I make plans
+                I&rsquo;m the runner people follow
               </Link>
             </div>
-            <div className="rl-row" style={{ gap: "var(--rl-space-3)" }}>
+            <div className="rl-row rl-rise" style={{ gap: "var(--rl-space-3)", ["--rise-delay" as string]: "400ms" }}>
               <span className="rl-avatar-row">
                 {EXAMPLE_CREATORS.slice(0, 4).map((c) => (
                   <Portrait key={c.name} name={c.name} size={36} tone="paper" style={{ borderColor: "var(--rl-ink-900)", borderWidth: 2 }} />
                 ))}
               </span>
-              <p className="rl-help" style={{ color: "inherit", opacity: 0.7, margin: 0 }}>Plans from coaches, club captains and the runner you already follow. Works with Garmin and Coros today.</p>
+              <p className="rl-help" style={{ color: "inherit", opacity: 0.7, margin: 0 }}>Coaches, club captains, the runner whose posts get you out the door.</p>
+            </div>
+            <div className="rl-works rl-rise" style={{ ["--rise-delay" as string]: "480ms" }} aria-label="Works with">
+              <span className="lbl">Works with</span>
+              <span className="wm">Strava</span>
+              <span className="wm">Garmin</span>
+              <span className="wm">COROS</span>
+              <span className="wm soon">Apple Fitness <em>soon</em></span>
             </div>
           </div>
-          <div>
-            <p className="t-label" style={{ opacity: 0.6, margin: "0 0 var(--rl-space-2)" }}>Week 3 · Base building for busy people</p>
-            <div className="rl-track">
-              <Flipbook tone="paper" width={120} className="rl-runner" />
-              <div className="rl-tt-wrap"><Timetable light /></div>
-            </div>
+          <div aria-hidden="true" />
+        </div>
+        <div className="rl-page rl-wide rl-rise" style={{ paddingBlock: "var(--rl-space-10) 0", ["--rise-delay" as string]: "520ms" }}>
+          <p className="t-label" style={{ opacity: 0.6, margin: "0 0 var(--rl-space-2)" }}>Week 3 · Base building for busy people · what a week looks like</p>
+          <div className="rl-track">
+            <Flipbook tone="paper" width={120} className="rl-runner" />
+            <div className="rl-tt-wrap"><Timetable light /></div>
           </div>
         </div>
       </section>
@@ -196,7 +222,7 @@ export default function Landing() {
       </section>
 
       {/* ---------- final CTA ---------- */}
-      <section className="rl-atmo rl-atmo-night rl-photo-band" style={{ padding: "var(--rl-space-16) 0", backgroundImage: "linear-gradient(90deg, rgba(20,19,17,.92) 0%, rgba(20,19,17,.55) 55%, rgba(20,19,17,.25) 100%), url(/brand/photo/hero.webp)" }}>
+      <section className="rl-atmo rl-atmo-night" style={{ padding: "var(--rl-space-16) 0" }}>
         <div className="rl-page rl-wide rl-stack" style={{ paddingBlock: 0, gap: "var(--rl-space-5)", alignItems: "flex-start" }} data-reveal>
           <Flipbook tone="paper" width={150} />
           <h2 className="t-display-xl" style={{ margin: 0, maxWidth: "14ch" }}>Your first week is waiting.</h2>
