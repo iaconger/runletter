@@ -44,10 +44,10 @@ export default function CreatorsLanding() {
               it starts, and run it on their watch. You write the runs. We handle the rest.
             </p>
             <div className="rl-row">
-              <Link href="/login?next=/studio" className="rl-btn rl-btn-lg" style={{ background: "var(--rl-ink-900)", color: "var(--rl-paper-100)" }}>
+              <Link href="/login?next=/studio" className="rl-btn rl-btn-lg rl-btn-ink">
                 Start a program
               </Link>
-              <Link href="/c/sarah" className="rl-btn rl-btn-lg rl-btn-ghost" style={{ color: "inherit" }}>
+              <Link href="/c/sarah" className="rl-btn rl-btn-lg rl-btn-ghost">
                 See a creator page
               </Link>
             </div>
