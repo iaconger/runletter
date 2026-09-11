@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Mark } from "@/components/ui/Logo";
-import { Cover, Ink, coverFor } from "@/components/ui/Ink";
+import { Cover, Ink, Portrait, coverFor } from "@/components/ui/Ink";
 import { sampleCreator, sampleProgram } from "@/lib/sample";
 
 export async function generateMetadata({ params }: { params: Promise<{ handle: string }> }) {
@@ -21,7 +21,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
         <div className="rl-page rl-stack" style={{ paddingBlock: 0, gap: "var(--rl-space-4)", position: "relative" }}>
           <Ink name="pace-group" style={{ position: "absolute", right: "-6%", top: "-10%", width: "min(52%, 300px)", opacity: 0.85, pointerEvents: "none" }} />
           <Link href="/" className="rl-logo" style={{ color: "inherit" }} aria-label="RunLetter"><Mark size={28} /></Link>
-          <span className="t-label" style={{ opacity: 0.7 }}>@{c.handle}</span>
+          <div className="rl-row"><Portrait name="sarah" size={64} /><span className="t-label" style={{ opacity: 0.7 }}>@{c.handle}</span></div>
           <h1 className="t-display-xl" style={{ margin: 0 }}>{c.displayName}</h1>
           <p className="t-body" style={{ margin: 0, maxWidth: "48ch" }}>{c.bio}</p>
           <div className="rl-row">

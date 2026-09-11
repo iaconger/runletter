@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { Lockup } from "@/components/ui/Logo";
 import { Ink } from "@/components/ui/Ink";
+import { CreatorRow } from "@/components/ui/CreatorRow";
 import { Flipbook } from "@/components/ui/Flipbook";
 import { RevealObserver } from "@/components/ui/Reveal";
 import { BlockBar } from "@/components/run/BlockBar";
@@ -73,6 +74,18 @@ export default function CreatorsLanding() {
           <p className="c-secondary" style={{ margin: 0, maxWidth: "44ch" }}>
             A program in RunLetter is the plan, week by week, in your voice. Followers subscribe to you, the week lands before Monday, and each run goes to their watch with your note on it. You see who ran it.
           </p>
+        </div>
+      </section>
+
+      {/* ---------- who this is for ---------- */}
+      <section className="rl-hairline">
+        <div className="rl-page rl-wide rl-stack" style={{ gap: "var(--rl-space-5)", paddingBlock: "var(--rl-space-10)" }} data-reveal>
+          <div className="rl-stack" style={{ gap: "var(--rl-space-2)", maxWidth: "44ch" }}>
+            <span className="t-label c-muted">Who this is for</span>
+            <h2 className="t-display-lg" style={{ margin: 0 }}>Anyone whose followers ask what to run.</h2>
+          </div>
+          <CreatorRow compact />
+          <p className="rl-help">Example creators, drawn not photographed. If you see yourself in one of these, you&rsquo;re who we built it for.</p>
         </div>
       </section>
 

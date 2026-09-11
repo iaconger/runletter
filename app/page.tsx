@@ -3,7 +3,8 @@
 
 import Link from "next/link";
 import { Lockup } from "@/components/ui/Logo";
-import { Ink } from "@/components/ui/Ink";
+import { EXAMPLE_CREATORS, Ink, Portrait } from "@/components/ui/Ink";
+import { CreatorRow } from "@/components/ui/CreatorRow";
 import { Flipbook } from "@/components/ui/Flipbook";
 import { RevealObserver } from "@/components/ui/Reveal";
 import { BlockBar } from "@/components/run/BlockBar";
@@ -75,7 +76,14 @@ export default function Landing() {
                 I make plans
               </Link>
             </div>
-            <p className="rl-help" style={{ color: "inherit", opacity: 0.6, margin: 0 }}>Works with Garmin and Coros today. Free runs are free to follow.</p>
+            <div className="rl-row" style={{ gap: "var(--rl-space-3)" }}>
+              <span className="rl-avatar-row">
+                {EXAMPLE_CREATORS.slice(0, 4).map((c) => (
+                  <Portrait key={c.name} name={c.name} size={36} tone="paper" style={{ borderColor: "var(--rl-ink-900)", borderWidth: 2 }} />
+                ))}
+              </span>
+              <p className="rl-help" style={{ color: "inherit", opacity: 0.7, margin: 0 }}>Plans from coaches, club captains and the runner you already follow. Works with Garmin and Coros today.</p>
+            </div>
           </div>
           <div>
             <p className="t-label" style={{ opacity: 0.6, margin: "0 0 var(--rl-space-2)" }}>Week 3 · Base building for busy people</p>
@@ -141,6 +149,21 @@ export default function Landing() {
               <span className="rl-btn rl-btn-secondary" aria-hidden="true">Mark done</span>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ---------- creators ---------- */}
+      <section className="rl-hairline">
+        <div className="rl-page rl-wide rl-stack" style={{ gap: "var(--rl-space-6)", paddingBlock: "var(--rl-space-12)" }} data-reveal>
+          <div className="rl-between" style={{ alignItems: "flex-end", flexWrap: "wrap" }}>
+            <div className="rl-stack" style={{ gap: "var(--rl-space-2)", maxWidth: "40ch" }}>
+              <span className="t-label c-muted">Written by people who run</span>
+              <h2 className="t-display-lg" style={{ margin: 0 }}>Follow the runner, not the app.</h2>
+            </div>
+            <Link href="/creators" className="rl-btn rl-btn-ghost">I&rsquo;m a creator →</Link>
+          </div>
+          <CreatorRow />
+          <p className="rl-help">Example creators. The first cohort is being recruited now, so these are the kinds of runners you&rsquo;ll find here, not the roster.</p>
         </div>
       </section>
 

@@ -78,3 +78,39 @@ export function Cover({ name, ratio = 16 / 9, style }: { name: InkName; ratio?: 
     </div>
   );
 }
+
+export type PortraitName = "sarah" | "marcus" | "lena" | "diego" | "priya" | "tom";
+
+/** Ink portrait of a creator. Round crop by default, like an avatar. */
+export function Portrait({ name, size = 64, tone = "ink", round = true, style }: { name: PortraitName; size?: number; tone?: "ink" | "paper"; round?: boolean; style?: CSSProperties }) {
+  const src = `/brand/ink/creator-${name}${tone === "paper" ? "-paper" : ""}.svg`;
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        display: "inline-block",
+        width: size,
+        height: size,
+        borderRadius: round ? "50%" : "var(--rl-radius-md)",
+        overflow: "hidden",
+        background: tone === "paper" ? "rgba(247,244,238,.08)" : "var(--rl-surface-sunken)",
+        border: "var(--rl-border-hairline) solid var(--rl-hairline)",
+        flex: "none",
+        ...style,
+      }}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 0%", transform: "scale(1.7)", transformOrigin: "50% 26%", display: "block" }} />
+    </span>
+  );
+}
+
+/** Example creators for the landing pages. Fictional, and labelled as such wherever they appear. */
+export const EXAMPLE_CREATORS: { name: PortraitName; display: string; city: string; focus: string; program: string }[] = [
+  { name: "sarah", display: "Sarah Okafor", city: "Chicago", focus: "Marathon coach", program: "Base building for busy people" },
+  { name: "marcus", display: "Marcus Bell", city: "Atlanta", focus: "Run club captain", program: "First 10K, eight weeks" },
+  { name: "lena", display: "Lena Vogt", city: "Denver", focus: "Trail and vert", program: "Hills without hating them" },
+  { name: "diego", display: "Diego Ferrer", city: "Austin", focus: "5K speed", program: "Sub-20 in twelve weeks" },
+  { name: "priya", display: "Priya Nair", city: "Toronto", focus: "Comeback runner", program: "Back after the break" },
+  { name: "tom", display: "Tom Hale", city: "Portland", focus: "Track workouts", program: "Tuesday night intervals" },
+];
