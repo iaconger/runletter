@@ -378,3 +378,7 @@ textarea.rl-input { height: auto; min-height: 96px; padding: var(--rl-space-3); 
 .rl-creators[data-tone="paper"] .pg { color: var(--rl-paper-100); }
 .rl-avatar-row { display: flex; }
 .rl-avatar-row > * + * { margin-left: -14px; }
+
+.rl-photo-band { background-size: cover; background-position: 70% 50%; min-height: 520px; display: flex; align-items: center; }
+.rl-photo-band > .rl-page { width: 100%; }
+.rl-photo-band::after { opacity: .3; }

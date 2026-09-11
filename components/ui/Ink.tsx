@@ -82,8 +82,12 @@ export function Cover({ name, ratio = 16 / 9, style }: { name: InkName; ratio?: 
 export type PortraitName = "sarah" | "marcus" | "lena" | "diego" | "priya" | "tom";
 
 /** Ink portrait of a creator. Round crop by default, like an avatar. */
-export function Portrait({ name, size = 64, tone = "ink", round = true, style }: { name: PortraitName; size?: number; tone?: "ink" | "paper"; round?: boolean; style?: CSSProperties }) {
-  const src = `/brand/ink/creator-${name}${tone === "paper" ? "-paper" : ""}.svg`;
+export function Portrait({ name, size = 64, tone = "ink", round = true, photo = true, style }: { name: PortraitName; size?: number; tone?: "ink" | "paper"; round?: boolean; photo?: boolean; style?: CSSProperties }) {
+  // photo: generated editorial portrait (public/brand/photo). Falls back to the ink sketch when photo=false.
+  const src = photo ? `/brand/photo/${name}.webp` : `/brand/ink/creator-${name}${tone === "paper" ? "-paper" : ""}.svg`;
+  const imgStyle: CSSProperties = photo
+    ? { width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 30%", display: "block" }
+    : { width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 0%", transform: "scale(1.7)", transformOrigin: "50% 26%", display: "block" };
   return (
     <span
       aria-hidden="true"
@@ -100,7 +104,7 @@ export function Portrait({ name, size = 64, tone = "ink", round = true, style }:
       }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 0%", transform: "scale(1.7)", transformOrigin: "50% 26%", display: "block" }} />
+      <img src={src} alt="" draggable={false} style={imgStyle} />
     </span>
   );
 }

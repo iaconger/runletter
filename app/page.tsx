@@ -196,7 +196,7 @@ export default function Landing() {
       </section>
 
       {/* ---------- final CTA ---------- */}
-      <section className="rl-atmo rl-atmo-night" style={{ padding: "var(--rl-space-16) 0" }}>
+      <section className="rl-atmo rl-atmo-night rl-photo-band" style={{ padding: "var(--rl-space-16) 0", backgroundImage: "linear-gradient(90deg, rgba(20,19,17,.92) 0%, rgba(20,19,17,.55) 55%, rgba(20,19,17,.25) 100%), url(/brand/photo/hero.webp)" }}>
         <div className="rl-page rl-wide rl-stack" style={{ paddingBlock: 0, gap: "var(--rl-space-5)", alignItems: "flex-start" }} data-reveal>
           <Flipbook tone="paper" width={150} />
           <h2 className="t-display-xl" style={{ margin: 0, maxWidth: "14ch" }}>Your first week is waiting.</h2>
