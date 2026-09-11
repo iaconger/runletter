@@ -417,11 +417,12 @@ textarea.rl-input { height: auto; min-height: 96px; padding: var(--rl-space-3); 
 .rl-hero-photo { position: relative; }
 /* the reel: three frames crossfading with a slow push-in, like a muted phone video behind the headline */
 .rl-reel { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
-.rl-reel-frame { position: absolute; inset: 0; background-size: cover; background-position: 70% 40%; opacity: 0; animation: rl-reel 21s ease-in-out infinite; will-change: opacity, transform; }
+.rl-reel-frame { position: absolute; inset: 0; background-size: cover; background-position: 70% 40%; opacity: 0; animation: rl-reel 21s ease-in-out infinite; will-change: opacity; }
 .rl-reel-frame:nth-child(1) { animation-delay: 0s; }
 .rl-reel-frame:nth-child(2) { animation-delay: 7s; }
 .rl-reel-frame:nth-child(3) { animation-delay: 14s; }
-@keyframes rl-reel { 0% { opacity: 0; transform: scale(1.04); } 6% { opacity: 1; } 33% { opacity: 1; transform: scale(1.12); } 40% { opacity: 0; transform: scale(1.13); } 100% { opacity: 0; } }
+/* still frames, a plain crossfade. No push-in: the brand holds still, the runner moves. */
+@keyframes rl-reel { 0% { opacity: 0; } 6% { opacity: 1; } 33% { opacity: 1; } 40% { opacity: 0; } 100% { opacity: 0; } }
 .rl-reel-shade { position: absolute; inset: 0; background: linear-gradient(100deg, rgba(20,19,17,.96) 0%, rgba(20,19,17,.86) 38%, rgba(20,19,17,.38) 66%, rgba(20,19,17,.12) 100%), linear-gradient(180deg, rgba(20,19,17,.15) 0%, rgba(20,19,17,0) 40%, rgba(20,19,17,.9) 100%); }
 @media (prefers-reduced-motion: reduce) { .rl-reel-frame { animation: none; } .rl-reel-frame:first-child { opacity: 1; } }
 @media (max-width: 760px) { .rl-reel-frame { background-position: 62% 40%; } .rl-reel-shade { background: linear-gradient(180deg, rgba(20,19,17,.9) 0%, rgba(20,19,17,.75) 55%, rgba(20,19,17,.92) 100%); } }
