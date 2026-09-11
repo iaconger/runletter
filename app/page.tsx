@@ -235,7 +235,7 @@ export default function Landing() {
           <h2 className="t-display-xl" style={{ margin: 0, maxWidth: "14ch" }}>Your first week is waiting.</h2>
           <div className="rl-row">
             <Link href="/signup" className="rl-btn rl-btn-lg rl-btn-paper">Create an account</Link>
-            <Link href="/signup?as=creator" className="rl-btn rl-btn-lg rl-btn-secondary">I make plans</Link>
+            <Link href="/signup?as=creator" className="rl-btn rl-btn-lg rl-btn-secondary">I&rsquo;m here to create</Link>
           </div>
         </div>
       </section>
