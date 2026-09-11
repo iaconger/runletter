@@ -45,7 +45,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
           <h1 className="t-display-xl" style={{ margin: 0 }}>{c.displayName || `@${c.handle}`}</h1>
           {c.bio && <p className="t-body" style={{ margin: 0, maxWidth: "48ch" }}>{c.bio}</p>}
           <div className="rl-row">
-            <Link href={`/login?next=/c/${c.handle}`} className="rl-btn rl-btn-lg rl-btn-ink">Subscribe · $7/mo</Link>
+            <Link href={`/signup?next=/c/${c.handle}`} className="rl-btn rl-btn-lg rl-btn-ink">Subscribe · $7/mo</Link>
             <span className="rl-help" style={{ color: "inherit", opacity: 0.7 }}>Cancel any time. Sold on the web.</span>
           </div>
           {Object.keys(c.links).length > 0 && (

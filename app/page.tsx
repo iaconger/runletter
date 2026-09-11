@@ -58,7 +58,8 @@ export default function Landing() {
           <nav className="rl-row">
             <Link href="/c/sarah" className="rl-btn rl-btn-ghost rl-btn-sm rl-nav-secondary">Example creator</Link>
             <Link href="/creators" className="rl-btn rl-btn-ghost rl-btn-sm rl-nav-secondary">For creators</Link>
-            <Link href="/login" className="rl-btn rl-btn-primary rl-btn-sm">Sign in</Link>
+            <Link href="/login" className="rl-btn rl-btn-ghost rl-btn-sm">Sign in</Link>
+            <Link href="/signup" className="rl-btn rl-btn-primary rl-btn-sm">Sign up</Link>
           </nav>
         </div>
       </header>
@@ -93,7 +94,7 @@ export default function Landing() {
               your watch, marked done the moment it hits Strava. You&rsquo;re not following a plan. You&rsquo;re running with them.
             </p>
             <div className="rl-row rl-rise" style={{ ["--rise-delay" as string]: "320ms" }}>
-              <Link href="/c/sarah" className="rl-btn rl-btn-lg rl-btn-paper rl-btn-shine">
+              <Link href="/signup" className="rl-btn rl-btn-lg rl-btn-paper rl-btn-shine">
                 Find your runner
               </Link>
               <Link href="/creators" className="rl-btn rl-btn-lg rl-btn-secondary">
@@ -233,8 +234,8 @@ export default function Landing() {
           <Flipbook tone="paper" width={150} />
           <h2 className="t-display-xl" style={{ margin: 0, maxWidth: "14ch" }}>Your first week is waiting.</h2>
           <div className="rl-row">
-            <Link href="/c/sarah" className="rl-btn rl-btn-lg rl-btn-paper">Follow a creator</Link>
-            <Link href="/creators" className="rl-btn rl-btn-lg rl-btn-secondary">I make plans</Link>
+            <Link href="/signup" className="rl-btn rl-btn-lg rl-btn-paper">Create an account</Link>
+            <Link href="/signup?as=creator" className="rl-btn rl-btn-lg rl-btn-secondary">I make plans</Link>
           </div>
         </div>
       </section>

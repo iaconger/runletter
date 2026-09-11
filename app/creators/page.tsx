@@ -27,7 +27,7 @@ export default function CreatorsLanding() {
         <nav className="rl-row">
           <Link href="/" className="rl-btn rl-btn-ghost rl-btn-sm rl-nav-secondary">For runners</Link>
           <Link href="/c/sarah" className="rl-btn rl-btn-ghost rl-btn-sm rl-nav-secondary">Example creator</Link>
-          <Link href="/login?next=/studio" className="rl-btn rl-btn-primary rl-btn-sm">Open the studio</Link>
+          <Link href="/signup?as=creator&next=/studio" className="rl-btn rl-btn-primary rl-btn-sm">Start a program</Link>
         </nav>
       </header>
 
@@ -44,7 +44,7 @@ export default function CreatorsLanding() {
               it starts, and run it on their watch. You write the runs. We handle the rest.
             </p>
             <div className="rl-row">
-              <Link href="/login?next=/studio" className="rl-btn rl-btn-lg rl-btn-ink">
+              <Link href="/signup?as=creator&next=/studio" className="rl-btn rl-btn-lg rl-btn-ink">
                 Start a program
               </Link>
               <Link href="/c/sarah" className="rl-btn rl-btn-lg rl-btn-ghost">
@@ -193,7 +193,7 @@ export default function CreatorsLanding() {
           <Flipbook tone="ink" width={140} />
           <h2 className="t-display-xl" style={{ margin: 0, maxWidth: "14ch" }}>Your first program is one afternoon away.</h2>
           <div className="rl-row">
-            <Link href="/login?next=/studio" className="rl-btn rl-btn-primary rl-btn-lg">Start a program</Link>
+            <Link href="/signup?as=creator&next=/studio" className="rl-btn rl-btn-primary rl-btn-lg">Start a program</Link>
             <Link href="/" className="rl-btn rl-btn-ghost rl-btn-lg">I&rsquo;m here to run</Link>
           </div>
           <p className="rl-help">The first creator cohort is small on purpose. If you have a following that runs, we want to talk.</p>

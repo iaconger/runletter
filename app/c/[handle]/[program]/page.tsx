@@ -67,7 +67,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ handle
       ) : (
         <div className="rl-card rl-sunken"><span className="c-secondary">Subscribe to see the weeks. The plan is {p.weeks} weeks long.</span></div>
       )}
-      <Link href={`/login?next=/app`} className="rl-btn rl-btn-primary rl-btn-lg">
+      <Link href={`/signup?next=/app`} className="rl-btn rl-btn-primary rl-btn-lg">
         {p.access === "creator_sub" ? `Subscribe to ${c.displayName || c.handle} · $7/mo` : `Buy this program · $${((p.priceCents ?? 0) / 100).toFixed(0)}`}
       </Link>
     </main>
