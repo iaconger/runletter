@@ -65,10 +65,16 @@ export default function Landing() {
 
       {/* ---------- hero ---------- */}
       <section className="rl-atmo rl-atmo-night rl-hero-photo" style={{ padding: "var(--rl-space-16) 0 var(--rl-space-12)", overflow: "hidden" }}>
-        <div className="rl-page rl-wide rl-hero" style={{ paddingBlock: 0 }}>
+        <div className="rl-reel" aria-hidden="true">
+          <div className="rl-reel-frame" style={{ backgroundImage: "url(/brand/photo/hero-ugc-1.webp)" }} />
+          <div className="rl-reel-frame" style={{ backgroundImage: "url(/brand/photo/hero-ugc-2.webp)" }} />
+          <div className="rl-reel-frame" style={{ backgroundImage: "url(/brand/photo/hero-ugc-3.webp)" }} />
+          <div className="rl-reel-shade" />
+        </div>
+        <div className="rl-page rl-wide rl-hero" style={{ paddingBlock: 0, position: "relative", zIndex: 1 }}>
           <div className="rl-stack" style={{ gap: "var(--rl-space-6)" }}>
             <p className="t-label rl-rise" style={{ opacity: 0.7, margin: 0 }}>Find the runners who inspire you</p>
-            <h1 className="t-display-xl rl-rise" style={{ maxWidth: "14ch", margin: 0, ["--rise-delay" as string]: "80ms" }}>
+            <h1 className="t-display-hero rl-rise" style={{ maxWidth: "12ch", margin: 0, ["--rise-delay" as string]: "80ms" }}>
               Train alongside the runners who inspire you.
             </h1>
             <p className="t-title rl-rise" style={{ margin: 0, maxWidth: "30ch", ["--rise-delay" as string]: "160ms" }}>
@@ -112,7 +118,7 @@ export default function Landing() {
           </div>
           <div aria-hidden="true" />
         </div>
-        <div className="rl-page rl-wide rl-rise" style={{ paddingBlock: "var(--rl-space-10) 0", ["--rise-delay" as string]: "520ms" }}>
+        <div className="rl-page rl-wide rl-rise" style={{ paddingBlock: "var(--rl-space-10) 0", position: "relative", zIndex: 1, ["--rise-delay" as string]: "520ms" }}>
           <p className="t-label" style={{ opacity: 0.6, margin: "0 0 var(--rl-space-2)" }}>Week 3 · Base building for busy people · what a week looks like</p>
           <div className="rl-track">
             <Flipbook tone="paper" width={120} className="rl-runner" />
