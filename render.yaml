@@ -1,0 +1,30 @@
+# Render blueprint. In Render: Blueprints > New Blueprint Instance > pick this repo.
+# Render creates the web service from this file and asks for the secret env vars.
+services:
+  - type: web
+    name: runletter
+    runtime: node
+    plan: free
+    region: ohio
+    branch: main
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: NEXT_PUBLIC_APP_URL
+        value: https://runletter.onrender.com   # change to https://runletter.com after the custom domain is live
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
