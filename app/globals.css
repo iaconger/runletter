@@ -413,7 +413,14 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 @keyframes rl-ping { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.6); } 100% { box-shadow: 0 0 0 9px rgba(255,255,255,0); } }
 .rl-announce .arrow { transition: transform var(--rl-duration-fast) var(--rl-ease); }
 .rl-announce:hover .arrow { transform: translateX(3px); }
-.rl-header { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--rl-bg) 82%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: var(--rl-border-hairline) solid var(--rl-hairline); }
+.rl-header { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--rl-bg) 82%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: var(--rl-border-hairline) solid var(--rl-hairline); color: var(--rl-text); transition: background-color var(--rl-duration-base, 200ms) var(--rl-ease), color var(--rl-duration-base, 200ms) var(--rl-ease), border-color var(--rl-duration-base, 200ms) var(--rl-ease); }
+/* Over a Night section the bar inverts: dark glass, paper type, paper buttons. HeaderTone.tsx sets the class. */
+.rl-header.is-night { background: color-mix(in srgb, var(--rl-ink-900) 72%, transparent); color: var(--rl-paper-100); border-color: rgba(247,244,238,.14); }
+.rl-header.is-night .rl-logo { color: var(--rl-paper-100); }
+.rl-header.is-night .rl-btn-ghost { color: var(--rl-paper-100); }
+.rl-header.is-night .rl-btn-ghost:hover { background: rgba(247,244,238,.08); }
+.rl-header.is-night .rl-btn-primary { background: var(--rl-paper-100); color: var(--rl-ink-900); box-shadow: none; }
+.rl-header .rl-btn, .rl-header .rl-logo { transition: background-color var(--rl-duration-base, 200ms) var(--rl-ease), color var(--rl-duration-base, 200ms) var(--rl-ease); }
 
 /* ---------- hero: photo, rise-in, rotating word, button shine ---------- */
 .rl-hero-photo { position: relative; }
@@ -466,10 +473,13 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 .rl-blockrow-tools .rl-btn { min-width: 26px; }
 
 
-/* Parallax ink: faint sketches on the paper under the page, drifting at their own rates with scroll. */
-.rl-parallax { position: fixed; inset: 0; pointer-events: none; z-index: -1; overflow: hidden; mix-blend-mode: exclusion; opacity: 0.11; }
-.rl-parallax img { position: absolute; top: 0; height: auto; will-change: transform; }
-@media (max-width: 720px) { .rl-parallax { opacity: 0.09; } .rl-parallax img { width: 60vw !important; } }
+/* Parallax ink: faint sketches in the side margins, drifting at their own rates with scroll. The sketch is a mask
+   over a solid colour, so ink pieces take the text colour and blue pieces take the accent, in both themes. */
+.rl-parallax { position: fixed; inset: 0; pointer-events: none; z-index: -1; overflow: hidden; }
+.rl-parallax > div { position: absolute; top: 0; will-change: transform; background: var(--rl-text); opacity: 0.07;
+  -webkit-mask: var(--mask) center / contain no-repeat; mask: var(--mask) center / contain no-repeat; }
+.rl-parallax > .rl-parallax-blue { background: var(--rl-accent); opacity: 0.13; }
+@media (max-width: 900px) { .rl-parallax { display: none; } }
 @media print { .rl-parallax { display: none; } }
 
 /* Inline text button, for "email me a link" style toggles inside help copy. */

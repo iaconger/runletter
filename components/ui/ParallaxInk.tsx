@@ -8,21 +8,23 @@ import { usePathname } from "next/navigation";
 
 const QUIET = ["/studio", "/app", "/welcome"];
 
-type Piece = { name: string; x: string; y: number; w: number; speed: number; rot?: number; flip?: boolean };
-// y is the start position as a fraction of the viewport height; speed is how much of the scroll it follows
-// (0 = pinned to the glass, 1 = moves with the page). Small numbers read as far away.
+type Piece = { name: string; x: string; y: number; w: number; speed: number; rot?: number; flip?: boolean; blue?: boolean };
+// Margins only: x is the left edge as a fraction of the viewport, pieces sit in the outer fifth on either side.
+// y is the start position in viewport heights; speed is how much of the scroll it follows (0 = pinned to the
+// glass, 1 = moves with the page). Small numbers read as far away. Blue pieces use the accent, sparingly.
 const PIECES: Piece[] = [
-  { name: "04-route", x: "68%", y: 0.12, w: 520, speed: 0.18, rot: -6 },
-  { name: "03-cadence", x: "-6%", y: 0.55, w: 620, speed: 0.1 },
-  { name: "06-breath", x: "72%", y: 1.05, w: 360, speed: 0.28, rot: 4 },
-  { name: "05-dawn-road", x: "4%", y: 1.5, w: 560, speed: 0.14, flip: true },
-  { name: "07-intervals", x: "60%", y: 2.1, w: 480, speed: 0.22 },
-  { name: "02-sequence", x: "-2%", y: 2.7, w: 520, speed: 0.08, rot: 3 },
+  { name: "04-route", x: "82%", y: 0.1, w: 420, speed: 0.18, rot: -6, blue: true },
+  { name: "03-cadence", x: "-10%", y: 0.6, w: 460, speed: 0.1 },
+  { name: "06-breath", x: "84%", y: 1.1, w: 300, speed: 0.28, rot: 4 },
+  { name: "05-dawn-road", x: "-6%", y: 1.55, w: 420, speed: 0.14, flip: true, blue: true },
+  { name: "07-intervals", x: "80%", y: 2.1, w: 380, speed: 0.22 },
+  { name: "02-sequence", x: "-8%", y: 2.7, w: 400, speed: 0.08, rot: 3 },
+  { name: "01-stride", x: "86%", y: 3.2, w: 260, speed: 0.2, blue: true },
 ];
 
 export function ParallaxInk() {
   const pathname = usePathname();
-  const refs = useRef<(HTMLImageElement | null)[]>([]);
+  const refs = useRef<(HTMLDivElement | null)[]>([]);
   const quiet = QUIET.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   useEffect(() => {
@@ -36,7 +38,7 @@ export function ParallaxInk() {
       PIECES.forEach((p, i) => {
         const el = refs.current[i];
         if (!el) return;
-        const h = el.offsetHeight || p.w * 0.6;
+        const h = p.w * 0.6;
         const span = vh + h;
         // Where this piece is on the glass right now, wrapped so it comes back around on long pages.
         let top = p.y * vh - y * (reduce ? 0 : p.speed);
@@ -61,16 +63,13 @@ export function ParallaxInk() {
   return (
     <div className="rl-parallax" aria-hidden="true">
       {PIECES.map((p, i) => (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <div
           key={p.name}
           ref={(el) => {
             refs.current[i] = el;
           }}
-          src={`/brand/ink/${p.name}-paper.svg`}
-          alt=""
-          draggable={false}
-          style={{ left: p.x, width: p.w }}
+          className={p.blue ? "rl-parallax-blue" : undefined}
+          style={{ left: p.x, width: p.w, height: p.w * 0.6, ["--mask" as string]: `url(/brand/ink/${p.name}-ink.svg)` }}
         />
       ))}
     </div>

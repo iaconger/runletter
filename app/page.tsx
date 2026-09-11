@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import { Lockup } from "@/components/ui/Logo";
+import { HeaderTone } from "@/components/ui/HeaderTone";
 import { EXAMPLE_CREATORS, Ink, Portrait } from "@/components/ui/Ink";
 import { CreatorRow } from "@/components/ui/CreatorRow";
 import { Flipbook } from "@/components/ui/Flipbook";
@@ -50,9 +51,10 @@ export default function Landing() {
         <span>First creator cohort now open. Keep 100 percent for 90 days.</span>
         <span className="arrow" aria-hidden="true">→</span>
       </Link>
+      <HeaderTone />
       <header className="rl-header">
         <div className="rl-page rl-wide rl-between" style={{ paddingBlock: "var(--rl-space-3)", alignItems: "center" }}>
-          <Link href="/" className="rl-logo" style={{ color: "var(--rl-text)" }} aria-label="RunLetter home">
+          <Link href="/" className="rl-logo" aria-label="RunLetter home">
             <Lockup height={26} />
           </Link>
           <nav className="rl-row">
