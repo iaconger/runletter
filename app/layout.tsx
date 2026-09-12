@@ -26,7 +26,12 @@ const sans = localFont({
 export const metadata: Metadata = {
   title: { default: "RunLetter", template: "%s · RunLetter" },
   description: "Training plans from the runners you already follow.",
-  icons: { icon: "/brand/runletter-app-icon.svg" },
+  icons: {
+    icon: [{ url: "/brand/runletter-app-icon.svg", type: "image/svg+xml" }, { url: "/brand/icons/runletter-icon-192.png", sizes: "192x192", type: "image/png" }],
+    apple: "/brand/icons/runletter-icon-180.png",
+  },
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "RunLetter", statusBarStyle: "black-translucent" },
 };
 
 export const viewport: Viewport = {
