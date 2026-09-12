@@ -1,7 +1,7 @@
 // Small presentational pieces shared by Today, the program editor and the creator page.
 
 import type { ReactNode } from "react";
-import { DAY_NAMES, dayDurationS, fmtMinutes, fmtPace, type Block, type ProgramDay } from "@/lib/types";
+import { DAY_NAMES, addDays, dayDurationS, fmtMinutes, fmtPace, toISODate, type Block, type ProgramDay } from "@/lib/types";
 
 export function CreatorNote({ note, by }: { note: string; by: string }) {
   if (!note) return null;
@@ -86,6 +86,14 @@ export function dayShort(day: ProgramDay): string {
   return `${t.charAt(0).toUpperCase() + t.slice(1)} ${Math.round(dayDurationS(day) / 60)}`;
 }
 
+/** The run-type key used for colour: the run type for runs, "cross" for cross training, nothing for rest/empty. */
+export function runKey(d: ProgramDay | undefined): string | undefined {
+  if (!d) return undefined;
+  if (d.kind === "cross") return "cross";
+  if (d.kind === "run") return d.runType ?? "easy";
+  return undefined;
+}
+
 /** Seven day cells for one week. */
 export function WeekStrip({
   days,
@@ -94,6 +102,8 @@ export function WeekStrip({
   selectedDay,
   hrefFor,
   onPick,
+  weekStart,
+  today,
 }: {
   days: ProgramDay[];
   todayDay?: number;
@@ -102,27 +112,42 @@ export function WeekStrip({
   hrefFor?: (day: ProgramDay) => string;
   /** Editor mode: every cell is clickable, including empty ones. */
   onPick?: (day: number) => void;
+  /** Dated calendar: Monday of this week (YYYY-MM-DD). Cells show the date and today is marked. */
+  weekStart?: string | null;
+  today?: string;
 }) {
+  const dateOf = (idx: number) => (weekStart ? addDays(weekStart, idx) : null);
   return (
     <div className="rl-week" role="list">
       {DAY_NAMES.map((name, idx) => {
         const d = days.find((x) => x.day === idx + 1);
+        const date = dateOf(idx);
+        const iso = date ? toISODate(date) : null;
+        const isToday = todayDay === idx + 1 || (!!iso && iso === today);
         const attrs = {
           "data-kind": d?.kind ?? "rest",
-          "data-today": todayDay === idx + 1 ? "true" : undefined,
+          "data-run": runKey(d),
+          "data-today": isToday ? "true" : undefined,
+          "data-past": iso && today && iso < today ? "true" : undefined,
           "data-done": done?.has(idx + 1) ? "true" : undefined,
           "data-selected": selectedDay === idx + 1 ? "true" : undefined,
         };
+        const head = (
+          <span className="d">
+            {name}
+            {date && <span className="n"> {date.getDate()}</span>}
+          </span>
+        );
         const inner = (
           <>
-            <span className="d">{name}</span>
+            {head}
             <span className="k">{d ? dayShort(d) : "Rest"}</span>
           </>
         );
         if (onPick) {
           return (
             <button key={name} type="button" role="listitem" className="rl-day" {...attrs} data-kind={d?.kind ?? "empty"} onClick={() => onPick(idx + 1)} style={{ font: "inherit" }}>
-              <span className="d">{name}</span>
+              {head}
               <span className="k" style={!d ? { color: "var(--rl-text-disabled)" } : undefined}>{d ? dayShort(d) : "+"}</span>
             </button>
           );

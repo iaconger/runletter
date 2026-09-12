@@ -69,6 +69,7 @@ export const sampleProgram: Program = {
   access: "creator_sub",
   priceCents: null,
   status: "published",
+  isLetter: false,
   days: [
     run(3, 1, "easy", "Shake out the weekend. Conversational the whole way.", easy(40)),
     run(3, 2, "intervals", "Six by three. The last two should feel like the first two, that's the whole point.", intervals),

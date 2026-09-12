@@ -95,11 +95,13 @@ export type Database = {
         ];
       };
       creator_posts: {
-        Row: { body: string; created_at: string; creator_id: string; id: string };
-        Insert: { body: string; created_at?: string; creator_id: string; id?: string };
-        Update: { body?: string; created_at?: string; creator_id?: string; id?: string };
+        Row: { body: string; created_at: string; creator_id: string; id: string; program_day_id: string | null; program_id: string | null };
+        Insert: { body: string; created_at?: string; creator_id: string; id?: string; program_day_id?: string | null; program_id?: string | null };
+        Update: { body?: string; created_at?: string; creator_id?: string; id?: string; program_day_id?: string | null; program_id?: string | null };
         Relationships: [
           { foreignKeyName: "creator_posts_creator_id_fkey"; columns: ["creator_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+          { foreignKeyName: "creator_posts_program_id_fkey"; columns: ["program_id"]; isOneToOne: false; referencedRelation: "programs"; referencedColumns: ["id"] },
+          { foreignKeyName: "creator_posts_program_day_id_fkey"; columns: ["program_day_id"]; isOneToOne: false; referencedRelation: "program_days"; referencedColumns: ["id"] },
         ];
       };
       enrollments: {
@@ -130,6 +132,14 @@ export type Database = {
         Relationships: [
           { foreignKeyName: "enrollments_follower_id_fkey"; columns: ["follower_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
           { foreignKeyName: "enrollments_program_id_fkey"; columns: ["program_id"]; isOneToOne: false; referencedRelation: "programs"; referencedColumns: ["id"] },
+        ];
+      };
+      letter_issues: {
+        Row: { created_at: string; id: string; intro: string; program_id: string; scheduled_for: string | null; sent_at: string | null; updated_at: string; week: number };
+        Insert: { created_at?: string; id?: string; intro?: string; program_id: string; scheduled_for?: string | null; sent_at?: string | null; updated_at?: string; week: number };
+        Update: { created_at?: string; id?: string; intro?: string; program_id?: string; scheduled_for?: string | null; sent_at?: string | null; updated_at?: string; week?: number };
+        Relationships: [
+          { foreignKeyName: "letter_issues_program_id_fkey"; columns: ["program_id"]; isOneToOne: false; referencedRelation: "programs"; referencedColumns: ["id"] },
         ];
       };
       profiles: {
@@ -222,6 +232,7 @@ export type Database = {
           fixed_start_date: string | null;
           goal: Database["public"]["Enums"]["program_goal"];
           id: string;
+          is_letter: boolean;
           level: Database["public"]["Enums"]["program_level"];
           price_cents: number | null;
           published_at: string | null;
@@ -240,6 +251,7 @@ export type Database = {
           fixed_start_date?: string | null;
           goal?: Database["public"]["Enums"]["program_goal"];
           id?: string;
+          is_letter?: boolean;
           level?: Database["public"]["Enums"]["program_level"];
           price_cents?: number | null;
           published_at?: string | null;
@@ -258,6 +270,7 @@ export type Database = {
           fixed_start_date?: string | null;
           goal?: Database["public"]["Enums"]["program_goal"];
           id?: string;
+          is_letter?: boolean;
           level?: Database["public"]["Enums"]["program_level"];
           price_cents?: number | null;
           published_at?: string | null;

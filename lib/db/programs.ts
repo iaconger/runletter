@@ -4,7 +4,7 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables, TablesInsert } from "@/lib/database.types";
-import type { Block, Program, ProgramDay, Profile } from "@/lib/types";
+import type { Block, Program, ProgramDay, Profile, LetterIssue } from "@/lib/types";
 
 type ProgramRow = Tables<"programs">;
 type DayRow = Tables<"program_days">;
@@ -54,6 +54,7 @@ export function mapProgram(r: ProgramRow, days: DayRow[] = [], blocks: BlockRow[
     access: r.access,
     priceCents: r.price_cents,
     status: r.status,
+    isLetter: r.is_letter,
     days: days.map((d) => mapDay(d, blocks)).sort((a, b) => a.week - b.week || a.day - b.day),
   };
 }
@@ -108,11 +109,23 @@ export async function getProgram(id: string): Promise<Program | null> {
 
 // ---------- writes ----------
 
-export async function createProgram(input: { title: string; weeks: number; goal: Program["goal"]; level: Program["level"] }): Promise<string> {
+export async function createProgram(input: { title: string; weeks: number; goal: Program["goal"]; level: Program["level"]; isLetter?: boolean; fixedStartDate?: string | null; access?: Program["access"]; priceCents?: number | null }): Promise<string> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not signed in");
-  const row: TablesInsert<"programs"> = { creator_id: user.id, title: input.title, weeks: input.weeks, goal: input.goal, level: input.level };
+  const row: TablesInsert<"programs"> = {
+    creator_id: user.id,
+    title: input.title,
+    weeks: input.weeks,
+    goal: input.goal,
+    level: input.level,
+    is_letter: input.isLetter ?? false,
+    // The Letter is dated: everyone runs the same week. Plans roll: each buyer starts when they start.
+    start_rule: input.isLetter ? "fixed" : "rolling",
+    fixed_start_date: input.isLetter ? (input.fixedStartDate ?? null) : null,
+    access: input.access ?? (input.isLetter ? "creator_sub" : "one_time"),
+    price_cents: input.isLetter ? null : (input.priceCents ?? 2900),
+  };
   const { data, error } = await supabase.from("programs").insert(row).select("id").single();
   if (error) throw error;
   // Mark the account as a creator the first time they make a program.
@@ -226,4 +239,67 @@ export async function updateMyProfile(patch: Partial<Pick<Profile, "handle" | "d
   if (patch.isCreator !== undefined) row.is_creator = patch.isCreator;
   const { error } = await supabase.from("profiles").update(row).eq("id", user.id);
   if (error) throw error;
+}
+
+// ---------- posts: updates to your runners, optionally pinned to a Letter or one workout ----------
+
+export type Post = { id: string; body: string; createdAt: string; programId: string | null; programDayId: string | null };
+
+export async function listMyPosts(programId?: string): Promise<Post[]> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  let q = supabase.from("creator_posts").select("id, body, created_at, program_id, program_day_id").eq("creator_id", user.id).order("created_at", { ascending: false }).limit(50);
+  if (programId) q = q.eq("program_id", programId);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []).map((r) => ({ id: r.id, body: r.body, createdAt: r.created_at, programId: r.program_id, programDayId: r.program_day_id }));
+}
+
+export async function createPost(input: { body: string; programId?: string | null; programDayId?: string | null }): Promise<Post> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not signed in");
+  const { data, error } = await supabase
+    .from("creator_posts")
+    .insert({ creator_id: user.id, body: input.body, program_id: input.programId ?? null, program_day_id: input.programDayId ?? null })
+    .select("id, body, created_at, program_id, program_day_id")
+    .single();
+  if (error) throw error;
+  return { id: data.id, body: data.body, createdAt: data.created_at, programId: data.program_id, programDayId: data.program_day_id };
+}
+
+export async function deletePost(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("creator_posts").delete().eq("id", id);
+  if (error) throw error;
+}
+
+/** The creator's Letter, if they have started one. */
+export async function getMyLetter(): Promise<Program | null> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data } = await supabase.from("programs").select("*").eq("creator_id", user.id).eq("is_letter", true).maybeSingle();
+  return data ? mapProgram(data) : null;
+}
+
+// ---------- letter issues: one per week, sent or scheduled by the creator ----------
+
+export async function listIssues(programId: string): Promise<LetterIssue[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("letter_issues").select("*").eq("program_id", programId).order("week");
+  if (error) throw error;
+  return (data ?? []).map((r) => ({ id: r.id, programId: r.program_id, week: r.week, intro: r.intro, scheduledFor: r.scheduled_for, sentAt: r.sent_at }));
+}
+
+export async function upsertIssue(input: { programId: string; week: number; intro?: string; scheduledFor?: string | null; sentAt?: string | null }): Promise<LetterIssue> {
+  const supabase = await createClient();
+  const row: TablesInsert<"letter_issues"> = { program_id: input.programId, week: input.week };
+  if (input.intro !== undefined) row.intro = input.intro;
+  if (input.scheduledFor !== undefined) row.scheduled_for = input.scheduledFor;
+  if (input.sentAt !== undefined) row.sent_at = input.sentAt;
+  const { data, error } = await supabase.from("letter_issues").upsert(row, { onConflict: "program_id,week" }).select("*").single();
+  if (error) throw error;
+  return { id: data.id, programId: data.program_id, week: data.week, intro: data.intro, scheduledFor: data.scheduled_for, sentAt: data.sent_at };
 }

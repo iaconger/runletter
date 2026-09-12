@@ -4,7 +4,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { Goal, Level, ProgramDay, Program, StartRule, Access } from "@/lib/types";
+import { Goal, Level, ProgramDay, Program, StartRule, Access, mondayOf } from "@/lib/types";
 import * as db from "@/lib/db/programs";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
@@ -16,12 +16,46 @@ function fail(e: unknown): ActionResult {
 
 export async function createProgramAction(formData: FormData) {
   const parsed = z
-    .object({ title: z.string().trim().min(1).max(80), weeks: z.coerce.number().int().min(1).max(52), goal: Goal, level: Level })
-    .safeParse({ title: formData.get("title"), weeks: formData.get("weeks"), goal: formData.get("goal"), level: formData.get("level") });
+    .object({ title: z.string().trim().min(1).max(80), weeks: z.coerce.number().int().min(1).max(52), goal: Goal, level: Level, priceCents: z.coerce.number().int().min(0).optional() })
+    .safeParse({ title: formData.get("title"), weeks: formData.get("weeks"), goal: formData.get("goal"), level: formData.get("level"), priceCents: formData.get("price") ? Math.round(Number(formData.get("price")) * 100) : undefined });
   if (!parsed.success) redirect("/studio/new?error=" + encodeURIComponent("Check the title, weeks, goal and level."));
-  const id = await db.createProgram(parsed.data);
+  const id = await db.createProgram({ ...parsed.data, isLetter: false });
   revalidatePath("/studio");
   redirect(`/studio/programs/${id}`);
+}
+
+/** Start the creator's Letter: dated from this week's Monday, four weeks open to begin with, grows as they write. */
+export async function startLetterAction(formData: FormData) {
+  const title = String(formData.get("title") ?? "").trim().slice(0, 80) || "My Letter";
+  const goal = Goal.safeParse(formData.get("goal"));
+  const level = Level.safeParse(formData.get("level"));
+  const existing = await db.getMyLetter();
+  if (existing) redirect(`/studio/programs/${existing.id}`);
+  const id = await db.createProgram({ title, weeks: 4, goal: goal.success ? goal.data : "base", level: level.success ? level.data : "intermediate", isLetter: true, fixedStartDate: mondayOf(new Date()) });
+  revalidatePath("/studio");
+  redirect(`/studio/programs/${id}`);
+}
+
+export async function createPostAction(input: { body: string; programId?: string | null; programDayId?: string | null }): Promise<ActionResult & { post?: db.Post }> {
+  const parsed = z.object({ body: z.string().trim().min(1, "Write something first").max(2000), programId: z.string().uuid().nullable().optional(), programDayId: z.string().uuid().nullable().optional() }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid" };
+  try {
+    const post = await db.createPost(parsed.data);
+    revalidatePath("/studio");
+    return { ok: true, post };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+export async function deletePostAction(id: string): Promise<ActionResult> {
+  try {
+    await db.deletePost(id);
+    revalidatePath("/studio");
+    return { ok: true };
+  } catch (e) {
+    return fail(e);
+  }
 }
 
 const ProgramPatch = z.object({
@@ -118,4 +152,26 @@ export async function updateProfileAction(formData: FormData) {
   revalidatePath("/studio/page");
   revalidatePath(`/c/${handle}`);
   redirect("/studio/page?saved=1");
+}
+
+/** Save the week's intro, or send / schedule the issue. Sending means runners can see the week in their app. */
+export async function saveIssueAction(input: { programId: string; week: number; intro?: string; scheduledFor?: string | null; send?: boolean; unsend?: boolean }): Promise<ActionResult & { issue?: import("@/lib/types").LetterIssue }> {
+  const parsed = z
+    .object({ programId: z.string().uuid(), week: z.number().int().min(1).max(520), intro: z.string().max(4000).optional(), scheduledFor: z.string().datetime({ offset: true }).nullable().optional(), send: z.boolean().optional(), unsend: z.boolean().optional() })
+    .safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid" };
+  const { programId, week, intro, scheduledFor, send, unsend } = parsed.data;
+  try {
+    const issue = await db.upsertIssue({
+      programId,
+      week,
+      intro,
+      scheduledFor: send ? null : scheduledFor,
+      sentAt: send ? new Date().toISOString() : unsend ? null : undefined,
+    });
+    revalidatePath(`/studio/programs/${programId}`);
+    return { ok: true, issue };
+  } catch (e) {
+    return fail(e);
+  }
 }

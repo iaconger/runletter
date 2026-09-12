@@ -42,6 +42,15 @@
   --rl-on-success-soft: var(--rl-moss-600);
   --rl-focus: var(--rl-cobalt-600);
 
+  /* run types: one hue each, a soft fill for cells and an ink for type. Used by the calendar, day panel and legend. */
+  --rl-run-easy: #256A3D;        --rl-run-easy-soft: #DDEDE2;
+  --rl-run-long: #6B3F8A;        --rl-run-long-soft: #EADFF0;
+  --rl-run-tempo: #9A5B00;       --rl-run-tempo-soft: #F7E8CC;
+  --rl-run-intervals: #1C33A6;   --rl-run-intervals-soft: #E3E8FB;
+  --rl-run-recovery: #1F6B63;    --rl-run-recovery-soft: #D9EEEB;
+  --rl-run-race: #A3352A;        --rl-run-race-soft: #F8DEDA;
+  --rl-run-cross: #4A4741;       --rl-run-cross-soft: #E9E5DC;
+
   /* type */
   /* font families are set on <html> by next/font in app/layout.tsx as --rl-font-display and --rl-font-sans */
   --rl-weight-regular: 400;
@@ -127,6 +136,13 @@
     --rl-success-soft: #1E3327;
     --rl-on-success-soft: #5FB57E;
     --rl-focus: var(--rl-cobalt-400);
+    --rl-run-easy: #7FCB98;        --rl-run-easy-soft: #1E3327;
+    --rl-run-long: #C9A6E3;        --rl-run-long-soft: #2A1F33;
+    --rl-run-tempo: #E8B45A;       --rl-run-tempo-soft: #33270F;
+    --rl-run-intervals: #9AAEFF;   --rl-run-intervals-soft: #1B2140;
+    --rl-run-recovery: #7FCFC4;    --rl-run-recovery-soft: #16302D;
+    --rl-run-race: #F09084;        --rl-run-race-soft: #3A1C19;
+    --rl-run-cross: #C9C3B8;       --rl-run-cross-soft: #2E2B27;
     color-scheme: dark;
   }
 }
@@ -151,6 +167,13 @@
   --rl-success-soft: #1E3327;
   --rl-on-success-soft: #5FB57E;
   --rl-focus: var(--rl-cobalt-400);
+  --rl-run-easy: #7FCB98;        --rl-run-easy-soft: #1E3327;
+  --rl-run-long: #C9A6E3;        --rl-run-long-soft: #2A1F33;
+  --rl-run-tempo: #E8B45A;       --rl-run-tempo-soft: #33270F;
+  --rl-run-intervals: #9AAEFF;   --rl-run-intervals-soft: #1B2140;
+  --rl-run-recovery: #7FCFC4;    --rl-run-recovery-soft: #16302D;
+  --rl-run-race: #F09084;        --rl-run-race-soft: #3A1C19;
+  --rl-run-cross: #C9C3B8;       --rl-run-cross-soft: #2E2B27;
   color-scheme: dark;
 }
 
@@ -283,6 +306,76 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 .rl-day[data-today="true"] { border-color: var(--rl-text); border-width: 2px; }
 .rl-day[data-done="true"] > .k::after { content: " \2713"; color: var(--rl-success); }
 .rl-day[data-selected="true"] { outline: 2px solid var(--rl-accent); outline-offset: 2px; }
+/* colour by run type: soft fill, a 3px ink bar on the left, ink-coloured title */
+.rl-day[data-run] { border-color: transparent; box-shadow: inset 3px 0 0 var(--run-ink); background: var(--run-soft); }
+.rl-day[data-run] > .k { color: var(--run-ink); }
+.rl-day[data-run="easy"] { --run-ink: var(--rl-run-easy); --run-soft: var(--rl-run-easy-soft); }
+.rl-day[data-run="long"] { --run-ink: var(--rl-run-long); --run-soft: var(--rl-run-long-soft); }
+.rl-day[data-run="tempo"] { --run-ink: var(--rl-run-tempo); --run-soft: var(--rl-run-tempo-soft); }
+.rl-day[data-run="intervals"] { --run-ink: var(--rl-run-intervals); --run-soft: var(--rl-run-intervals-soft); }
+.rl-day[data-run="recovery"] { --run-ink: var(--rl-run-recovery); --run-soft: var(--rl-run-recovery-soft); }
+.rl-day[data-run="race"] { --run-ink: var(--rl-run-race); --run-soft: var(--rl-run-race-soft); }
+.rl-day[data-run="cross"] { --run-ink: var(--rl-run-cross); --run-soft: var(--rl-run-cross-soft); }
+.rl-day > .n { font: var(--rl-text-label); color: var(--rl-text-muted); letter-spacing: 0; text-transform: none; }
+.rl-day[data-today="true"] > .d::after { content: " · today"; color: var(--rl-accent); text-transform: none; letter-spacing: 0; }
+.rl-day[data-past="true"] { opacity: .72; }
+
+/* run type chips and the day panel tint */
+.rl-run-chip { --run-ink: var(--rl-text); --run-soft: var(--rl-surface-sunken); background: var(--run-soft); color: var(--run-ink); border: 1px solid transparent; }
+.rl-run-chip[data-run="easy"] { --run-ink: var(--rl-run-easy); --run-soft: var(--rl-run-easy-soft); }
+.rl-run-chip[data-run="long"] { --run-ink: var(--rl-run-long); --run-soft: var(--rl-run-long-soft); }
+.rl-run-chip[data-run="tempo"] { --run-ink: var(--rl-run-tempo); --run-soft: var(--rl-run-tempo-soft); }
+.rl-run-chip[data-run="intervals"] { --run-ink: var(--rl-run-intervals); --run-soft: var(--rl-run-intervals-soft); }
+.rl-run-chip[data-run="recovery"] { --run-ink: var(--rl-run-recovery); --run-soft: var(--rl-run-recovery-soft); }
+.rl-run-chip[data-run="race"] { --run-ink: var(--rl-run-race); --run-soft: var(--rl-run-race-soft); }
+.rl-run-chip[data-run="cross"] { --run-ink: var(--rl-run-cross); --run-soft: var(--rl-run-cross-soft); }
+.rl-run-chip[aria-pressed="true"], .rl-run-chip:hover { border-color: var(--run-ink); }
+.rl-daypanel-head { border-radius: var(--rl-radius-md); padding: var(--rl-space-3) var(--rl-space-4); background: var(--run-soft, var(--rl-surface-sunken)); color: var(--run-ink, var(--rl-text)); display: flex; justify-content: space-between; align-items: baseline; gap: var(--rl-space-3); }
+.rl-daypanel-head[data-run="easy"] { --run-ink: var(--rl-run-easy); --run-soft: var(--rl-run-easy-soft); }
+.rl-daypanel-head[data-run="long"] { --run-ink: var(--rl-run-long); --run-soft: var(--rl-run-long-soft); }
+.rl-daypanel-head[data-run="tempo"] { --run-ink: var(--rl-run-tempo); --run-soft: var(--rl-run-tempo-soft); }
+.rl-daypanel-head[data-run="intervals"] { --run-ink: var(--rl-run-intervals); --run-soft: var(--rl-run-intervals-soft); }
+.rl-daypanel-head[data-run="recovery"] { --run-ink: var(--rl-run-recovery); --run-soft: var(--rl-run-recovery-soft); }
+.rl-daypanel-head[data-run="race"] { --run-ink: var(--rl-run-race); --run-soft: var(--rl-run-race-soft); }
+.rl-daypanel-head[data-run="cross"] { --run-ink: var(--rl-run-cross); --run-soft: var(--rl-run-cross-soft); }
+
+/* week row: label column carries the date range, the total, and the sent stamp */
+.rl-weekrow { grid-template-columns: 112px 1fr; }
+.rl-weekrow > .w { display: flex; flex-direction: column; gap: 2px; padding-top: 8px; }
+.rl-weekrow > .w > b { font: var(--rl-text-body-medium); color: var(--rl-text); text-transform: none; letter-spacing: 0; }
+.rl-weekrow > .w > .tot { font: var(--rl-text-body-sm); color: var(--rl-text-secondary); text-transform: none; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+.rl-weekrow[data-current="true"] > .w > b { color: var(--rl-accent); }
+.rl-stamp { display: inline-flex; align-items: center; gap: 6px; font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; padding: 3px 8px; border-radius: 999px; border: 1px solid currentColor; }
+.rl-stamp[data-state="sent"] { color: var(--rl-run-easy); background: var(--rl-run-easy-soft); border-color: transparent; }
+.rl-stamp[data-state="scheduled"] { color: var(--rl-run-tempo); background: var(--rl-run-tempo-soft); border-color: transparent; }
+.rl-stamp[data-state="draft"] { color: var(--rl-text-muted); }
+
+/* the week's Letter panel: a sheet of paper with a progress ring and the send controls */
+.rl-issue { border: var(--rl-border-hairline) solid var(--rl-hairline); border-radius: var(--rl-radius-lg, 14px); background: var(--rl-surface); padding: var(--rl-space-5); display: grid; gap: var(--rl-space-4); position: relative; overflow: hidden; }
+.rl-issue::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; background: linear-gradient(90deg, var(--rl-run-easy), var(--rl-run-intervals), var(--rl-run-long), var(--rl-run-tempo)); opacity: .9; }
+.rl-ring { --p: 0; width: 56px; height: 56px; border-radius: 50%; background: conic-gradient(var(--rl-accent) calc(var(--p) * 1%), var(--rl-surface-sunken) 0); display: grid; place-items: center; flex: none; }
+.rl-ring > span { width: 44px; height: 44px; border-radius: 50%; background: var(--rl-surface); display: grid; place-items: center; font: var(--rl-text-label); font-variant-numeric: tabular-nums; }
+.rl-streak { display: inline-flex; align-items: center; gap: 8px; font: var(--rl-text-body-sm); color: var(--rl-text-secondary); }
+.rl-streak > i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--rl-surface-sunken); }
+.rl-streak > i[data-on="true"] { background: var(--rl-run-easy); }
+.rl-shape { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 10px; border-radius: var(--rl-radius-md); border: 1px solid transparent; background: var(--run-soft, var(--rl-surface-sunken)); color: var(--run-ink, var(--rl-text)); cursor: pointer; font: inherit; text-align: left; min-width: 0; }
+.rl-shape > b { font: var(--rl-text-body-medium); }
+.rl-shape > small { font: var(--rl-text-label); color: inherit; opacity: .8; }
+.rl-shape:hover { border-color: var(--run-ink, var(--rl-text)); }
+.rl-shape[data-run="easy"] { --run-ink: var(--rl-run-easy); --run-soft: var(--rl-run-easy-soft); }
+.rl-shape[data-run="long"] { --run-ink: var(--rl-run-long); --run-soft: var(--rl-run-long-soft); }
+.rl-shape[data-run="tempo"] { --run-ink: var(--rl-run-tempo); --run-soft: var(--rl-run-tempo-soft); }
+.rl-shape[data-run="intervals"] { --run-ink: var(--rl-run-intervals); --run-soft: var(--rl-run-intervals-soft); }
+.rl-shape[data-run="recovery"] { --run-ink: var(--rl-run-recovery); --run-soft: var(--rl-run-recovery-soft); }
+.rl-shape[data-run="race"] { --run-ink: var(--rl-run-race); --run-soft: var(--rl-run-race-soft); }
+.rl-shape[data-run="cross"] { --run-ink: var(--rl-run-cross); --run-soft: var(--rl-run-cross-soft); }
+.rl-shapes { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
+.rl-avatar { border-radius: 50%; overflow: hidden; background: var(--rl-surface-sunken); border: var(--rl-border-hairline) solid var(--rl-hairline); flex: none; display: block; }
+.rl-avatar > img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rl-lettercard { border-radius: var(--rl-radius-lg, 14px); overflow: hidden; border: var(--rl-border-hairline) solid var(--rl-hairline); background: var(--rl-surface); display: grid; grid-template-columns: 200px 1fr; }
+.rl-lettercard > .img { background: var(--rl-surface-sunken); position: relative; min-height: 160px; }
+.rl-lettercard > .img > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+@media (max-width: 640px) { .rl-lettercard { grid-template-columns: 1fr; } }
 
 /* ---------- nav ---------- */
 .rl-tabbar { position: sticky; bottom: 0; display: grid; grid-template-columns: repeat(4, 1fr); background: var(--rl-surface); border-top: var(--rl-border-hairline) solid var(--rl-hairline); padding-bottom: env(safe-area-inset-bottom); }

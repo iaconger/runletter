@@ -37,15 +37,15 @@ export default function CreatorsLanding() {
           <div className="rl-stack" style={{ gap: "var(--rl-space-6)" }}>
             <p className="t-label" style={{ opacity: 0.7, margin: 0 }}>For running creators</p>
             <h1 className="t-display-xl" style={{ maxWidth: "14ch", margin: 0 }}>
-              They already run because of you. Give them the plan.
+              Turn your running programs into products.
             </h1>
             <p className="t-body" style={{ maxWidth: "46ch", opacity: 0.85, margin: 0 }}>
-              Build a training program in an afternoon. Publish it. Your followers subscribe to you, get each week before
-              it starts, and run it on their watch. You write the runs. We handle the rest.
+              Two things to sell. Your Letter: a week of running, written by you, sent to subscribers every Sunday night.
+              And plans: a twelve-week block they buy once. Either way it lands on their watch. You write the runs. We handle the rest.
             </p>
             <div className="rl-row">
               <Link href="/signup?as=creator&next=/studio" className="rl-btn rl-btn-lg rl-btn-ink">
-                Start a program
+                Start your Letter
               </Link>
               <Link href="/c/sarah" className="rl-btn rl-btn-lg rl-btn-ghost">
                 See a creator page

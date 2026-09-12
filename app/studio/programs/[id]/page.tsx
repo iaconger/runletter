@@ -1,20 +1,23 @@
-// Program editor. Loads from Supabase (or the example program), hands everything to the client editor.
+// Editor for a Letter or a Plan. Loads from Supabase (or the example), hands everything to the client editor.
 import { notFound } from "next/navigation";
-import { getProgram, getMyProfile } from "@/lib/db/programs";
+import { getProgram, getMyProfile, listIssues, listMyPosts } from "@/lib/db/programs";
 import { isConfigured } from "@/lib/supabase/server";
 import { sampleCreator, sampleProgram } from "@/lib/sample";
+import { toISODate } from "@/lib/types";
 import { Editor } from "./Editor";
 
-export const metadata = { title: "Edit program" };
+export const metadata = { title: "Editor" };
 export const dynamic = "force-dynamic";
 
 export default async function ProgramEditor({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const today = toISODate(new Date());
   if (id === sampleProgram.id) {
-    return <Editor program={sampleProgram} creatorName={sampleCreator.displayName} readOnly />;
+    return <Editor program={sampleProgram} creatorName={sampleCreator.displayName} today={today} readOnly />;
   }
   if (!isConfigured()) notFound();
   const [program, profile] = await Promise.all([getProgram(id), getMyProfile()]);
   if (!program || !profile || program.creatorId !== profile.id) notFound();
-  return <Editor program={program} creatorName={profile.displayName || `@${profile.handle}`} handle={profile.handle} />;
+  const [issues, posts] = await Promise.all([program.isLetter ? listIssues(id) : Promise.resolve([]), listMyPosts(id)]);
+  return <Editor program={program} issues={issues} posts={posts} creatorName={profile.displayName || `@${profile.handle}`} handle={profile.handle} userId={profile.id} today={today} />;
 }
