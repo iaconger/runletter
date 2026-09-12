@@ -308,7 +308,7 @@ export function Editor({
           <span className={`rl-chip ${program.status === "published" ? "rl-chip-success" : ""}`}>{program.status === "published" ? (letter ? "Open" : "Published") : program.status}</span>
           {program.status === "published" && handle && <Link href={`/c/${handle}/${program.id}`} className="rl-btn rl-btn-secondary rl-btn-sm">View public page</Link>}
           {program.status !== "published" ? (
-            <button className="rl-btn rl-btn-primary" type="button" disabled={readOnly || pending} onClick={() => { if (warnings.length && !confirm(`Publish anyway?\n\n${warnings.join("\n")}`)) return; setStatus("published"); }}>
+            <button className="rl-btn rl-btn-primary" type="button" disabled={readOnly || pending} onClick={() => setStatus("published")}>
               {letter ? "Open to subscribers" : "Publish"}
             </button>
           ) : (
@@ -319,7 +319,7 @@ export function Editor({
 
       {warnings.length > 0 && !readOnly && (
         <div className="rl-sunken" style={{ borderRadius: "var(--rl-radius-md)", padding: "var(--rl-space-3) var(--rl-space-4)", display: "flex", gap: "var(--rl-space-4)", flexWrap: "wrap" }}>
-          <span className="t-label c-muted" style={{ alignSelf: "center" }}>Before you publish</span>
+          <span className="t-label c-muted" style={{ alignSelf: "center" }}>Worth a look, not required</span>
           {warnings.map((w) => <span key={w} className="rl-chip">{w}</span>)}
         </div>
       )}
@@ -577,54 +577,74 @@ function BlocksEditor({ blocks, onChange, readOnly }: { blocks: Block[]; onChang
   }
 
   return (
-    <div className="rl-stack" style={{ gap: "var(--rl-space-2)" }}>
-      {rows.map((row) => (
-        <div key={row.group ?? row.items[0]!.id} style={row.group ? { borderLeft: "2px solid var(--rl-hairline)", paddingLeft: "var(--rl-space-3)", display: "flex", flexDirection: "column", gap: 6 } : { display: "flex", flexDirection: "column", gap: 6 }}>
-          {row.group && (
-            <div className="rl-row" style={{ gap: 6 }}>
-              <input className="rl-input" type="number" min={2} max={30} value={row.items[0]!.repeatCount ?? 2} disabled={readOnly} style={{ width: 64 }} onChange={(e) => setRepeatCount(row.group!, Number(e.target.value))} />
-              <span className="c-muted">× repeat</span>
+    <div className="rl-stack" style={{ gap: 6 }}>
+      {rows.map((row) => {
+        const items = row.items.map((b, i) => (
+          <BlockRow key={b.id} b={b} readOnly={readOnly} first={sorted[0]!.id === b.id} last={sorted[sorted.length - 1]!.id === b.id} onChange={(patch) => update(b.id, patch)} onRemove={() => remove(b.id)} onUp={() => move(b.id, -1)} onDown={() => move(b.id, 1)} hint={row.group ? (i === 0 ? "on" : "off") : undefined} />
+        ));
+        if (!row.group) return items;
+        return (
+          <div key={row.group} className="rl-repeat">
+            <div className="head">
+              <div className="rl-stepper" style={{ height: 26 }}>
+                <button type="button" aria-label="Fewer repeats" disabled={readOnly} onClick={() => setRepeatCount(row.group!, (row.items[0]!.repeatCount ?? 2) - 1)}>−</button>
+                <input type="number" min={2} max={30} value={row.items[0]!.repeatCount ?? 2} disabled={readOnly} onChange={(e) => setRepeatCount(row.group!, Number(e.target.value))} aria-label="Repeats" />
+                <button type="button" aria-label="More repeats" disabled={readOnly} onClick={() => setRepeatCount(row.group!, (row.items[0]!.repeatCount ?? 2) + 1)}>+</button>
+              </div>
+              <span><b>×</b> repeat</span>
             </div>
-          )}
-          {row.items.map((b) => (
-            <BlockRow key={b.id} b={b} readOnly={readOnly} onChange={(patch) => update(b.id, patch)} onRemove={() => remove(b.id)} onUp={() => move(b.id, -1)} onDown={() => move(b.id, 1)} />
-          ))}
-        </div>
-      ))}
+            {items}
+          </div>
+        );
+      })}
       {!readOnly && (
-        <div className="rl-row" style={{ gap: 4, paddingTop: 4 }}>
-          <button type="button" className="rl-btn rl-btn-ghost rl-btn-sm" onClick={() => add("warmup")}>+ Warm up</button>
-          <button type="button" className="rl-btn rl-btn-ghost rl-btn-sm" onClick={() => add("work")}>+ Work</button>
-          <button type="button" className="rl-btn rl-btn-ghost rl-btn-sm" onClick={addRepeat}>+ Repeat</button>
-          <button type="button" className="rl-btn rl-btn-ghost rl-btn-sm" onClick={() => add("cooldown")}>+ Cool down</button>
+        <div className="rl-addrow" style={{ paddingTop: 4 }}>
+          <button type="button" onClick={() => add("warmup")}>+ Warm up</button>
+          <button type="button" onClick={() => add("work")}>+ Work</button>
+          <button type="button" onClick={addRepeat}>+ Repeat</button>
+          <button type="button" onClick={() => add("cooldown")}>+ Cool down</button>
         </div>
       )}
     </div>
   );
 }
 
-function BlockRow({ b, onChange, onRemove, onUp, onDown, readOnly }: { b: Block; onChange: (p: Partial<Block>) => void; onRemove: () => void; onUp: () => void; onDown: () => void; readOnly: boolean }) {
-  const amount = b.measure === "time" ? Math.round((b.durationS ?? 0) / 60) : Number(((b.distanceM ?? 0) / 1000).toFixed(2));
+function BlockRow({ b, onChange, onRemove, onUp, onDown, readOnly, first, last, hint }: { b: Block; onChange: (p: Partial<Block>) => void; onRemove: () => void; onUp: () => void; onDown: () => void; readOnly: boolean; first: boolean; last: boolean; hint?: string }) {
+  const isTime = b.measure === "time";
+  const amount = isTime ? Math.round((b.durationS ?? 0) / 60) : Number(((b.distanceM ?? 0) / 1000).toFixed(1));
+  const step = isTime ? 1 : 0.5;
+  const setAmount = (v: number) => onChange(isTime ? { durationS: Math.max(60, Math.round(v * 60)) } : { distanceM: Math.max(100, Math.round(v * 1000)) });
+  const toggleUnit = () => onChange(isTime ? { measure: "distance", distanceM: b.distanceM ?? 1000, durationS: null } : { measure: "time", durationS: b.durationS ?? 600, distanceM: null });
   return (
-    <div className="rl-blockrow">
-      <select className="rl-input" value={b.kind} disabled={readOnly} onChange={(e) => onChange({ kind: e.target.value as Block["kind"] })}>
-        {(Object.keys(KIND_LABEL) as Block["kind"][]).map((k) => <option key={k} value={k}>{KIND_LABEL[k]}</option>)}
-      </select>
-      <input className="rl-input" type="number" min={0} step={b.measure === "time" ? 1 : 0.1} value={amount} disabled={readOnly} onChange={(e) => { const v = Number(e.target.value); onChange(b.measure === "time" ? { durationS: Math.max(60, Math.round(v * 60)) } : { distanceM: Math.max(100, Math.round(v * 1000)) }); }} />
-      <select className="rl-input" value={b.measure} disabled={readOnly} onChange={(e) => { const m = e.target.value as Block["measure"]; onChange(m === "time" ? { measure: m, durationS: b.durationS ?? 600, distanceM: null } : { measure: m, distanceM: b.distanceM ?? 1000, durationS: null }); }}>
-        <option value="time">min</option>
-        <option value="distance">km</option>
-      </select>
-      <select className="rl-input" value={b.targetEffort ?? "easy"} disabled={readOnly} onChange={(e) => onChange({ targetEffort: e.target.value as Block["targetEffort"] })}>
-        {EFFORTS.map((x) => <option key={x} value={x}>{x.replace("_", " ")}</option>)}
-      </select>
-      {!readOnly && (
-        <span className="rl-blockrow-tools">
-          <button type="button" className="rl-btn rl-btn-ghost rl-btn-sm" aria-label="Move up" onClick={onUp} style={{ paddingInline: 6 }}>↑</button>
-          <button type="button" className="rl-btn rl-btn-ghost rl-btn-sm" aria-label="Move down" onClick={onDown} style={{ paddingInline: 6 }}>↓</button>
-          <button type="button" className="rl-btn rl-btn-ghost rl-btn-sm" aria-label="Remove block" onClick={onRemove} style={{ paddingInline: 6 }}>×</button>
-        </span>
-      )}
+    <div className="rl-piece" data-effort={b.targetEffort ?? "easy"}>
+      <span className="bar" aria-hidden="true" />
+      <div className="body">
+        <div className="top">
+          <select className="rl-piece-kind" value={b.kind} disabled={readOnly} onChange={(e) => onChange({ kind: e.target.value as Block["kind"] })} aria-label="Kind">
+            {(Object.keys(KIND_LABEL) as Block["kind"][]).map((k) => <option key={k} value={k}>{KIND_LABEL[k]}{hint && k === b.kind ? "" : ""}</option>)}
+          </select>
+          <div className="rl-stepper">
+            <button type="button" aria-label="Less" disabled={readOnly} onClick={() => setAmount(amount - (isTime ? 1 : step))}>−</button>
+            <input type="number" min={0} step={step} value={amount} disabled={readOnly} onChange={(e) => setAmount(Number(e.target.value))} aria-label="Amount" />
+            <button type="button" aria-label="More" disabled={readOnly} onClick={() => setAmount(amount + (isTime ? 1 : step))}>+</button>
+            <button type="button" className="unit" disabled={readOnly} onClick={toggleUnit} title="Switch between minutes and kilometres">{isTime ? "min" : "km"}</button>
+          </div>
+        </div>
+        <div className="bottom">
+          <div className="rl-seg" role="radiogroup" aria-label="Effort">
+            {EFFORTS.map((x) => (
+              <button key={x} type="button" role="radio" aria-checked={(b.targetEffort ?? "easy") === x} aria-pressed={(b.targetEffort ?? "easy") === x} disabled={readOnly} onClick={() => onChange({ targetEffort: x })}>{x === "all_out" ? "All out" : x[0]!.toUpperCase() + x.slice(1)}</button>
+            ))}
+          </div>
+          {!readOnly && (
+            <span className="rl-piece-tools">
+              <button type="button" aria-label="Move up" onClick={onUp} disabled={first}>↑</button>
+              <button type="button" aria-label="Move down" onClick={onDown} disabled={last}>↓</button>
+              <button type="button" aria-label="Remove" onClick={onRemove}>×</button>
+            </span>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

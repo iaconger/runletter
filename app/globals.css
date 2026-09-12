@@ -558,12 +558,42 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 .rl-works .wm em { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; font-style: normal; border: 1px solid currentColor; border-radius: var(--rl-radius-pill); padding: 2px 6px; opacity: .8; }
 
 /* ---------- editor block rows ---------- */
-.rl-blockrow { display: grid; grid-template-columns: minmax(0, 1fr) 58px 64px; gap: 6px; align-items: center; padding: 6px 0; border-bottom: var(--rl-border-hairline) solid var(--rl-hairline); }
-.rl-blockrow > :nth-child(4) { grid-column: 1 / span 2; }
-.rl-blockrow-tools { grid-column: 3; justify-self: end; }
-.rl-blockrow > .rl-input { min-width: 0; padding-inline: 8px; height: var(--rl-control-sm); font-size: 14px; }
-.rl-blockrow-tools { display: inline-flex; gap: 0; }
-.rl-blockrow-tools .rl-btn { min-width: 26px; }
+/* pieces of a run (fine tune): one card per piece, an effort-coloured bar, kind as a quiet select,
+   a stepper for the amount, effort as a segmented control, tools that show on hover */
+.rl-piece { display: grid; grid-template-columns: 4px 1fr; gap: 0 10px; border-radius: var(--rl-radius-md); background: var(--rl-surface-sunken); padding: 8px 10px 8px 0; overflow: hidden; }
+.rl-piece > .bar { border-radius: 2px; background: var(--rl-run-easy); margin-left: 0; }
+.rl-piece[data-effort="moderate"] > .bar { background: var(--rl-run-tempo); }
+.rl-piece[data-effort="hard"] > .bar { background: var(--rl-run-race); }
+.rl-piece[data-effort="all_out"] > .bar { background: var(--rl-text); }
+.rl-piece > .body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.rl-piece .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.rl-piece-kind { appearance: none; -webkit-appearance: none; background: transparent; border: 0; padding: 2px 18px 2px 0; font: var(--rl-text-body-medium); color: var(--rl-text); cursor: pointer;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%236F6A62' stroke-width='1.5'/></svg>"); background-repeat: no-repeat; background-position: right 4px center; }
+.rl-piece-kind:disabled { cursor: default; background-image: none; }
+.rl-stepper { display: inline-flex; align-items: center; border: var(--rl-border-hairline) solid var(--rl-hairline); border-radius: 999px; background: var(--rl-surface); height: 30px; overflow: hidden; }
+.rl-stepper > button { width: 28px; height: 100%; border: 0; background: transparent; color: var(--rl-text-secondary); font: 500 16px/1 var(--rl-font-sans); cursor: pointer; }
+.rl-stepper > button:hover { background: var(--rl-surface-sunken); color: var(--rl-text); }
+.rl-stepper > input { width: 40px; height: 100%; border: 0; background: transparent; text-align: center; font: var(--rl-text-body-medium); font-variant-numeric: tabular-nums; color: var(--rl-text); -moz-appearance: textfield; padding: 0; }
+.rl-stepper > input::-webkit-outer-spin-button, .rl-stepper > input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.rl-stepper > .unit { border: 0; background: transparent; padding: 0 10px 0 2px; font: var(--rl-text-body-sm); color: var(--rl-text-muted); cursor: pointer; height: 100%; }
+.rl-stepper > .unit:hover { color: var(--rl-text); text-decoration: underline; text-underline-offset: 2px; }
+.rl-seg { display: inline-flex; border: var(--rl-border-hairline) solid var(--rl-hairline); border-radius: 999px; background: var(--rl-surface); padding: 2px; gap: 2px; }
+.rl-seg > button { border: 0; background: transparent; border-radius: 999px; padding: 3px 9px; font: var(--rl-text-label); letter-spacing: 0; text-transform: none; color: var(--rl-text-secondary); cursor: pointer; }
+.rl-seg > button[aria-pressed="true"] { background: var(--rl-text); color: var(--rl-bg); }
+.rl-seg > button:disabled { cursor: default; }
+.rl-piece .bottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.rl-piece-tools { display: inline-flex; gap: 0; opacity: 0; transition: opacity var(--rl-duration-fast) var(--rl-ease); }
+.rl-piece:hover .rl-piece-tools, .rl-piece:focus-within .rl-piece-tools { opacity: 1; }
+@media (hover: none) { .rl-piece-tools { opacity: 1; } }
+.rl-piece-tools > button { width: 26px; height: 26px; border: 0; border-radius: 999px; background: transparent; color: var(--rl-text-muted); cursor: pointer; font: 500 14px/1 var(--rl-font-sans); }
+.rl-piece-tools > button:hover { background: var(--rl-surface); color: var(--rl-text); }
+.rl-piece-tools > button:disabled { opacity: .3; cursor: default; }
+.rl-repeat { border-left: 2px solid var(--rl-accent); padding-left: 10px; display: flex; flex-direction: column; gap: 6px; }
+.rl-repeat > .head { display: flex; align-items: center; gap: 8px; font: var(--rl-text-body-sm); color: var(--rl-text-secondary); }
+.rl-repeat > .head > b { color: var(--rl-accent); font-weight: 600; }
+.rl-addrow { display: flex; flex-wrap: wrap; gap: 6px; }
+.rl-addrow > button { border: 1px dashed var(--rl-hairline); background: transparent; border-radius: 999px; padding: 5px 11px; font: var(--rl-text-label); letter-spacing: 0; text-transform: none; color: var(--rl-text-secondary); cursor: pointer; }
+.rl-addrow > button:hover { border-color: var(--rl-text); color: var(--rl-text); border-style: solid; }
 
 
 /* Parallax ink: faint sketches in the side margins, drifting at their own rates with scroll. The sketch is a mask
