@@ -607,3 +607,13 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 
 /* Inline text button, for "email me a link" style toggles inside help copy. */
 .rl-linkbtn { background: none; border: 0; padding: 0; font: inherit; color: var(--rl-accent, var(--rl-cobalt-600)); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+
+/* the watch view: a small dark screen listing the steps as the watch names them */
+.rl-watch { display: flex; flex-direction: column; gap: 8px; }
+.rl-watch > ol { list-style: none; margin: 0; padding: 10px 12px; border-radius: 14px; background: var(--rl-ink-900); color: var(--rl-paper-100); display: flex; flex-direction: column; gap: 2px; font: var(--rl-text-body-sm); font-variant-numeric: tabular-nums; }
+.rl-watch > ol > li { display: grid; grid-template-columns: 1fr auto; gap: 0 10px; padding: 5px 0; border-bottom: 1px solid rgba(247,244,238,.1); }
+.rl-watch > ol > li:last-child { border-bottom: 0; }
+.rl-watch .nm { font-weight: 500; }
+.rl-watch .am { text-align: right; }
+.rl-watch .tg { grid-column: 1 / span 2; color: rgba(247,244,238,.6); font: var(--rl-text-label); letter-spacing: 0; text-transform: none; }
+.rl-watch > ol > li[data-kind="work"] .nm { color: var(--rl-run-tempo, #E8B45A); }

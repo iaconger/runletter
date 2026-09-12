@@ -1,11 +1,19 @@
 // Encode a program day as a Garmin FIT structured workout file.
 // Imports into Garmin Connect and the Coros app. Uses the official Garmin FIT SDK encoder.
 // Docs: https://developer.garmin.com/fit/file-types/workout/
+//
+// What the watch gets, per step: a name (16 chars), a duration (time or distance), a target and an intensity.
+// Targets: if the creator wrote a pace range, that becomes a speed target. Otherwise the effort becomes a
+// heart-rate zone (easy Z2, moderate Z3, hard Z4, all out Z5), which every runner's watch already personalises,
+// so the creator writes effort once and each runner gets their own numbers.
 
 import { Encoder, Profile, type Encodable, type FileIdMesg, type WorkoutMesg, type WorkoutStepMesg } from "@garmin/fitsdk";
 import type { Block, ProgramDay } from "@/lib/types";
 
 type Intensity = "warmup" | "active" | "rest" | "cooldown";
+
+const HR_ZONE: Record<NonNullable<Block["targetEffort"]>, number> = { easy: 2, moderate: 3, hard: 4, all_out: 5 };
+export const EFFORT_ZONE_LABEL: Record<NonNullable<Block["targetEffort"]>, string> = { easy: "HR zone 2", moderate: "HR zone 3", hard: "HR zone 4", all_out: "HR zone 5" };
 
 const INTENSITY: Record<Block["kind"], Intensity> = {
   warmup: "warmup",
@@ -77,10 +85,12 @@ export function encodeWorkout(day: ProgramDay, opts: { name: string; createdAt?:
     if (b.kind === "work") workIndex += 1;
     const isTime = b.measure === "time";
     const durationValue = isTime ? (b.durationS ?? 0) * 1000 : (b.distanceM ?? 0) * 100; // ms or cm per FIT spec
-    const hasPace = b.targetPaceMin != null && b.targetPaceMax != null;
+    const hasPace = b.targetPaceMin != null && b.targetPaceMax != null && b.targetPaceMin > 0 && b.targetPaceMax > 0;
     // FIT speed target is in m/s * 1000; pace min (faster) maps to the high speed bound.
-    const speedHigh = hasPace ? Math.round((1000 / b.targetPaceMin!) * 1000) : undefined;
-    const speedLow = hasPace ? Math.round((1000 / b.targetPaceMax!) * 1000) : undefined;
+    const speedHigh = hasPace ? Math.round((1000 / Math.min(b.targetPaceMin!, b.targetPaceMax!)) * 1000) : undefined;
+    const speedLow = hasPace ? Math.round((1000 / Math.max(b.targetPaceMin!, b.targetPaceMax!)) * 1000) : undefined;
+    // Warm up and cool down stay open: nobody wants a zone alarm while jogging to the start.
+    const zone = b.kind === "work" || b.kind === "recovery" ? HR_ZONE[b.targetEffort ?? "easy"] : null;
 
     const step: Encodable<WorkoutStepMesg> = {
       mesgNum: Profile.MesgNum.WORKOUT_STEP,
@@ -88,9 +98,12 @@ export function encodeWorkout(day: ProgramDay, opts: { name: string; createdAt?:
       wktStepName: stepName(b, workIndex, steps.filter((s) => s.kind === "work").length).slice(0, 16),
       durationType: isTime ? "time" : "distance",
       durationValue,
-      targetType: hasPace ? "speed" : "open",
-      ...(hasPace ? { customTargetValueLow: speedLow, customTargetValueHigh: speedHigh } : {}),
       intensity: INTENSITY[b.kind],
+      ...(hasPace
+        ? { targetType: "speed", targetValue: 0, customTargetValueLow: speedLow, customTargetValueHigh: speedHigh }
+        : zone
+          ? { targetType: "heartRate", targetValue: zone }
+          : { targetType: "open" }),
     };
     encoder.writeMesg(step);
   });
@@ -105,4 +118,23 @@ export function fitFilename(programTitle: string, day: ProgramDay): string {
     .replace(/(^-|-$)/g, "")
     .slice(0, 40);
   return `${slug}-w${day.week}d${day.day}.fit`;
+}
+
+/** Human preview of what the watch will show, one line per step. */
+export function watchPreview(day: ProgramDay): { name: string; amount: string; target: string; kind: Block["kind"] }[] {
+  const steps = expandBlocks(day.blocks);
+  const total = steps.filter((s) => s.kind === "work").length;
+  let workIndex = 0;
+  return steps.map((b) => {
+    if (b.kind === "work") workIndex += 1;
+    const amount = b.measure === "time" ? `${Math.round((b.durationS ?? 0) / 60)} min` : `${((b.distanceM ?? 0) / 1000).toFixed(1)} km`;
+    const hasPace = b.targetPaceMin != null && b.targetPaceMax != null && b.targetPaceMin > 0 && b.targetPaceMax > 0;
+    const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+    const target = hasPace
+      ? `${fmt(Math.min(b.targetPaceMin!, b.targetPaceMax!))} to ${fmt(Math.max(b.targetPaceMin!, b.targetPaceMax!))} /km`
+      : b.kind === "work" || b.kind === "recovery"
+        ? EFFORT_ZONE_LABEL[b.targetEffort ?? "easy"]
+        : "no target";
+    return { name: stepName(b, workIndex, total).slice(0, 16), amount, target, kind: b.kind };
+  });
 }

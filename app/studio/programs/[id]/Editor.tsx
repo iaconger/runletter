@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { BlockBar } from "@/components/run/BlockBar";
+import { watchPreview } from "@/lib/fit/encode";
 import { CreatorNote, WeekStrip, dayTitle, runKey } from "@/components/run/RunPieces";
 import { createClient } from "@/lib/supabase/client";
 import { clearDayAction, createPostAction, duplicateWeekAction, saveDayAction, saveIssueAction, setStatusAction, updateProgramAction } from "@/app/studio/actions";
@@ -510,6 +511,7 @@ export function Editor({
                     )}
                     <button type="button" className="rl-btn rl-btn-ghost rl-btn-sm" style={{ alignSelf: "flex-start" }} onClick={() => setFineTune((v) => !v)} aria-expanded={fineTune}>{fineTune ? "Hide the pieces" : "Fine tune the pieces"}</button>
                     {fineTune && <BlocksEditor blocks={draft.blocks} readOnly={readOnly} onChange={(blocks) => edit({ ...draft, blocks })} />}
+                    <WatchPreview day={draft} programId={program.id} />
                   </>
                 )}
 
@@ -644,7 +646,75 @@ function BlockRow({ b, onChange, onRemove, onUp, onDown, readOnly, first, last, 
             </span>
           )}
         </div>
+        {(b.kind === "work" || b.kind === "recovery") && (
+          <PaceRow b={b} readOnly={readOnly} onChange={onChange} />
+        )}
       </div>
+    </div>
+  );
+}
+
+/** Optional pace range. Left blank, the watch uses the effort as a heart-rate zone, which is personal to each runner. */
+function PaceRow({ b, onChange, readOnly }: { b: Block; onChange: (p: Partial<Block>) => void; readOnly: boolean }) {
+  const has = b.targetPaceMin != null && b.targetPaceMax != null;
+  const [open, setOpen] = useState(has);
+  const fmt = (s: number | null | undefined) => (s == null ? "" : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`);
+  const parse = (v: string): number | null => {
+    const m = v.trim().match(/^(\d{1,2})[:.](\d{1,2})$/);
+    if (!m) return null;
+    return Number(m[1]) * 60 + Number(m[2]);
+  };
+  if (!open) {
+    return readOnly ? null : (
+      <button type="button" className="rl-linkbtn" style={{ alignSelf: "flex-start", font: "var(--rl-text-label)", color: "var(--rl-text-muted)", textDecoration: "none" }} onClick={() => setOpen(true)}>
+        + pace target (optional)
+      </button>
+    );
+  }
+  return (
+    <div className="rl-row" style={{ gap: 6, alignItems: "center", flexWrap: "nowrap" }}>
+      <span className="rl-help" style={{ whiteSpace: "nowrap" }}>Pace</span>
+      <input className="rl-input" placeholder="4:30" defaultValue={fmt(b.targetPaceMin)} disabled={readOnly} style={{ width: 62, height: 30, padding: "0 8px", textAlign: "center" }} onBlur={(e) => { const v = parse(e.target.value); onChange({ targetPaceMin: v, targetPaceMax: v != null ? (b.targetPaceMax ?? v + 15) : null }); }} aria-label="Fastest pace per km" />
+      <span className="rl-help">to</span>
+      <input className="rl-input" placeholder="4:45" defaultValue={fmt(b.targetPaceMax)} disabled={readOnly} style={{ width: 62, height: 30, padding: "0 8px", textAlign: "center" }} onBlur={(e) => { const v = parse(e.target.value); onChange({ targetPaceMax: v, targetPaceMin: v != null ? (b.targetPaceMin ?? Math.max(60, v - 15)) : null }); }} aria-label="Slowest pace per km" />
+      <span className="rl-help" style={{ whiteSpace: "nowrap" }}>/km</span>
+      {!readOnly && <button type="button" className="rl-piece-tools" style={{ opacity: 1 }} aria-label="Remove pace target" onClick={() => { onChange({ targetPaceMin: null, targetPaceMax: null }); setOpen(false); }}><span style={{ fontSize: 14 }}>×</span></button>}
+    </div>
+  );
+}
+
+/** What the watch will show for this day, step by step, plus the .FIT the runner would get. */
+function WatchPreview({ day, programId }: { day: ProgramDay; programId: string }) {
+  const [open, setOpen] = useState(false);
+  const steps = watchPreview(day);
+  const hasZones = steps.some((s) => s.target.startsWith("HR"));
+  return (
+    <div className="rl-stack" style={{ gap: 6 }}>
+      <button type="button" className="rl-btn rl-btn-ghost rl-btn-sm" style={{ alignSelf: "flex-start" }} onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+        {open ? "Hide the watch view" : `On the watch: ${steps.length} step${steps.length === 1 ? "" : "s"}`}
+      </button>
+      {open && (
+        <div className="rl-watch">
+          <ol>
+            {steps.map((st, i) => (
+              <li key={i} data-kind={st.kind}>
+                <span className="nm">{st.name}</span>
+                <span className="am">{st.amount}</span>
+                <span className="tg">{st.target}</span>
+              </li>
+            ))}
+          </ol>
+          <span className="rl-help">
+            {hasZones ? "Effort becomes a heart-rate zone, which the runner's watch already personalises. Add a pace target on a piece if you want exact numbers." : "Targets are paces you wrote; the watch will alert when the runner drifts outside them."}
+            {" "}Same file for Garmin Connect and the COROS app.
+          </span>
+          {day.blocks.length > 0 && (
+            <a className="rl-btn rl-btn-secondary rl-btn-sm" style={{ alignSelf: "flex-start" }} href={`/api/fit?program=${programId}&week=${day.week}&day=${day.day}`} download>
+              Download the .FIT
+            </a>
+          )}
+        </div>
+      )}
     </div>
   );
 }
