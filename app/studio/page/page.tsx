@@ -1,4 +1,5 @@
 // "Your page": handle, name, bio, links. What /c/:handle shows.
+import { Connections } from "@/components/connections/Connections";
 import Link from "next/link";
 import { updateProfileAction } from "@/app/studio/actions";
 import { getMyProfile } from "@/lib/db/programs";
@@ -7,8 +8,8 @@ import { isConfigured } from "@/lib/supabase/server";
 export const metadata = { title: "Your page" };
 export const dynamic = "force-dynamic";
 
-export default async function YourPage({ searchParams }: { searchParams: Promise<{ error?: string; saved?: string }> }) {
-  const { error, saved } = await searchParams;
+export default async function YourPage({ searchParams }: { searchParams: Promise<{ error?: string; saved?: string; connected?: string }> }) {
+  const { error, saved, connected } = await searchParams;
   const profile = isConfigured() ? await getMyProfile() : null;
   const handle = profile && !profile.handle.startsWith("u_") ? profile.handle : "";
   return (
@@ -52,6 +53,7 @@ export default async function YourPage({ searchParams }: { searchParams: Promise
         <button type="submit" className="rl-btn rl-btn-primary rl-btn-lg" style={{ alignSelf: "flex-start" }}>Save page</button>
         <p className="rl-help">Photos and cover: <Link href="/welcome?role=creator&next=/studio/page">update them here</Link>. Programs you publish show on this page automatically.</p>
       </form>
+      <Connections back="/studio/page" notice={{ connected }} />
     </main>
   );
 }

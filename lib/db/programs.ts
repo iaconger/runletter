@@ -303,3 +303,12 @@ export async function upsertIssue(input: { programId: string; week: number; intr
   if (error) throw error;
   return { id: data.id, programId: data.program_id, week: data.week, intro: data.intro, scheduledFor: data.scheduled_for, sentAt: data.sent_at };
 }
+
+/** Enrol the signed-in user in a program from a given Monday. Creators use it for their own Letter. */
+export async function enrolSelf(programId: string, startDate: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not signed in");
+  const { error } = await supabase.from("enrollments").insert({ follower_id: user.id, program_id: programId, start_date: startDate });
+  if (error && !/duplicate|unique/i.test(error.message)) throw error;
+}

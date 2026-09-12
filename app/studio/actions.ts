@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { Goal, Level, ProgramDay, Program, StartRule, Access, mondayOf } from "@/lib/types";
 import * as db from "@/lib/db/programs";
+import { enqueueWeek } from "@/lib/db/sync";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -31,7 +32,10 @@ export async function startLetterAction(formData: FormData) {
   const level = Level.safeParse(formData.get("level"));
   const existing = await db.getMyLetter();
   if (existing) redirect(`/studio/programs/${existing.id}`);
-  const id = await db.createProgram({ title, weeks: 4, goal: goal.success ? goal.data : "base", level: level.success ? level.data : "intermediate", isLetter: true, fixedStartDate: mondayOf(new Date()) });
+  const start = mondayOf(new Date());
+  const id = await db.createProgram({ title, weeks: 4, goal: goal.success ? goal.data : "base", level: level.success ? level.data : "intermediate", isLetter: true, fixedStartDate: start });
+  // The creator runs their own Letter: enrol them so completions and pushes work for them too.
+  await db.enrolSelf(id, start);
   revalidatePath("/studio");
   redirect(`/studio/programs/${id}`);
 }
@@ -170,6 +174,14 @@ export async function saveIssueAction(input: { programId: string; week: number; 
       sentAt: send ? new Date().toISOString() : unsend ? null : undefined,
     });
     revalidatePath(`/studio/programs/${programId}`);
+    // Sending a week puts its runs on every connected watch, the creator's included.
+    if (send) {
+      try {
+        await enqueueWeek(programId, week);
+      } catch (e) {
+        console.error("enqueueWeek", e);
+      }
+    }
     return { ok: true, issue };
   } catch (e) {
     return fail(e);

@@ -94,6 +94,23 @@ export type Database = {
           { foreignKeyName: "completions_program_day_id_fkey"; columns: ["program_day_id"]; isOneToOne: false; referencedRelation: "program_days"; referencedColumns: ["id"] },
         ];
       };
+      connections: {
+        Row: { access_token: string | null; created_at: string; expires_at: string | null; external_id: string | null; provider: Database["public"]["Enums"]["connection_provider"]; refresh_token: string | null; scope: string | null; updated_at: string; user_id: string };
+        Insert: { access_token?: string | null; created_at?: string; expires_at?: string | null; external_id?: string | null; provider: Database["public"]["Enums"]["connection_provider"]; refresh_token?: string | null; scope?: string | null; updated_at?: string; user_id: string };
+        Update: { access_token?: string | null; created_at?: string; expires_at?: string | null; external_id?: string | null; provider?: Database["public"]["Enums"]["connection_provider"]; refresh_token?: string | null; scope?: string | null; updated_at?: string; user_id?: string };
+        Relationships: [
+          { foreignKeyName: "connections_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        ];
+      };
+      workout_pushes: {
+        Row: { created_at: string; error: string | null; external_ref: string | null; id: string; program_day_id: string; provider: Database["public"]["Enums"]["connection_provider"]; scheduled_for: string | null; sent_at: string | null; status: Database["public"]["Enums"]["push_status"]; user_id: string };
+        Insert: { created_at?: string; error?: string | null; external_ref?: string | null; id?: string; program_day_id: string; provider: Database["public"]["Enums"]["connection_provider"]; scheduled_for?: string | null; sent_at?: string | null; status?: Database["public"]["Enums"]["push_status"]; user_id: string };
+        Update: { created_at?: string; error?: string | null; external_ref?: string | null; id?: string; program_day_id?: string; provider?: Database["public"]["Enums"]["connection_provider"]; scheduled_for?: string | null; sent_at?: string | null; status?: Database["public"]["Enums"]["push_status"]; user_id?: string };
+        Relationships: [
+          { foreignKeyName: "workout_pushes_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+          { foreignKeyName: "workout_pushes_program_day_id_fkey"; columns: ["program_day_id"]; isOneToOne: false; referencedRelation: "program_days"; referencedColumns: ["id"] },
+        ];
+      };
       creator_posts: {
         Row: { body: string; created_at: string; creator_id: string; id: string; program_day_id: string | null; program_id: string | null };
         Insert: { body: string; created_at?: string; creator_id: string; id?: string; program_day_id?: string | null; program_id?: string | null };
@@ -333,6 +350,8 @@ export type Database = {
       block_kind: "warmup" | "work" | "recovery" | "cooldown";
       block_measure: "time" | "distance";
       completion_source: "manual" | "strava";
+      connection_provider: "strava" | "garmin" | "coros";
+      push_status: "queued" | "sent" | "failed" | "skipped";
       day_kind: "run" | "rest" | "cross";
       effort: "easy" | "moderate" | "hard" | "all_out";
       enrollment_status: "active" | "paused" | "completed" | "dropped";
