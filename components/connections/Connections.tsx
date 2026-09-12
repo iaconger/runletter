@@ -19,16 +19,15 @@ export async function Connections({ back, notice }: { back: string; notice?: { c
     <section className="rl-card" aria-label="Connections" style={{ gap: "var(--rl-space-4)" }}>
       <div className="rl-stack" style={{ gap: 2 }}>
         <span className="t-label c-muted">Connections</span>
-        <span className="t-heading">Your watch and your score.</span>
-        <span className="c-secondary">Connect once. Each week&rsquo;s runs go to your watch; finished runs mark themselves done.</span>
+        <span className="t-heading">Watch and Strava</span>
       </div>
       {notice?.connected && <span className="rl-chip rl-chip-success">{notice.connected[0]!.toUpperCase() + notice.connected.slice(1)} connected</span>}
       {notice?.error && <span className="rl-help" role="alert" style={{ color: "var(--rl-danger, #b3261e)" }}>{notice.error}</span>}
 
       <Row
         name="Strava"
-        role="Keeps the score"
-        detail={has("strava") ? "Connected. Runs you finish are matched to the day and marked done." : "Finished runs are matched to the day automatically. Strava cannot receive planned workouts, so this one is for completion only."}
+        role=""
+        detail={has("strava") ? "Finished runs mark the day done." : "Marks finished runs done."}
         connected={!!has("strava")}
         action={stravaEnabled() ? { href: `/api/connect/strava?back=${encodeURIComponent(back)}`, label: "Connect Strava" } : { disabled: "Needs Strava API keys on the server" }}
         back={back}
@@ -36,13 +35,13 @@ export async function Connections({ back, notice }: { back: string; notice?: { c
       />
       <Row
         name="Garmin"
-        role="Gets the workouts"
+        role=""
         detail={
           has("garmin")
-            ? `Connected. ${sent} workout${sent === 1 ? "" : "s"} on your calendar${queued ? `, ${queued} waiting` : ""}.`
+            ? `${sent} on your calendar${queued ? `, ${queued} waiting` : ""}.`
             : garminEnabled()
-              ? "Each run lands on your Garmin Connect calendar and syncs to the watch. Nothing to download."
-              : "Direct push is waiting on Garmin's developer approval. Until then, every run has a .FIT you import into Garmin Connect."
+              ? "Workouts land on your watch."
+              : "Coming. Import the .FIT for now."
         }
         connected={!!has("garmin")}
         action={garminEnabled() ? { href: `/api/connect/garmin?back=${encodeURIComponent(back)}`, label: "Connect Garmin" } : { disabled: "Coming" }}
@@ -51,8 +50,8 @@ export async function Connections({ back, notice }: { back: string; notice?: { c
       />
       <Row
         name="COROS"
-        role="Gets the workouts"
-        detail="Import each run's .FIT in the COROS app (Training → Workouts → Import). Direct push needs a COROS partnership; on the list."
+        role=""
+        detail="Import the .FIT in the COROS app."
         connected={false}
         action={{ disabled: "File import" }}
         back={back}
@@ -68,7 +67,7 @@ function Row({ name, role, detail, connected, action, back, provider }: { name: 
       <div className="rl-stack" style={{ gap: 2, minWidth: 0 }}>
         <span className="rl-row" style={{ gap: 8, alignItems: "baseline" }}>
           <span className="t-body-medium">{name}</span>
-          <span className="t-label c-muted">{role}</span>
+          {role && <span className="t-label c-muted">{role}</span>}
           {connected && <span className="rl-chip rl-chip-success" style={{ fontSize: 11 }}>Connected</span>}
         </span>
         <span className="rl-help">{detail}</span>

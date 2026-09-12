@@ -47,9 +47,7 @@ export function AuthFormClient({
           <h1 className="t-display-lg" style={{ margin: 0 }}>
             {signup ? (asCreator ? "Open your studio" : "Start running with them") : asCreator ? "Back to the studio" : "Back to your week"}
           </h1>
-          <p className="c-secondary" style={{ margin: 0 }}>
-            {viaLink ? "We email you a link, you tap it, you're in." : signup ? "Takes a minute. Your first week takes longer." : "Good to see you."}
-          </p>
+          {viaLink && <p className="c-secondary" style={{ margin: 0 }}>We email you a link.</p>}
         </div>
 
         <input type="hidden" name="mode" value={mode} />
@@ -96,7 +94,7 @@ export function AuthFormClient({
         </p>
         <p className="rl-help" style={{ margin: 0 }}>
           {signup ? <>Already have an account? <Link href={other}>Sign in</Link>.</> : <>New here? <Link href={other}>Create an account</Link>.</>}
-          {signup && <> By continuing you agree this is a beta and things will change.</>}
+
         </p>
         {!configured && <span className="rl-help">Sign-in is not configured in this environment.</span>}
       </form>

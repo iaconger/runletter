@@ -87,7 +87,7 @@ export function Onboarding({ profile, userId, next, role }: { profile: Profile; 
         <form className="rl-stack" style={{ gap: "var(--rl-space-5)" }} onSubmit={(e) => { e.preventDefault(); go(() => saveIdentityAction({ handle, displayName: name, bio, isCreator }), () => setStep(1)); }}>
           <div className="rl-stack" style={{ gap: 4 }}>
             <h1 className="t-display-lg" style={{ margin: 0 }}>{isCreator ? "Your page starts here." : "First, the basics."}</h1>
-            <p className="c-secondary" style={{ margin: 0 }}>{isCreator ? "This is what followers see when they land from your bio link." : "So your creator knows who's running with them."}</p>
+
           </div>
           <div className="rl-field">
             <label htmlFor="handle">Handle</label>
@@ -95,15 +95,15 @@ export function Onboarding({ profile, userId, next, role }: { profile: Profile; 
               <span className="c-muted" style={{ whiteSpace: "nowrap" }}>runletter.com/c/</span>
               <input id="handle" className="rl-input" value={handle} onChange={(e) => setHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 24))} placeholder="yourname" required minLength={3} autoFocus />
             </div>
-            <span className="rl-help">{isCreator ? "This goes in your bio, so pick it once." : "Lowercase, no spaces."}</span>
+
           </div>
           <div className="rl-field">
             <label htmlFor="name">Name</label>
             <input id="name" className="rl-input" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} required placeholder={isCreator ? "What your followers call you" : "Your name"} />
           </div>
           <div className="rl-field">
-            <label htmlFor="bio">{isCreator ? "One line about you" : "Anything you want your creator to know (optional)"}</label>
-            <textarea id="bio" className="rl-input" value={bio} onChange={(e) => setBio(e.target.value)} maxLength={500} placeholder={isCreator ? "Marathoner, coach, and the person who will make you do your long run. Chicago." : "Coming back from a knee thing, aiming for a spring half."} />
+            <label htmlFor="bio">Bio</label>
+            <textarea id="bio" className="rl-input" value={bio} onChange={(e) => setBio(e.target.value)} maxLength={500} placeholder="Optional" />
           </div>
           {error && <span className="rl-help" role="alert" style={{ color: "var(--rl-danger, #b3261e)" }}>{error}</span>}
           <button type="submit" className="rl-btn rl-btn-primary rl-btn-lg" disabled={pending} style={{ alignSelf: "flex-start" }}>{pending ? "Saving…" : "Continue"}</button>
@@ -114,7 +114,7 @@ export function Onboarding({ profile, userId, next, role }: { profile: Profile; 
         <form className="rl-stack" style={{ gap: "var(--rl-space-5)" }} onSubmit={(e) => { e.preventDefault(); go(() => saveSocialsAction(socials), () => setStep(2)); }}>
           <div className="rl-stack" style={{ gap: 4 }}>
             <h1 className="t-display-lg" style={{ margin: 0 }}>Where do people find you?</h1>
-            <p className="c-secondary" style={{ margin: 0 }}>Usernames only. We build the links. Skip any you don&rsquo;t use.</p>
+            <p className="c-secondary" style={{ margin: 0 }}>Usernames only.</p>
           </div>
           {SOCIALS.map((s) => (
             <div key={s.key} className="rl-field">
@@ -137,7 +137,7 @@ export function Onboarding({ profile, userId, next, role }: { profile: Profile; 
         <div className="rl-stack" style={{ gap: "var(--rl-space-5)" }}>
           <div className="rl-stack" style={{ gap: 4 }}>
             <h1 className="t-display-lg" style={{ margin: 0 }}>{isCreator ? "Put a face on it." : "Add a photo."}</h1>
-            <p className="c-secondary" style={{ margin: 0 }}>{isCreator ? "A photo of you and a wide shot for the top of your page. Phone photos are fine; running photos are better." : "So your creator sees a person, not a handle."}</p>
+
           </div>
 
           <div className="rl-row" style={{ alignItems: "center", gap: "var(--rl-space-4)" }}>
@@ -161,7 +161,7 @@ export function Onboarding({ profile, userId, next, role }: { profile: Profile; 
               </div>
               <input ref={coverInput} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => e.target.files?.[0] && upload("cover", e.target.files[0])} />
               <button type="button" className="rl-btn rl-btn-secondary rl-btn-sm" onClick={() => coverInput.current?.click()} disabled={uploading !== null} style={{ alignSelf: "flex-start" }}>{uploading === "cover" ? "Uploading…" : coverUrl ? "Replace" : "Choose cover"}</button>
-              <span className="rl-help">Wide, landscape. Up to 5 MB. If you skip it, your page gets an ink sketch instead, which is not a bad look.</span>
+              <span className="rl-help">Wide. Optional.</span>
             </div>
           )}
 

@@ -12,13 +12,13 @@ export default async function NewProgram({ searchParams }: { searchParams: Promi
       <div className="rl-stack" style={{ gap: 2 }}>
         <span className="t-label c-muted">New plan</span>
         <h1 className="t-display-lg" style={{ margin: 0 }}>What are they training for?</h1>
-        <p className="c-secondary" style={{ margin: 0 }}>A plan is a product: fixed length, bought once, starts the Monday after they buy. Four choices to start; everything is editable after.</p>
+
       </div>
       <form action={createProgramAction} className="rl-stack" style={{ gap: "var(--rl-space-5)" }}>
         <div className="rl-field">
           <label htmlFor="title">Title</label>
           <input id="title" name="title" className="rl-input" placeholder="Base building for busy people" maxLength={80} required autoFocus />
-          <span className="rl-help">Say who it&rsquo;s for. &ldquo;Sub-20 in twelve weeks&rdquo; beats &ldquo;5K plan&rdquo;.</span>
+
         </div>
         <div className="rl-field">
           <label htmlFor="goal">Goal</label>

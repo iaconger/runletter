@@ -310,7 +310,7 @@ export function Editor({
           {program.status === "published" && handle && <Link href={`/c/${handle}/${program.id}`} className="rl-btn rl-btn-secondary rl-btn-sm">View public page</Link>}
           {program.status !== "published" ? (
             <button className="rl-btn rl-btn-primary" type="button" disabled={readOnly || pending} onClick={() => setStatus("published")}>
-              {letter ? "Open to subscribers" : "Publish"}
+              {letter ? "Open" : "Publish"}
             </button>
           ) : (
             <button className="rl-btn rl-btn-ghost" type="button" disabled={readOnly || pending} onClick={() => setStatus("draft")}>{letter ? "Close" : "Unpublish"}</button>
@@ -320,7 +320,7 @@ export function Editor({
 
       {warnings.length > 0 && !readOnly && (
         <div className="rl-sunken" style={{ borderRadius: "var(--rl-radius-md)", padding: "var(--rl-space-3) var(--rl-space-4)", display: "flex", gap: "var(--rl-space-4)", flexWrap: "wrap" }}>
-          <span className="t-label c-muted" style={{ alignSelf: "center" }}>Worth a look, not required</span>
+          <span className="t-label c-muted" style={{ alignSelf: "center" }}>Optional</span>
           {warnings.map((w) => <span key={w} className="rl-chip">{w}</span>)}
         </div>
       )}
@@ -341,10 +341,10 @@ export function Editor({
                 <input type="file" accept="image/jpeg,image/png,image/webp" hidden disabled={uploading} onChange={(e) => e.target.files?.[0] && uploadCover(e.target.files[0])} />
               </label>
             )}
-            <span className="rl-help">Shows on your page and in the app. A running photo beats a logo.</span>
+
           </div>
           <div className="rl-field"><label>Title</label><input className="rl-input" value={program.title} readOnly={readOnly} maxLength={80} onChange={(e) => setProgram({ ...program, title: e.target.value })} onBlur={(e) => e.target.value.trim() && e.target.value !== initial.title && saveSetting({ title: e.target.value.trim() })} /></div>
-          <div className="rl-field"><label>{letter ? "What runners get" : "Description"}</label><textarea className="rl-input" value={program.description} readOnly={readOnly} placeholder={letter ? "A week of running from me, every Sunday night. Easy days, one hard day, one long one, and a note on why." : "Who it's for and what it gets them."} onChange={(e) => setProgram({ ...program, description: e.target.value })} onBlur={(e) => saveSetting({ description: e.target.value })} /></div>
+          <div className="rl-field"><label>Description</label><textarea className="rl-input" value={program.description} readOnly={readOnly} placeholder={letter ? "What subscribers get" : "Who it's for"} onChange={(e) => setProgram({ ...program, description: e.target.value })} onBlur={(e) => saveSetting({ description: e.target.value })} /></div>
           <div className="rl-field"><label>Goal</label>
             <select className="rl-input" value={program.goal} disabled={readOnly} onChange={(e) => saveSetting({ goal: e.target.value as Program["goal"] })}>
               {(Object.keys(GOAL_LABEL) as Program["goal"][]).map((g) => <option key={g} value={g}>{GOAL_LABEL[g]}</option>)}
@@ -358,7 +358,7 @@ export function Editor({
           {letter ? (
             <div className="rl-field"><label>Started</label>
               <input className="rl-input" type="date" value={program.fixedStartDate ?? ""} disabled={readOnly} onChange={(e) => e.target.value && saveSetting({ startRule: "fixed", fixedStartDate: e.target.value })} />
-              <span className="rl-help">The Monday your Letter began. Weeks count from here.</span>
+
             </div>
           ) : (
             <>
@@ -368,7 +368,7 @@ export function Editor({
                   <span className="c-muted">$</span>
                   <input className="rl-input" type="number" min={0} step={1} value={Math.round((program.priceCents ?? 0) / 100)} disabled={readOnly} onChange={(e) => setProgram({ ...program, priceCents: Math.round(Number(e.target.value) * 100) })} onBlur={(e) => saveSetting({ access: "one_time", priceCents: Math.round(Number(e.target.value) * 100) })} />
                 </div>
-                <span className="rl-help">One-time. Buyers start the week after they buy. Your Letter subscribers get it included if you tick below.</span>
+
                 <label className="rl-row" style={{ gap: 8, alignItems: "center", cursor: "pointer" }}>
                   <input type="checkbox" checked={program.access === "creator_sub"} disabled={readOnly} onChange={(e) => saveSetting({ access: e.target.checked ? "creator_sub" : "one_time" })} />
                   <span className="t-body-sm">Included for Letter subscribers</span>
@@ -427,17 +427,17 @@ export function Editor({
                 </div>
               </div>
               <div className="rl-field">
-                <label>About this week</label>
+                <label>This week</label>
                 <textarea
                   className="rl-input"
                   rows={4}
                   readOnly={readOnly || !!selIssue?.sentAt}
-                  placeholder={"Here's the week. Two easy, one tempo on Thursday, long on Sunday. The tempo is the one to show up for."}
+                  placeholder="A few lines about the week"
                   defaultValue={selIssue?.intro ?? ""}
                   key={`intro-${sel.week}`}
                   onChange={(e) => saveIssue(sel.week, { intro: e.target.value }, 800)}
                 />
-                <span className="rl-help">Opens the week in their app, in your voice. This is the letter part.</span>
+
               </div>
               {!readOnly && (
                 <div className="rl-row">
@@ -471,13 +471,12 @@ export function Editor({
               {draft && draft.kind === "run" && <span className="t-numeral-lg">{fmtMinutes(dayDurationS(draft))}</span>}
             </div>
             <div className="rl-between">
-              <span className="rl-help">{readOnly ? "Example, read only" : saveState === "saving" ? "Saving…" : saveState === "pending" ? "Unsaved" : saveState === "saved" ? "Saved" : saveState === "error" ? "Could not save" : "Autosaves"}</span>
+              <span className="rl-help">{readOnly ? "Example" : saveState === "saving" ? "Saving…" : saveState === "error" ? "Could not save" : ""}</span>
               {draft && !readOnly && <button type="button" className="rl-btn rl-btn-ghost rl-btn-sm" onClick={removeDay} disabled={pending}>Clear day</button>}
             </div>
 
             {/* shapes: the whole point. One tap fills the day. */}
             <div className="rl-stack" style={{ gap: 6 }}>
-              {draft && <span className="t-label c-muted">Change to</span>}
               <div className="rl-shapes">
                 {SHAPES.map((s) => (
                   <button key={s.key} type="button" className="rl-shape" data-run={s.kind === "cross" ? "cross" : s.runType ?? undefined} disabled={readOnly} onClick={() => applyShape(s)}>
@@ -509,15 +508,15 @@ export function Editor({
                     ) : (
                       <BlockBar blocks={draft.blocks} legend={false} />
                     )}
-                    <button type="button" className="rl-btn rl-btn-ghost rl-btn-sm" style={{ alignSelf: "flex-start" }} onClick={() => setFineTune((v) => !v)} aria-expanded={fineTune}>{fineTune ? "Hide the pieces" : "Fine tune the pieces"}</button>
+                    <button type="button" className="rl-btn rl-btn-ghost rl-btn-sm" style={{ alignSelf: "flex-start" }} onClick={() => setFineTune((v) => !v)} aria-expanded={fineTune}>{fineTune ? "Hide pieces" : "Pieces"}</button>
                     {fineTune && <BlocksEditor blocks={draft.blocks} readOnly={readOnly} onChange={(blocks) => edit({ ...draft, blocks })} />}
                     <WatchPreview day={draft} programId={program.id} />
                   </>
                 )}
 
                 <div className="rl-field">
-                  <label>Note on the day</label>
-                  <textarea className="rl-input" value={draft.note} readOnly={readOnly} maxLength={400} rows={3} onChange={(e) => edit({ ...draft, note: e.target.value })} placeholder={draft.kind === "rest" ? "Rest means rest. Walk the dog, that's it." : "Why this run, what it should feel like, what to ignore."} />
+                  <label>Note</label>
+                  <textarea className="rl-input" value={draft.note} readOnly={readOnly} maxLength={400} rows={3} onChange={(e) => edit({ ...draft, note: e.target.value })} placeholder="Optional" />
                 </div>
                 {draft.note && <CreatorNote note={draft.note} by={creatorName} />}
 
@@ -667,7 +666,7 @@ function PaceRow({ b, onChange, readOnly }: { b: Block; onChange: (p: Partial<Bl
   if (!open) {
     return readOnly ? null : (
       <button type="button" className="rl-linkbtn" style={{ alignSelf: "flex-start", font: "var(--rl-text-label)", color: "var(--rl-text-muted)", textDecoration: "none" }} onClick={() => setOpen(true)}>
-        + pace target (optional)
+        + pace
       </button>
     );
   }
@@ -691,7 +690,7 @@ function WatchPreview({ day, programId }: { day: ProgramDay; programId: string }
   return (
     <div className="rl-stack" style={{ gap: 6 }}>
       <button type="button" className="rl-btn rl-btn-ghost rl-btn-sm" style={{ alignSelf: "flex-start" }} onClick={() => setOpen((v) => !v)} aria-expanded={open}>
-        {open ? "Hide the watch view" : `On the watch: ${steps.length} step${steps.length === 1 ? "" : "s"}`}
+        {open ? "Hide watch" : "Watch"}
       </button>
       {open && (
         <div className="rl-watch">
@@ -704,13 +703,10 @@ function WatchPreview({ day, programId }: { day: ProgramDay; programId: string }
               </li>
             ))}
           </ol>
-          <span className="rl-help">
-            {hasZones ? "Effort becomes a heart-rate zone, which the runner's watch already personalises. Add a pace target on a piece if you want exact numbers." : "Targets are paces you wrote; the watch will alert when the runner drifts outside them."}
-            {" "}Same file for Garmin Connect and the COROS app.
-          </span>
+          {hasZones && <span className="rl-help">Effort becomes a heart-rate zone on the runner&rsquo;s own watch.</span>}
           {day.blocks.length > 0 && (
             <a className="rl-btn rl-btn-secondary rl-btn-sm" style={{ alignSelf: "flex-start" }} href={`/api/fit?program=${programId}&week=${day.week}&day=${day.day}`} download>
-              Download the .FIT
+              .FIT
             </a>
           )}
         </div>

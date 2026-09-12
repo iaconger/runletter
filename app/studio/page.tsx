@@ -5,7 +5,7 @@ import { isConfigured } from "@/lib/supabase/server";
 import { Cover, coverFor } from "@/components/ui/Ink";
 import { startLetterAction } from "@/app/studio/actions";
 import { sampleProgram } from "@/lib/sample";
-import { Goal, Level, addDays, toISODate, weekOfDate, type Program } from "@/lib/types";
+import { Goal, Level, addDays, weekOfDate, type Program } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -49,7 +49,7 @@ export default async function StudioHome() {
       {needsHandle && (
         <div className="rl-card" style={{ borderColor: "var(--rl-accent)", gap: "var(--rl-space-2)" }}>
           <span className="t-heading">Pick your handle first</span>
-          <span className="c-secondary">Your page will live at runletter.com/c/<b>yourhandle</b>. Set it, your name and a line about you before you open anything.</span>
+          <span className="c-secondary">runletter.com/c/<b>yourhandle</b></span>
           <Link href="/studio/page" className="rl-btn rl-btn-secondary" style={{ alignSelf: "flex-start" }}>Set up your page</Link>
         </div>
       )}
@@ -59,7 +59,7 @@ export default async function StudioHome() {
         <div className="rl-between" style={{ alignItems: "baseline" }}>
           <div className="rl-stack" style={{ gap: 2 }}>
             <span className="t-label c-muted">Your Letter</span>
-            <h2 className="t-title" style={{ margin: 0 }}>{letter ? letter.title : "One plan, every week, to everyone who subscribes."}</h2>
+            <h2 className="t-title" style={{ margin: 0 }}>{letter ? letter.title : "Start your Letter"}</h2>
           </div>
           {letter && <Link href={`/studio/programs/${letter.id}`} className="rl-btn rl-btn-primary rl-btn-sm">Open this week</Link>}
         </div>
@@ -76,12 +76,11 @@ export default async function StudioHome() {
                 <span className={STATUS_CHIP[letter.status]}>{letter.status === "published" ? "Open" : letter.status}</span>
               </div>
               <span className="c-secondary">
-                {thisIssue?.sentAt ? "This week is sent. Start on next week whenever you like." : thisWeekDays === 0 ? "This week is empty. Fill seven days and send it." : thisWeekDays < 7 ? `${thisWeekDays} of 7 days filled. Finish the week and send it.` : "Seven days ready. Write a line about the week and send it."}
+                {thisIssue?.sentAt ? "Sent." : thisWeekDays === 0 ? "Empty." : thisWeekDays < 7 ? `${thisWeekDays} of 7 days.` : "Ready to send."}
               </span>
               <div className="rl-row">
-                <span className="rl-stamp" data-state={thisIssue?.sentAt ? "sent" : thisIssue?.scheduledFor ? "scheduled" : "draft"}>{thisIssue?.sentAt ? "sent" : thisIssue?.scheduledFor ? "scheduled" : "this week: draft"}</span>
+                <span className="rl-stamp" data-state={thisIssue?.sentAt ? "sent" : thisIssue?.scheduledFor ? "scheduled" : "draft"}>{thisIssue?.sentAt ? "sent" : thisIssue?.scheduledFor ? "scheduled" : "draft"}</span>
                 <span className="rl-chip">{sent} week{sent === 1 ? "" : "s"} sent</span>
-                <span className="rl-chip">{letter.access === "creator_sub" ? "Subscription" : "Free"}</span>
               </div>
             </div>
           </Link>
@@ -89,7 +88,7 @@ export default async function StudioHome() {
           <form action={startLetterAction} className="rl-lettercard">
             <div className="img"><Cover name="dawn-road" ratio={5 / 4} /></div>
             <div className="rl-stack" style={{ padding: "var(--rl-space-4)", gap: "var(--rl-space-3)" }}>
-              <span className="c-secondary">Your Letter is the subscription. Each week you plan seven days, write a few lines about them, and send. It lands in their app Sunday night, on their watch Monday morning. Plans are the one-off products; the Letter is the relationship.</span>
+              <span className="c-secondary">A week of running, written by you, sent every Sunday. This is what people subscribe to.</span>
               <div className="rl-row" style={{ alignItems: "stretch" }}>
                 <div className="rl-field" style={{ flex: 2, minWidth: 200 }}>
                   <label htmlFor="ltitle">Call it</label>
@@ -108,7 +107,7 @@ export default async function StudioHome() {
                   </select>
                 </div>
               </div>
-              <button type="submit" className="rl-btn rl-btn-primary" style={{ alignSelf: "flex-start" }} disabled={!configured}>Start my Letter (week of {fmtDate(addDays(toISODate(today), -((today.getDay() + 6) % 7)))})</button>
+              <button type="submit" className="rl-btn rl-btn-primary" style={{ alignSelf: "flex-start" }} disabled={!configured}>Start my Letter</button>
             </div>
           </form>
         )}
@@ -118,14 +117,13 @@ export default async function StudioHome() {
       <section className="rl-stack" style={{ gap: "var(--rl-space-3)" }} aria-label="Plans">
         <div className="rl-between" style={{ alignItems: "baseline" }}>
           <div className="rl-stack" style={{ gap: 2 }}>
-            <span className="t-label c-muted">Plans</span>
-            <h2 className="t-title" style={{ margin: 0 }}>Turn your running programs into products.</h2>
+            <h2 className="t-title" style={{ margin: 0 }}>Plans</h2>
           </div>
           <Link href="/studio/new" className="rl-btn rl-btn-secondary rl-btn-sm">New plan</Link>
         </div>
         {plans.length === 0 ? (
           <div className="rl-stack" style={{ gap: "var(--rl-space-3)" }}>
-            <span className="c-secondary">A plan is fixed: twelve weeks to a sub-20 5K, eight weeks back from injury. Runners buy it once and start the Monday after. Below is what a finished one looks like.</span>
+            <span className="c-secondary">Fixed length, bought once. Here is an example.</span>
             <PlanCard p={sampleProgram} href={`/studio/programs/${sampleProgram.id}`} example />
           </div>
         ) : (
