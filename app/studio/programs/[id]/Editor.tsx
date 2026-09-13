@@ -13,7 +13,7 @@ import { clearDayAction, createPostAction, duplicateWeekAction, saveDayAction, s
 import type { Post } from "@/lib/db/programs";
 import { DAY_NAMES_LONG, RUN_TYPE_LABEL, addDays, dayDurationS, fmtMinutes, toISODate, type Block, type LetterIssue, type Program, type ProgramDay } from "@/lib/types";
 
-const GOAL_LABEL: Record<Program["goal"], string> = { base: "Base building", "5k": "5K", "10k": "10K", half: "Half marathon", marathon: "Marathon", other: "Other" };
+const GOAL_LABEL: Record<Program["goal"], string> = { base: "Base building", "5k": "5K", "10k": "10K", half: "Half marathon", marathon: "Marathon", other: "Just running" };
 const RUN_TYPES = Object.keys(RUN_TYPE_LABEL) as NonNullable<ProgramDay["runType"]>[];
 const EFFORTS: NonNullable<Block["targetEffort"]>[] = ["easy", "moderate", "hard", "all_out"];
 const KIND_LABEL: Record<Block["kind"], string> = { warmup: "Warm up", work: "Work", recovery: "Recover", cooldown: "Cool down" };

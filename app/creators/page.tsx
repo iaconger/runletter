@@ -40,8 +40,8 @@ export default function CreatorsLanding() {
               Turn your running programs into products.
             </h1>
             <p className="t-body" style={{ maxWidth: "46ch", opacity: 0.85, margin: 0 }}>
-              Two things to sell. Your Letter: a week of running, written by you, sent to subscribers every Sunday night.
-              And plans: a twelve-week block they buy once. Either way it lands on their watch. You write the runs. We handle the rest.
+              Your Letter: how you run, week by week, sent to subscribers every Sunday night. No race required; people follow you for the running.
+              Plans: a twelve-week block they buy once. Either way it lands on their watch. You write the runs. We handle the rest.
             </p>
             <div className="rl-row">
               <Link href="/signup?as=creator&next=/studio" className="rl-btn rl-btn-lg rl-btn-ink">

@@ -83,11 +83,11 @@ export default function Landing() {
             <p className="t-title rl-rise" style={{ margin: 0, maxWidth: "30ch", ["--rise-delay" as string]: "160ms" }}>
               This week, run with a{" "}
               <span className="rl-rotate" aria-hidden="true">
-                <span>marathon coach.</span>
                 <span>trail runner.</span>
                 <span>run club captain.</span>
-                <span>comeback runner.</span>
-                <span>5K speed freak.</span>
+                <span>Sunday long-run person.</span>
+                <span>marathon coach.</span>
+                <span>runner who just likes running.</span>
               </span>
               <span className="sr-only">runner you admire.</span>
             </p>
@@ -191,13 +191,20 @@ export default function Landing() {
       {/* ---------- written by a person ---------- */}
       <section className="rl-hairline">
         <div className="rl-page rl-wide rl-human" data-reveal>
-          <div className="rl-stack" style={{ gap: "var(--rl-space-2)", maxWidth: "36ch" }}>
-            <span className="t-label c-muted">A promise</span>
-            <h2 className="t-display-lg" style={{ margin: 0 }}>No AI writes the running.</h2>
+          <div className="rl-stack" style={{ gap: "var(--rl-space-2)" }}>
+            <span className="t-label c-muted">Two promises</span>
+            <h2 className="t-display-lg" style={{ margin: 0 }}>You don&rsquo;t need a race.</h2>
+            <p className="t-body c-secondary" style={{ margin: 0, maxWidth: "44ch" }}>
+              Most weeks here aren&rsquo;t building to anything. They&rsquo;re someone&rsquo;s running: the Tuesday loop, the long one with coffee after. Follow the person, not the goal.
+            </p>
           </div>
-          <p className="t-body c-secondary" style={{ margin: 0, maxWidth: "48ch" }}>
-            Every week on RunLetter is written by the runner whose name is on it. We deliver it to your watch; we never generate it. If a plan says Sarah, Sarah wrote it.
-          </p>
+          <div className="rl-stack" style={{ gap: "var(--rl-space-2)" }}>
+            <span className="t-label c-muted" aria-hidden="true">&nbsp;</span>
+            <h2 className="t-display-lg" style={{ margin: 0 }}>No AI writes the running.</h2>
+            <p className="t-body c-secondary" style={{ margin: 0, maxWidth: "44ch" }}>
+              Every week is written by the runner whose name is on it. We deliver it to your watch; we never generate it. If it says Sarah, Sarah wrote it.
+            </p>
+          </div>
         </div>
       </section>
 

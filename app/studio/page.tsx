@@ -10,7 +10,7 @@ import { Goal, Level, addDays, weekOfDate, type Program } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 const STATUS_CHIP: Record<Program["status"], string> = { draft: "rl-chip", published: "rl-chip rl-chip-success", archived: "rl-chip" };
-const GOAL_LABEL: Record<string, string> = { base: "Base building", "5k": "5K", "10k": "10K", half: "Half marathon", marathon: "Marathon", other: "Something else" };
+const GOAL_LABEL: Record<string, string> = { base: "Base building", "5k": "5K", "10k": "10K", half: "Half marathon", marathon: "Marathon", other: "Just running" };
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const fmtDate = (d: Date) => `${MONTHS[d.getMonth()]} ${d.getDate()}`;
 
@@ -88,7 +88,7 @@ export default async function StudioHome() {
           <form action={startLetterAction} className="rl-lettercard">
             <div className="img"><Cover name="dawn-road" ratio={5 / 4} /></div>
             <div className="rl-stack" style={{ padding: "var(--rl-space-4)", gap: "var(--rl-space-3)" }}>
-              <span className="c-secondary">A week of running, written by you, sent every Sunday. This is what people subscribe to.</span>
+              <span className="c-secondary">Your running, week by week, sent every Sunday. No race required.</span>
               <div className="rl-row" style={{ alignItems: "stretch" }}>
                 <div className="rl-field" style={{ flex: 2, minWidth: 200 }}>
                   <label htmlFor="ltitle">Call it</label>
@@ -96,7 +96,7 @@ export default async function StudioHome() {
                 </div>
                 <div className="rl-field" style={{ flex: 1, minWidth: 140 }}>
                   <label htmlFor="lgoal">Mostly for</label>
-                  <select id="lgoal" name="goal" className="rl-input" defaultValue="base">
+                  <select id="lgoal" name="goal" className="rl-input" defaultValue="other">
                     {Goal.options.map((g) => <option key={g} value={g}>{GOAL_LABEL[g]}</option>)}
                   </select>
                 </div>

@@ -3,7 +3,7 @@ import { Goal, Level } from "@/lib/types";
 
 export const metadata = { title: "New plan" };
 
-const GOAL_LABEL: Record<string, string> = { base: "Base building", "5k": "5K", "10k": "10K", half: "Half marathon", marathon: "Marathon", other: "Something else" };
+const GOAL_LABEL: Record<string, string> = { base: "Base building", "5k": "5K", "10k": "10K", half: "Half marathon", marathon: "Marathon", other: "Just running" };
 
 export default async function NewProgram({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
