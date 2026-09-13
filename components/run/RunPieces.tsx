@@ -108,6 +108,7 @@ export function WeekStrip({
   onPick,
   weekStart,
   today,
+  extras,
 }: {
   days: ProgramDay[];
   todayDay?: number;
@@ -119,6 +120,8 @@ export function WeekStrip({
   /** Dated calendar: Monday of this week (YYYY-MM-DD). Cells show the date and today is marked. */
   weekStart?: string | null;
   today?: string;
+  /** Unplanned runs, by day number: a short label like "+8 km". */
+  extras?: Map<number, string>;
 }) {
   const dateOf = (idx: number) => (weekStart ? addDays(weekStart, idx) : null);
   return (
@@ -142,10 +145,12 @@ export function WeekStrip({
             {date && <span className="n"> {date.getDate()}</span>}
           </span>
         );
+        const extra = extras?.get(idx + 1);
         const inner = (
           <>
             {head}
             <span className="k">{d ? dayShort(d) : "Rest"}</span>
+            {extra && <span className="x">{extra}</span>}
           </>
         );
         if (onPick) {

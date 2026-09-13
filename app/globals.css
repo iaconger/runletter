@@ -316,6 +316,7 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 .rl-day[data-run="recovery"] { --run-ink: var(--rl-run-recovery); --run-soft: var(--rl-run-recovery-soft); }
 .rl-day[data-run="race"] { --run-ink: var(--rl-run-race); --run-soft: var(--rl-run-race-soft); }
 .rl-day[data-run="cross"] { --run-ink: var(--rl-run-cross); --run-soft: var(--rl-run-cross-soft); }
+.rl-day > .x { font: var(--rl-text-label); letter-spacing: 0; text-transform: none; color: var(--rl-text-muted); }
 .rl-day > .n { font: var(--rl-text-label); color: var(--rl-text-muted); letter-spacing: 0; text-transform: none; }
 .rl-day[data-today="true"] > .d::after { content: " · today"; color: var(--rl-accent); text-transform: none; letter-spacing: 0; }
 .rl-day[data-past="true"] { opacity: .72; }

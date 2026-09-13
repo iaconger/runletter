@@ -56,13 +56,13 @@ export async function stravaAccessToken(userId: string): Promise<string | null> 
   return t.access_token;
 }
 
-type Activity = { id: number; type: string; sport_type?: string; start_date_local: string; distance: number; moving_time: number; average_speed: number };
+type Activity = { id: number; name?: string; type: string; sport_type?: string; start_date_local: string; distance: number; moving_time: number; average_speed: number };
 
 /**
  * A new Strava activity arrived for an athlete. If it is a run, find the program day that runner had on that
  * date (enrollments, including the creator's own) and record a completion. Idempotent per activity.
  */
-export async function recordStravaActivity(athleteId: string, activityId: number): Promise<"done" | "not_a_run" | "no_day" | "no_user"> {
+export async function recordStravaActivity(athleteId: string, activityId: number): Promise<"done" | "extra" | "not_a_run" | "no_user"> {
   const admin = createAdminClient();
   if (!admin) return "no_user";
   const { data: c } = await admin.from("connections").select("user_id").eq("provider", "strava").eq("external_id", athleteId).maybeSingle();
@@ -77,11 +77,23 @@ export async function recordStravaActivity(athleteId: string, activityId: number
   if (!isRun) return "not_a_run";
 
   const date = a.start_date_local.slice(0, 10);
+  const avgPace = a.average_speed > 0 ? Math.round(1000 / a.average_speed) : null;
   const { data: rows } = await admin.rpc("today_for_follower", { p_follower_id: c.user_id, p_date: date });
   const hit = rows?.find((x) => x.program_day_id);
-  if (!hit?.program_day_id) return "no_day";
 
-  const avgPace = a.average_speed > 0 ? Math.round(1000 / a.average_speed) : null;
+  // No planned run that day, or the day is already done by another activity: keep it as an extra.
+  const { data: existing } = hit?.program_day_id
+    ? await admin.from("completions").select("strava_activity_id").eq("enrollment_id", hit.enrollment_id).eq("program_day_id", hit.program_day_id).maybeSingle()
+    : { data: null };
+  const isRestOrCross = hit?.program_day_id ? (await admin.from("program_days").select("kind").eq("id", hit.program_day_id).single()).data?.kind !== "run" : true;
+  if (!hit?.program_day_id || isRestOrCross || (existing && existing.strava_activity_id && existing.strava_activity_id !== String(a.id))) {
+    await admin.from("extra_runs").upsert(
+      { user_id: c.user_id, run_date: date, source: "strava", strava_activity_id: String(a.id), name: a.name ?? null, distance_m: Math.round(a.distance), duration_s: a.moving_time, avg_pace_s: avgPace },
+      { onConflict: "strava_activity_id" },
+    );
+    return "extra";
+  }
+
   await admin.from("completions").upsert(
     {
       enrollment_id: hit.enrollment_id,

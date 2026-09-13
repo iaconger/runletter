@@ -111,6 +111,14 @@ export type Database = {
           { foreignKeyName: "workout_pushes_program_day_id_fkey"; columns: ["program_day_id"]; isOneToOne: false; referencedRelation: "program_days"; referencedColumns: ["id"] },
         ];
       };
+      extra_runs: {
+        Row: { avg_pace_s: number | null; created_at: string; distance_m: number | null; duration_s: number | null; id: string; name: string | null; run_date: string; source: Database["public"]["Enums"]["completion_source"]; strava_activity_id: string | null; user_id: string };
+        Insert: { avg_pace_s?: number | null; created_at?: string; distance_m?: number | null; duration_s?: number | null; id?: string; name?: string | null; run_date: string; source?: Database["public"]["Enums"]["completion_source"]; strava_activity_id?: string | null; user_id: string };
+        Update: { avg_pace_s?: number | null; created_at?: string; distance_m?: number | null; duration_s?: number | null; id?: string; name?: string | null; run_date?: string; source?: Database["public"]["Enums"]["completion_source"]; strava_activity_id?: string | null; user_id?: string };
+        Relationships: [
+          { foreignKeyName: "extra_runs_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        ];
+      };
       creator_posts: {
         Row: { body: string; created_at: string; creator_id: string; id: string; program_day_id: string | null; program_id: string | null };
         Insert: { body: string; created_at?: string; creator_id: string; id?: string; program_day_id?: string | null; program_id?: string | null };

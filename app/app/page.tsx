@@ -6,7 +6,7 @@ import { BlockBar } from "@/components/run/BlockBar";
 import { Ink } from "@/components/ui/Ink";
 import { StepCards } from "@/components/run/StepCards";
 import { CreatorNote, WeekStrip, dayTitle } from "@/components/run/RunPieces";
-import { getMyProfile, getMyWeek } from "@/lib/db/programs";
+import { getMyProfile, getMyWeek, listExtras } from "@/lib/db/programs";
 import { createClient, isConfigured } from "@/lib/supabase/server";
 import { sampleCompletedDays, sampleCreator, sampleProgram, sampleToday, sampleWeek } from "@/lib/sample";
 import { DAY_NAMES_LONG, addDays, dayDurationS, fmtMinutes, toISODate } from "@/lib/types";
@@ -36,6 +36,14 @@ export default async function Today({ searchParams }: { searchParams: Promise<{ 
   const done = mine?.done ?? sampleCompletedDays;
   const isDone = day ? done.has(day.day) : false;
   const weekStart = mine?.weekStart ?? null;
+  const extras = me && weekStart ? await listExtras(me.id, weekStart, toISODate(addDays(weekStart, 6))) : [];
+  const extraByDay = new Map<number, string>();
+  for (const x of extras) {
+    const d = Math.floor((addDays(x.date, 0).getTime() - addDays(weekStart!, 0).getTime()) / 86400000) + 1;
+    const km = x.distanceM ? `${(x.distanceM / 1000).toFixed(x.distanceM >= 10000 ? 0 : 1)} km` : "run";
+    extraByDay.set(d, extraByDay.has(d) ? `${extraByDay.get(d)} +${km}` : `+${km}`);
+  }
+  const selExtras = extras.filter((x) => Math.floor((addDays(x.date, 0).getTime() - addDays(weekStart!, 0).getTime()) / 86400000) + 1 === selectedDay);
   const dateLabel = weekStart ? `${MONTHS[addDays(weekStart, selectedDay - 1).getMonth()]} ${addDays(weekStart, selectedDay - 1).getDate()}` : null;
   const mins = day ? Math.round(dayDurationS(day) / 60) : 0;
   const range = mins ? `${Math.max(5, Math.round(mins * 0.95 / 5) * 5)}–${Math.round(mins * 1.08 / 5) * 5} min` : "";
@@ -54,7 +62,7 @@ export default async function Today({ searchParams }: { searchParams: Promise<{ 
         <span className="t-label c-muted">
           {isToday ? "Today" : DAY_NAMES_LONG[selectedDay - 1]}{dateLabel ? ` · ${dateLabel}` : ""} · Week {week}{program.isLetter ? "" : ` of ${program.weeks}`}
         </span>
-        <WeekStrip days={sent ? days : []} todayDay={todayDay} done={done} selectedDay={selectedDay} hrefFor={(d) => `/app?day=${d.day}`} weekStart={weekStart} today={today} />
+        <WeekStrip days={sent ? days : []} todayDay={todayDay} done={done} selectedDay={selectedDay} hrefFor={(d) => `/app?day=${d.day}`} weekStart={weekStart} today={today} extras={extraByDay} />
       </div>
 
       {!sent ? (
@@ -101,6 +109,18 @@ export default async function Today({ searchParams }: { searchParams: Promise<{ 
           <Ink name="breath" style={{ width: "min(100%, 320px)", opacity: 0.8 }} />
           {day?.note && <CreatorNote note={day.note} by={creator.displayName} avatarUrl={creator.avatarUrl} />}
         </>
+      )}
+
+      {selExtras.length > 0 && (
+        <div className="rl-stack" style={{ gap: 6 }}>
+          <span className="t-label c-muted">Also ran</span>
+          {selExtras.map((x) => (
+            <div key={x.id} className="rl-between rl-sunken" style={{ borderRadius: "var(--rl-radius-md)", padding: "8px 12px" }}>
+              <span className="t-body-sm">{x.name ?? "Run"}</span>
+              <span className="t-body-sm c-secondary" style={{ fontVariantNumeric: "tabular-nums" }}>{x.distanceM ? `${(x.distanceM / 1000).toFixed(1)} km` : ""}{x.durationS ? ` · ${Math.round(x.durationS / 60)} min` : ""}</span>
+            </div>
+          ))}
+        </div>
       )}
 
       {example && <p className="rl-help">Example week by {sampleCreator.displayName}. Subscribe to a creator, or start your own Letter, and this becomes yours.</p>}

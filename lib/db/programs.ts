@@ -370,3 +370,44 @@ export async function markDone(enrollmentId: string, programDayId: string) {
   const { error } = await supabase.from("completions").insert({ enrollment_id: enrollmentId, program_day_id: programDayId, source: "manual" });
   if (error && !/duplicate|unique/i.test(error.message)) throw error;
 }
+
+export type ExtraRun = { id: string; date: string; name: string | null; distanceM: number | null; durationS: number | null };
+
+/** Unplanned runs for a user in a date range (inclusive). */
+export async function listExtras(userId: string, from: string, to: string): Promise<ExtraRun[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("extra_runs").select("id, run_date, name, distance_m, duration_s").eq("user_id", userId).gte("run_date", from).lte("run_date", to).order("run_date");
+  return (data ?? []).map((r) => ({ id: r.id, date: r.run_date, name: r.name, distanceM: r.distance_m, durationS: r.duration_s }));
+}
+
+export type RunnerRow = { profile: Profile; programTitle: string; week: number; planned: number; done: number; extras: ExtraRun[]; lastRun: string | null };
+
+/** Everyone enrolled in the creator's programs, with this week's score. */
+export async function listMyRunners(today: string): Promise<RunnerRow[]> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data: programs } = await supabase.from("programs").select("id, title, weeks").eq("creator_id", user.id);
+  if (!programs?.length) return [];
+  const ids = programs.map((p) => p.id);
+  const { data: enrol } = await supabase.from("enrollments").select("id, follower_id, program_id, start_date").in("program_id", ids).eq("status", "active");
+  const rows: RunnerRow[] = [];
+  for (const e of enrol ?? []) {
+    const prog = programs.find((p) => p.id === e.program_id)!;
+    const diff = Math.floor((addDays(today, 0).getTime() - addDays(e.start_date, 0).getTime()) / 86400000);
+    const week = diff >= 0 ? Math.floor(diff / 7) + 1 : 0;
+    const weekStart = toISODate(addDays(e.start_date, (week - 1) * 7));
+    const weekEnd = toISODate(addDays(e.start_date, (week - 1) * 7 + 6));
+    const [{ data: prof }, { data: days }] = await Promise.all([
+      supabase.from("profiles").select(PROFILE_COLS).eq("id", e.follower_id).maybeSingle(),
+      supabase.from("program_days").select("id, kind").eq("program_id", e.program_id).eq("week", week),
+    ]);
+    if (!prof) continue;
+    const dayIds = (days ?? []).map((d) => d.id);
+    const { data: comps } = dayIds.length ? await supabase.from("completions").select("program_day_id, completed_at").eq("enrollment_id", e.id).in("program_day_id", dayIds) : { data: [] };
+    const { data: last } = await supabase.from("completions").select("completed_at").eq("enrollment_id", e.id).order("completed_at", { ascending: false }).limit(1).maybeSingle();
+    const extras = week > 0 ? await listExtras(e.follower_id, weekStart, weekEnd) : [];
+    rows.push({ profile: mapProfile(prof), programTitle: prog.title, week, planned: (days ?? []).filter((d) => d.kind === "run").length, done: (comps ?? []).length, extras, lastRun: last?.completed_at ?? null });
+  }
+  return rows;
+}
