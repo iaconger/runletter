@@ -71,6 +71,7 @@ export default function CreatorsLanding() {
         <div className="rl-stack" style={{ gap: "var(--rl-space-3)", ...delay(120) }} data-reveal>
           <span className="t-label c-muted">The fix</span>
           <h2 className="t-display-lg" style={{ margin: 0 }}>Write it once. It goes out every Sunday.</h2>
+          <p className="t-body-sm c-muted" style={{ margin: "var(--rl-space-2) 0 0" }}>Your words, your runs. RunLetter never generates a workout, and we say so to every runner.</p>
           <p className="c-secondary" style={{ margin: 0, maxWidth: "44ch" }}>
             A program in RunLetter is the plan, week by week, in your voice. Followers subscribe to you, the week lands before Monday, and each run goes to their watch with your note on it. You see who ran it.
           </p>

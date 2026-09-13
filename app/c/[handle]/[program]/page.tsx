@@ -46,6 +46,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ handle
           <span className="rl-chip">{p.weeks} weeks</span>
           <span className="rl-chip">{p.level}</span>
           {runsPerWeek > 0 && <span className="rl-chip">{runsPerWeek} runs / week</span>}
+          <span className="rl-chip rl-chip-human">Written by {c.displayName || c.handle}, not AI</span>
         </div>
       </div>
       {week.length > 0 ? (

@@ -188,6 +188,19 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ---------- written by a person ---------- */}
+      <section className="rl-hairline">
+        <div className="rl-page rl-wide rl-human" data-reveal>
+          <div className="rl-stack" style={{ gap: "var(--rl-space-2)", maxWidth: "36ch" }}>
+            <span className="t-label c-muted">A promise</span>
+            <h2 className="t-display-lg" style={{ margin: 0 }}>No AI writes the running.</h2>
+          </div>
+          <p className="t-body c-secondary" style={{ margin: 0, maxWidth: "48ch" }}>
+            Every week on RunLetter is written by the runner whose name is on it. We deliver it to your watch; we never generate it. If a plan says Sarah, Sarah wrote it.
+          </p>
+        </div>
+      </section>
+
       {/* ---------- creators ---------- */}
       <section className="rl-hairline">
         <div className="rl-page rl-wide rl-stack" style={{ gap: "var(--rl-space-6)", paddingBlock: "var(--rl-space-12)" }} data-reveal>

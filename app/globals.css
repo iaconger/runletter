@@ -654,3 +654,8 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 .rl-stepgroup > ol > li > .tag { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; color: var(--rl-text-muted); }
 .rl-note-by { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
 .rl-connect-prompt { display: flex; align-items: center; justify-content: space-between; gap: var(--rl-space-3); padding: var(--rl-space-3) var(--rl-space-4); border-radius: var(--rl-radius-md); background: var(--rl-accent-soft); color: var(--rl-on-accent-soft); }
+
+/* the human promise */
+.rl-human { display: grid; grid-template-columns: 1fr 1fr; gap: var(--rl-space-8); align-items: end; padding-block: var(--rl-space-12); }
+@media (max-width: 760px) { .rl-human { grid-template-columns: 1fr; gap: var(--rl-space-4); } }
+.rl-chip-human { border-color: var(--rl-accent); color: var(--rl-accent); }
