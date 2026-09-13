@@ -19,3 +19,14 @@ export async function savePaceAction(formData: FormData) {
   revalidatePath("/app");
   revalidatePath("/app/you");
 }
+
+export async function syncStravaAction() {
+  const { createClient } = await import("@/lib/supabase/server");
+  const { syncRecentStrava } = await import("@/lib/integrations/strava");
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  try { await syncRecentStrava(user.id, 30); } catch (e) { console.error("strava sync", e); }
+  revalidatePath("/app");
+  revalidatePath("/app/you");
+}

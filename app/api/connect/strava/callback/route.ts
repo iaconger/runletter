@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { publicOrigin } from "@/lib/origin";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { stravaExchange } from "@/lib/integrations/strava";
+import { stravaExchange, syncRecentStrava } from "@/lib/integrations/strava";
 
 export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams;
@@ -23,6 +23,8 @@ export async function GET(request: NextRequest) {
       { onConflict: "user_id,provider" },
     );
     if (error) throw error;
+    // Bring in the last month so the week isn't empty on day one. Best effort.
+    try { await syncRecentStrava(user.id, 30); } catch (e) { console.error("strava sync", e); }
   } catch (e) {
     return fail(e instanceof Error ? e.message : "Could not connect Strava");
   }

@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { garminEnabled } from "@/lib/integrations/garmin";
 import { stravaEnabled } from "@/lib/integrations/strava";
+import { syncStravaAction } from "@/app/app/actions";
 
 type Provider = "strava" | "garmin" | "coros";
 
@@ -27,7 +28,7 @@ export async function Connections({ back, notice }: { back: string; notice?: { c
       <Row
         name="Strava"
         role=""
-        detail={has("strava") ? "Finished runs mark the day done." : "Marks finished runs done."}
+        detail={has("strava") ? "Finished runs mark the day done. Off-plan runs show on your week." : "Marks finished runs done."}
         connected={!!has("strava")}
         action={stravaEnabled() ? { href: `/api/connect/strava?back=${encodeURIComponent(back)}`, label: "Connect Strava" } : { disabled: "Needs Strava API keys on the server" }}
         back={back}
@@ -78,11 +79,18 @@ function Row({ name, role, detail, connected, action, back, provider }: { name: 
         <span className="rl-help">{detail}</span>
       </div>
       {connected ? (
-        <form action="/api/connect/disconnect" method="post">
-          <input type="hidden" name="provider" value={provider} />
-          <input type="hidden" name="back" value={back} />
-          <button type="submit" className="rl-btn rl-btn-ghost rl-btn-sm">Disconnect</button>
-        </form>
+        <span className="rl-row" style={{ gap: 4 }}>
+          {provider === "strava" && (
+            <form action={syncStravaAction}>
+              <button type="submit" className="rl-btn rl-btn-secondary rl-btn-sm">Sync last 30 days</button>
+            </form>
+          )}
+          <form action="/api/connect/disconnect" method="post">
+            <input type="hidden" name="provider" value={provider} />
+            <input type="hidden" name="back" value={back} />
+            <button type="submit" className="rl-btn rl-btn-ghost rl-btn-sm">Disconnect</button>
+          </form>
+        </span>
       ) : "href" in action ? (
         provider === "strava" ? (
           // Strava's brand rules: the connect button is orange with their mark. Kept to their spec.

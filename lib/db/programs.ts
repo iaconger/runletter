@@ -411,3 +411,29 @@ export async function listMyRunners(today: string): Promise<RunnerRow[]> {
   }
   return rows;
 }
+
+export type RunLogItem = { id: string; date: string; title: string; planned: boolean; distanceM: number | null; durationS: number | null; avgPaceS: number | null; source: "strava" | "manual" };
+
+/** Everything the signed-in runner ran in a date range: planned days done, plus off-plan runs. Newest first. */
+export async function listMyRuns(from: string, to: string): Promise<RunLogItem[]> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  const [{ data: comps }, { data: extras }] = await Promise.all([
+    supabase.from("completions").select("id, completed_at, distance_m, duration_s, avg_pace_s, source, program_day_id, enrollments!inner(follower_id)").eq("enrollments.follower_id", user.id).gte("completed_at", `${from}T00:00:00`).lte("completed_at", `${to}T23:59:59`),
+    supabase.from("extra_runs").select("id, run_date, name, distance_m, duration_s, avg_pace_s, source").eq("user_id", user.id).gte("run_date", from).lte("run_date", to),
+  ]);
+  const dayIds = (comps ?? []).map((c) => c.program_day_id);
+  const { data: days } = dayIds.length ? await supabase.from("program_days").select("id, kind, run_type, week, day").in("id", dayIds) : { data: [] };
+  const titleFor = (id: string) => {
+    const d = (days ?? []).find((x) => x.id === id);
+    if (!d) return "Run";
+    const t = d.run_type ?? "run";
+    return `${t[0]!.toUpperCase()}${t.slice(1)} · week ${d.week}`;
+  };
+  const items: RunLogItem[] = [
+    ...(comps ?? []).map((c) => ({ id: c.id, date: c.completed_at.slice(0, 10), title: titleFor(c.program_day_id), planned: true, distanceM: c.distance_m, durationS: c.duration_s, avgPaceS: c.avg_pace_s, source: c.source as "strava" | "manual" })),
+    ...(extras ?? []).map((x) => ({ id: x.id, date: x.run_date, title: x.name ?? "Run", planned: false, distanceM: x.distance_m, durationS: x.duration_s, avgPaceS: x.avg_pace_s, source: x.source as "strava" | "manual" })),
+  ];
+  return items.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+}

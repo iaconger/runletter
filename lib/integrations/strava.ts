@@ -73,6 +73,31 @@ export async function recordStravaActivity(athleteId: string, activityId: number
   const r = await fetch(`${API}/activities/${activityId}`, { headers: { authorization: `Bearer ${token}` } });
   if (!r.ok) throw new Error(`Strava activity fetch failed (${r.status})`);
   const a = (await r.json()) as Activity;
+  return recordActivity(c.user_id, a);
+}
+
+/** Pull the athlete's last N days from Strava and record each run. Used right after connecting and on demand. */
+export async function syncRecentStrava(userId: string, days = 30): Promise<{ done: number; extra: number; skipped: number }> {
+  const out = { done: 0, extra: 0, skipped: 0 };
+  const token = await stravaAccessToken(userId);
+  if (!token) return out;
+  const after = Math.floor((Date.now() - days * 86400000) / 1000);
+  const r = await fetch(`${API}/athlete/activities?after=${after}&per_page=100`, { headers: { authorization: `Bearer ${token}` } });
+  if (!r.ok) throw new Error(`Strava activities fetch failed (${r.status})`);
+  const list = (await r.json()) as Activity[];
+  for (const a of list) {
+    const res = await recordActivity(userId, a);
+    if (res === "done") out.done++;
+    else if (res === "extra") out.extra++;
+    else out.skipped++;
+  }
+  return out;
+}
+
+async function recordActivity(userId: string, a: Activity): Promise<"done" | "extra" | "not_a_run" | "no_user"> {
+  const admin = createAdminClient();
+  if (!admin) return "no_user";
+  const c = { user_id: userId };
   const isRun = a.type === "Run" || a.sport_type === "Run" || a.sport_type === "TrailRun" || a.sport_type === "VirtualRun";
   if (!isRun) return "not_a_run";
 

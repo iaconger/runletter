@@ -1,6 +1,8 @@
 import { Ink } from "@/components/ui/Ink";
 import { Connections } from "@/components/connections/Connections";
-import { getMyProfile } from "@/lib/db/programs";
+import { getMyProfile, listMyRuns } from "@/lib/db/programs";
+import { RunLog } from "@/components/run/RunLog";
+import { addDays, toISODate } from "@/lib/types";
 import { isConfigured } from "@/lib/supabase/server";
 import { fmtTime } from "@/lib/paces";
 import { savePaceAction } from "../actions";
@@ -11,6 +13,8 @@ export const dynamic = "force-dynamic";
 export default async function You({ searchParams }: { searchParams: Promise<{ connected?: string; error?: string }> }) {
   const notice = await searchParams;
   const me = isConfigured() ? await getMyProfile() : null;
+  const today = toISODate(new Date());
+  const log = me ? await listMyRuns(toISODate(addDays(today, -29)), today) : [];
   return (
     <main className="rl-page rl-stack" style={{ gap: "var(--rl-space-6)" }}>
       <h1 className="t-display-lg" style={{ margin: 0 }}>You</h1>
@@ -27,6 +31,12 @@ export default async function You({ searchParams }: { searchParams: Promise<{ co
         <span className="rl-help">Turns &ldquo;easy&rdquo; and &ldquo;hard&rdquo; into your own paces, on screen and on the watch.</span>
       </form>
       <Connections back="/app/you" notice={notice} />
+      {me && (
+        <section className="rl-card" style={{ gap: "var(--rl-space-2)" }}>
+          <span className="t-heading">Last 30 days</span>
+          <RunLog runs={log} empty="Nothing yet. Connect Strava, or tap Sync." />
+        </section>
+      )}
     </main>
   );
 }
