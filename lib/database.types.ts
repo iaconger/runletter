@@ -352,6 +352,7 @@ export type Database = {
     Views: { [_ in never]: never };
     Functions: {
       can_read_program: { Args: { p_program_id: string }; Returns: boolean };
+      popular_runs: { Args: { p_limit?: number }; Returns: { program_day_id: string; program_id: string; completions: number }[] };
       today_for_follower: {
         Args: { p_date?: string; p_follower_id: string };
         Returns: { day: number; enrollment_id: string; program_day_id: string; program_id: string; week: number }[];

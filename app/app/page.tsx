@@ -11,6 +11,8 @@ import { createClient, isConfigured } from "@/lib/supabase/server";
 import { sampleCompletedDays, sampleCreator, sampleProgram, sampleToday, sampleWeek } from "@/lib/sample";
 import { DAY_NAMES_LONG, addDays, dayDurationS, fmtMinutes, toISODate } from "@/lib/types";
 import { markDoneAction } from "./actions";
+import { RunCard } from "@/components/run/RunCard";
+import { SAMPLE_EXPLORE } from "@/lib/explore";
 
 export const dynamic = "force-dynamic";
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -123,7 +125,17 @@ export default async function Today({ searchParams }: { searchParams: Promise<{ 
         </div>
       )}
 
-      {example && <p className="rl-help">Example week by {sampleCreator.displayName}. Subscribe to a creator, or start your own Letter, and this becomes yours.</p>}
+      {example && (
+        <section className="rl-stack" style={{ gap: "var(--rl-space-3)" }}>
+          <div className="rl-stack" style={{ gap: 2 }}>
+            <h2 className="t-title" style={{ margin: 0 }}>Nothing planned yet. Pick one for today.</h2>
+            <span className="rl-help">The week above is an example. <Link href="/app/explore">Explore</Link> for more.</span>
+          </div>
+          <div className="rl-rail">
+            {SAMPLE_EXPLORE.slice(0, 4).map((r) => <RunCard key={r.key} r={r} compact />)}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

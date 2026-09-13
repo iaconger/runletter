@@ -20,9 +20,9 @@ function usernameFrom(url: string | undefined): string {
   return url.replace(/^https?:\/\/(www\.)?[^/]+\//, "").replace(/^(athletes\/|@)/, "").replace(/\/.*$/, "");
 }
 
-export function Onboarding({ profile, userId, next, role }: { profile: Profile; userId: string; next: string; role: "creator" | "runner" }) {
+export function Onboarding({ profile, userId, next, role, startStep = 0, stravaConnected = false }: { profile: Profile; userId: string; next: string; role: "creator" | "runner"; startStep?: number; stravaConnected?: boolean }) {
   const router = useRouter();
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(startStep);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const isCreator = role === "creator" || profile.isCreator;
@@ -40,7 +40,7 @@ export function Onboarding({ profile, userId, next, role }: { profile: Profile; 
   const avatarInput = useRef<HTMLInputElement>(null);
   const coverInput = useRef<HTMLInputElement>(null);
 
-  const steps = isCreator ? ["You", "Socials", "Photos"] : ["You", "Socials", "Photo"];
+  const steps = isCreator ? ["You", "Socials", "Photos", "Connect"] : ["You", "Socials", "Photo", "Connect"];
 
   function go(fn: () => Promise<{ ok: boolean; error?: string }>, then: () => void) {
     setError(null);
@@ -167,8 +167,38 @@ export function Onboarding({ profile, userId, next, role }: { profile: Profile; 
 
           {error && <span className="rl-help" role="alert" style={{ color: "var(--rl-danger, #b3261e)" }}>{error}</span>}
           <div className="rl-row">
-            <button type="button" className="rl-btn rl-btn-primary rl-btn-lg" onClick={finish} disabled={uploading !== null}>{isCreator ? "Open the studio" : "Find a creator"}</button>
-            <button type="button" className="rl-btn rl-btn-ghost rl-btn-lg" onClick={finish}>Skip for now</button>
+            <button type="button" className="rl-btn rl-btn-primary rl-btn-lg" onClick={() => setStep(3)} disabled={uploading !== null}>Continue</button>
+            <button type="button" className="rl-btn rl-btn-ghost rl-btn-lg" onClick={() => setStep(3)}>Skip</button>
+          </div>
+        </div>
+      )}
+
+      {step === 3 && (
+        <div className="rl-stack" style={{ gap: "var(--rl-space-4)" }}>
+          <div className="rl-connect-hero">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/photo/situations/connect.webp" alt="" />
+            <div className="body">
+              <h1 className="t-display-lg" style={{ margin: 0 }}>Your watch. Your Strava. One tap.</h1>
+              <p style={{ margin: 0, opacity: 0.85, maxWidth: "36ch" }}>RunLetter isn&rsquo;t where you run. Runs go to your watch; finished runs come back from Strava.</p>
+            </div>
+          </div>
+          <div className="rl-stack" style={{ gap: 8 }}>
+            <a href={`/api/connect/strava?back=${encodeURIComponent(`/welcome?role=${role}&next=${encodeURIComponent(next)}&step=3&connected=strava`)}`} className="rl-btn rl-btn-lg rl-btn-strava" style={{ justifyContent: "center" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/brand/partners/strava-96.png" alt="" width={20} height={20} style={{ borderRadius: 5 }} />
+              {stravaConnected ? "Strava connected" : "Connect with Strava"}
+            </a>
+            <div className="rl-between rl-sunken" style={{ borderRadius: "var(--rl-radius-md)", padding: "10px 12px" }}>
+              <span className="t-body-sm">Garmin</span><span className="rl-chip">Coming</span>
+            </div>
+            <div className="rl-between rl-sunken" style={{ borderRadius: "var(--rl-radius-md)", padding: "10px 12px" }}>
+              <span className="t-body-sm">COROS</span><span className="rl-chip">File import</span>
+            </div>
+          </div>
+          <div className="rl-row">
+            <button type="button" className="rl-btn rl-btn-primary rl-btn-lg" onClick={finish}>{isCreator ? "Open the studio" : "See today"}</button>
+            {!stravaConnected && <button type="button" className="rl-btn rl-btn-ghost rl-btn-lg" onClick={finish}>Later</button>}
           </div>
         </div>
       )}

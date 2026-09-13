@@ -7,9 +7,18 @@ import { dayTitle } from "@/components/run/RunPieces";
 import { getMyProfile, getProgram } from "@/lib/db/programs";
 import { isConfigured } from "@/lib/supabase/server";
 import { sampleProgram } from "@/lib/sample";
+import { sampleExploreByKey } from "@/lib/explore";
 
 export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams;
+  const sample = q.get("sample");
+  if (sample) {
+    const r = sampleExploreByKey(sample);
+    if (!r) return NextResponse.json({ error: "No such run" }, { status: 404 });
+    const me = isConfigured() ? await getMyProfile() : null;
+    const bytes = encodeWorkout(r.day, { name: r.title, pace5kS: me?.pace5kS ?? null });
+    return new NextResponse(Buffer.from(bytes), { headers: { "content-type": "application/vnd.ant.fit", "content-disposition": `attachment; filename="${fitFilename(r.title, r.day)}"`, "cache-control": "no-store" } });
+  }
   const id = q.get("program") ?? sampleProgram.id;
   const week = Number(q.get("week") ?? 0);
   const day = Number(q.get("day") ?? 0);
