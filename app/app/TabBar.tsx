@@ -9,10 +9,11 @@ const TABS = [
   { href: "/app/you", label: "You" },
 ];
 
-export function TabBar() {
+/** Bottom tabs on phones, a row of links in the header on wider screens. One component, CSS decides. */
+export function TabBar({ variant = "bottom" }: { variant?: "bottom" | "top" }) {
   const path = usePathname();
   return (
-    <nav className="rl-tabbar" aria-label="Primary">
+    <nav className={variant === "top" ? "rl-topnav" : "rl-tabbar"} aria-label="Primary">
       {TABS.map((t) => (
         <Link key={t.href} href={t.href} aria-current={path === t.href ? "page" : undefined}>
           {t.label}

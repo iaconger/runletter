@@ -113,7 +113,8 @@ export default function Landing() {
             </div>
             <div className="rl-works rl-rise" style={{ ["--rise-delay" as string]: "480ms" }} aria-label="Works with">
               <span className="lbl">Works with</span>
-              <span className="wm">Strava</span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <span className="wm"><img src="/brand/partners/strava-96.png" alt="" width={18} height={18} style={{ borderRadius: 4 }} />Strava</span>
               <span className="wm">Garmin</span>
               <span className="wm">COROS</span>
               <span className="wm soon">Apple Fitness <em>soon</em></span>
@@ -212,7 +213,7 @@ export default function Landing() {
           <div className="rl-devices">
             <div className="rl-device"><span className="rl-chip rl-chip-success" style={{ alignSelf: "flex-start" }}>Now</span><span className="t">Garmin</span><span className="s">Every structured run exports as a .FIT workout. Import to Garmin Connect, it syncs to the watch, the watch beeps you through the intervals.</span></div>
             <div className="rl-device"><span className="rl-chip rl-chip-success" style={{ alignSelf: "flex-start" }}>Now</span><span className="t">Coros</span><span className="s">Same .FIT file, straight into the Coros app. Pace targets and rest blocks come with it.</span></div>
-            <div className="rl-device"><span className="rl-chip rl-chip-success" style={{ alignSelf: "flex-start" }}>Now</span><span className="t">Strava</span><span className="s">Connect once. When your run lands on Strava, the day is marked done and your creator sees you did it.</span></div>
+            <div className="rl-device"><span className="rl-chip rl-chip-success" style={{ alignSelf: "flex-start" }}>Now</span><span className="t rl-row" style={{ gap: 8, alignItems: "center" }}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src="/brand/partners/strava-96.png" alt="" width={22} height={22} style={{ borderRadius: 5 }} />Strava</span><span className="s">Connect once. When your run lands on Strava, the day is marked done and your creator sees you did it.</span></div>
             <div className="rl-device"><span className="rl-chip" style={{ alignSelf: "flex-start" }}>Coming</span><span className="t">Apple Watch</span><span className="s">Apple doesn&rsquo;t take workout files directly, so this needs a companion app. On the list, not in the box yet.</span></div>
           </div>
           <Ink name="intervals" style={{ width: "min(100%, 640px)", opacity: 0.8 }} />

@@ -61,11 +61,16 @@ export async function Connections({ back, notice }: { back: string; notice?: { c
   );
 }
 
+const ICON: Partial<Record<Provider, string>> = { strava: "/brand/partners/strava-96.png" };
+
 function Row({ name, role, detail, connected, action, back, provider }: { name: string; role: string; detail: string; connected: boolean; action: { href: string; label: string } | { disabled: string }; back: string; provider: Provider }) {
+  const icon = ICON[provider];
   return (
     <div className="rl-between" style={{ gap: "var(--rl-space-4)", alignItems: "flex-start", borderTop: "var(--rl-border-hairline) solid var(--rl-hairline)", paddingTop: "var(--rl-space-3)" }}>
       <div className="rl-stack" style={{ gap: 2, minWidth: 0 }}>
-        <span className="rl-row" style={{ gap: 8, alignItems: "baseline" }}>
+        <span className="rl-row" style={{ gap: 8, alignItems: "center" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {icon && <img src={icon} alt="" width={22} height={22} style={{ borderRadius: 5 }} />}
           <span className="t-body-medium">{name}</span>
           {role && <span className="t-label c-muted">{role}</span>}
           {connected && <span className="rl-chip rl-chip-success" style={{ fontSize: 11 }}>Connected</span>}
@@ -79,7 +84,16 @@ function Row({ name, role, detail, connected, action, back, provider }: { name: 
           <button type="submit" className="rl-btn rl-btn-ghost rl-btn-sm">Disconnect</button>
         </form>
       ) : "href" in action ? (
-        <a href={action.href} className="rl-btn rl-btn-secondary rl-btn-sm" style={{ whiteSpace: "nowrap" }}>{action.label}</a>
+        provider === "strava" ? (
+          // Strava's brand rules: the connect button is orange with their mark. Kept to their spec.
+          <a href={action.href} className="rl-btn rl-btn-sm rl-btn-strava" style={{ whiteSpace: "nowrap" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/partners/strava-96.png" alt="" width={18} height={18} style={{ borderRadius: 4 }} />
+            Connect with Strava
+          </a>
+        ) : (
+          <a href={action.href} className="rl-btn rl-btn-secondary rl-btn-sm" style={{ whiteSpace: "nowrap" }}>{action.label}</a>
+        )
       ) : (
         <span className="rl-chip" style={{ whiteSpace: "nowrap" }}>{action.disabled}</span>
       )}
