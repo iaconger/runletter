@@ -1,64 +1,109 @@
-// Today. The screen the whole product is built around: one run, the creator's note, the structure, two actions.
-// Phase 1 renders the sample program. Phase 2 swaps sample* for today_for_follower() via Supabase.
+// Today. One run, the creator's note, the steps in your own paces, two actions. Reads the runner's enrolment;
+// shows the example week when they are not on anything yet.
 
+import Link from "next/link";
 import { BlockBar } from "@/components/run/BlockBar";
 import { Ink } from "@/components/ui/Ink";
-import { BlockList, CreatorNote, WeekStrip, dayTitle } from "@/components/run/RunPieces";
+import { StepCards } from "@/components/run/StepCards";
+import { CreatorNote, WeekStrip, dayTitle } from "@/components/run/RunPieces";
+import { getMyProfile, getMyWeek } from "@/lib/db/programs";
+import { createClient, isConfigured } from "@/lib/supabase/server";
 import { sampleCompletedDays, sampleCreator, sampleProgram, sampleToday, sampleWeek } from "@/lib/sample";
-import { DAY_NAMES_LONG, dayDurationS, fmtMinutes } from "@/lib/types";
+import { DAY_NAMES_LONG, addDays, dayDurationS, fmtMinutes, toISODate } from "@/lib/types";
+import { markDoneAction } from "./actions";
+
+export const dynamic = "force-dynamic";
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export default async function Today({ searchParams }: { searchParams: Promise<{ day?: string }> }) {
   const { day: dayParam } = await searchParams;
-  const selectedDay = dayParam ? Number(dayParam) : sampleToday.day;
-  const day = sampleWeek.find((d) => d.day === selectedDay) ?? sampleToday;
-  const isToday = day.day === sampleToday.day;
-  const done = sampleCompletedDays.has(day.day);
+  const today = toISODate(new Date());
+  const configured = isConfigured();
+  const [me, mine] = configured ? await Promise.all([getMyProfile(), getMyWeek(today)]) : [null, null];
+  const supabase = configured ? await createClient() : null;
+  const { data: conns } = me && supabase ? await supabase.from("connections").select("provider").eq("user_id", me.id) : { data: [] };
+  const hasWatch = (conns ?? []).length > 0;
+
+  const example = !mine;
+  const program = mine?.program ?? sampleProgram;
+  const creator = mine?.creator ?? sampleCreator;
+  const week = mine?.week ?? sampleToday.week;
+  const days = program.days.filter((d) => d.week === week);
+  const todayDay = mine?.todayDay ?? sampleToday.day;
+  const selectedDay = dayParam ? Number(dayParam) : todayDay;
+  const day = days.find((d) => d.day === selectedDay) ?? null;
+  const isToday = selectedDay === todayDay;
+  const done = mine?.done ?? sampleCompletedDays;
+  const isDone = day ? done.has(day.day) : false;
+  const weekStart = mine?.weekStart ?? null;
+  const dateLabel = weekStart ? `${MONTHS[addDays(weekStart, selectedDay - 1).getMonth()]} ${addDays(weekStart, selectedDay - 1).getDate()}` : null;
+  const mins = day ? Math.round(dayDurationS(day) / 60) : 0;
+  const range = mins ? `${Math.max(5, Math.round(mins * 0.95 / 5) * 5)}–${Math.round(mins * 1.08 / 5) * 5} min` : "";
+  const sent = mine ? mine.sent : true;
 
   return (
     <main className="rl-page rl-stack" style={{ gap: "var(--rl-space-6)" }}>
-      <div className="rl-stack" style={{ gap: "var(--rl-space-1)" }}>
-        <span className="t-label c-muted">
-          {isToday ? "Today" : DAY_NAMES_LONG[day.day - 1]} · Week {day.week} of {sampleProgram.weeks}
-        </span>
-        <h1 className="t-display-xl" style={{ margin: 0 }}>
-          {dayTitle(day)}
-        </h1>
-      </div>
-
-      {day.kind === "run" ? (
-        <>
-          <div className="rl-row">
-            <span className="t-numeral-xl">{fmtMinutes(dayDurationS(day))}</span>
-            {done && <span className="rl-chip rl-chip-success">Done</span>}
-          </div>
-          <BlockBar blocks={day.blocks} />
-          <CreatorNote note={day.note} by={sampleCreator.displayName} />
-          <div className="rl-row">
-            <a className="rl-btn rl-btn-primary rl-btn-lg" href={`/api/fit?program=${sampleProgram.id}&week=${day.week}&day=${day.day}`} download>
-              Send to watch
-            </a>
-            <button className="rl-btn rl-btn-secondary rl-btn-lg" type="button" disabled={done}>
-              {done ? "Completed" : "Mark done"}
-            </button>
-          </div>
-          <BlockList blocks={day.blocks} />
-        </>
-      ) : (
-        <>
-          <Ink name="breath" style={{ width: "min(100%, 320px)", opacity: 0.8 }} />
-          <p className="t-title" style={{ margin: 0 }}>
-            Nothing to run. That is the plan.
-          </p>
-          <CreatorNote note={day.note} by={sampleCreator.displayName} />
-        </>
+      {me && !hasWatch && (
+        <div className="rl-connect-prompt">
+          <span className="t-body-sm">Connect your watch and Strava</span>
+          <Link href="/app/you" className="rl-btn rl-btn-primary rl-btn-sm">Connect</Link>
+        </div>
       )}
 
       <div className="rl-stack" style={{ gap: "var(--rl-space-2)" }}>
-        <span className="t-label c-muted">This week</span>
-        <WeekStrip days={sampleWeek} todayDay={sampleToday.day} done={sampleCompletedDays} selectedDay={day.day} hrefFor={(d) => `/app?day=${d.day}`} />
+        <span className="t-label c-muted">
+          {isToday ? "Today" : DAY_NAMES_LONG[selectedDay - 1]}{dateLabel ? ` · ${dateLabel}` : ""} · Week {week}{program.isLetter ? "" : ` of ${program.weeks}`}
+        </span>
+        <WeekStrip days={sent ? days : []} todayDay={todayDay} done={done} selectedDay={selectedDay} hrefFor={(d) => `/app?day=${d.day}`} weekStart={weekStart} today={today} />
       </div>
 
-      <p className="rl-help">Example program by {sampleCreator.displayName}. Real programs arrive in phase 2.</p>
+      {!sent ? (
+        <div className="rl-stack" style={{ gap: "var(--rl-space-3)" }}>
+          <Ink name="breath" style={{ width: "min(100%, 320px)", opacity: 0.8 }} />
+          <p className="t-title" style={{ margin: 0 }}>{creator.displayName} hasn&rsquo;t sent this week yet.</p>
+        </div>
+      ) : day && day.kind === "run" ? (
+        <>
+          <div className="rl-stack" style={{ gap: 4 }}>
+            <h1 className="t-display-xl" style={{ margin: 0 }}>{dayTitle(day)}</h1>
+            <div className="rl-row" style={{ alignItems: "baseline" }}>
+              <span className="t-numeral-lg">{range || fmtMinutes(dayDurationS(day))}</span>
+              {isDone && <span className="rl-chip rl-chip-success">Done</span>}
+            </div>
+          </div>
+          <BlockBar blocks={day.blocks} legend={false} />
+          {mine?.intro && selectedDay === 1 && <CreatorNote note={mine.intro} by={creator.displayName} avatarUrl={creator.avatarUrl} />}
+          {day.note && (
+            <div>
+              <CreatorNote note={day.note} by={creator.displayName} avatarUrl={creator.avatarUrl} />
+            </div>
+          )}
+          <div className="rl-row">
+            <a className="rl-btn rl-btn-primary rl-btn-lg" href={`/api/fit?program=${program.id}&week=${day.week}&day=${day.day}`} download>Send to watch</a>
+            {mine && !isDone ? (
+              <form action={markDoneAction}>
+                <input type="hidden" name="enrollmentId" value={mine.enrollmentId} />
+                <input type="hidden" name="programDayId" value={day.id} />
+                <button className="rl-btn rl-btn-secondary rl-btn-lg" type="submit">Mark done</button>
+              </form>
+            ) : (
+              <button className="rl-btn rl-btn-secondary rl-btn-lg" type="button" disabled>{isDone ? "Completed" : "Mark done"}</button>
+            )}
+          </div>
+          <StepCards day={day} pace5kS={me?.pace5kS} />
+          {me && !me.pace5kS && (
+            <p className="rl-help" style={{ margin: 0 }}>Paces are in effort words. <Link href="/app/you">Add your 5K time</Link> to see your own numbers.</p>
+          )}
+        </>
+      ) : (
+        <>
+          <h1 className="t-display-xl" style={{ margin: 0 }}>{day ? dayTitle(day) : "Rest"}</h1>
+          <Ink name="breath" style={{ width: "min(100%, 320px)", opacity: 0.8 }} />
+          {day?.note && <CreatorNote note={day.note} by={creator.displayName} avatarUrl={creator.avatarUrl} />}
+        </>
+      )}
+
+      {example && <p className="rl-help">Example week by {sampleCreator.displayName}. Subscribe to a creator, or start your own Letter, and this becomes yours.</p>}
     </main>
   );
 }

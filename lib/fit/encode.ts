@@ -9,6 +9,7 @@
 
 import { Encoder, Profile, type Encodable, type FileIdMesg, type WorkoutMesg, type WorkoutStepMesg } from "@garmin/fitsdk";
 import type { Block, ProgramDay } from "@/lib/types";
+import { bandFor } from "@/lib/paces";
 
 type Intensity = "warmup" | "active" | "rest" | "cooldown";
 
@@ -55,7 +56,7 @@ function stepName(b: Block, index: number, total: number): string {
  * Build a .FIT workout file for one program day.
  * Returns the raw bytes. Serve with content-type application/vnd.ant.fit and a .fit filename.
  */
-export function encodeWorkout(day: ProgramDay, opts: { name: string; createdAt?: Date }): Uint8Array {
+export function encodeWorkout(day: ProgramDay, opts: { name: string; createdAt?: Date; pace5kS?: number | null }): Uint8Array {
   if (day.kind !== "run" || day.blocks.length === 0) {
     throw new Error("Only run days with at least one block can be exported.");
   }
@@ -85,10 +86,12 @@ export function encodeWorkout(day: ProgramDay, opts: { name: string; createdAt?:
     if (b.kind === "work") workIndex += 1;
     const isTime = b.measure === "time";
     const durationValue = isTime ? (b.durationS ?? 0) * 1000 : (b.distanceM ?? 0) * 100; // ms or cm per FIT spec
-    const hasPace = b.targetPaceMin != null && b.targetPaceMax != null && b.targetPaceMin > 0 && b.targetPaceMax > 0;
+    // A written pace, or the runner's own band from their 5K time. Warm up and cool down stay open.
+    const band = b.kind === "work" || b.kind === "recovery" ? bandFor(b, opts.pace5kS) : null;
+    const hasPace = !!band;
     // FIT speed target is in m/s * 1000; pace min (faster) maps to the high speed bound.
-    const speedHigh = hasPace ? Math.round((1000 / Math.min(b.targetPaceMin!, b.targetPaceMax!)) * 1000) : undefined;
-    const speedLow = hasPace ? Math.round((1000 / Math.max(b.targetPaceMin!, b.targetPaceMax!)) * 1000) : undefined;
+    const speedHigh = band ? Math.round((1000 / band.min) * 1000) : undefined;
+    const speedLow = band ? Math.round((1000 / band.max) * 1000) : undefined;
     // Warm up and cool down stay open: nobody wants a zone alarm while jogging to the start.
     const zone = b.kind === "work" || b.kind === "recovery" ? HR_ZONE[b.targetEffort ?? "easy"] : null;
 
@@ -121,20 +124,16 @@ export function fitFilename(programTitle: string, day: ProgramDay): string {
 }
 
 /** Human preview of what the watch will show, one line per step. */
-export function watchPreview(day: ProgramDay): { name: string; amount: string; target: string; kind: Block["kind"] }[] {
+export function watchPreview(day: ProgramDay, pace5kS?: number | null): { name: string; amount: string; target: string; kind: Block["kind"] }[] {
   const steps = expandBlocks(day.blocks);
   const total = steps.filter((s) => s.kind === "work").length;
   let workIndex = 0;
   return steps.map((b) => {
     if (b.kind === "work") workIndex += 1;
     const amount = b.measure === "time" ? `${Math.round((b.durationS ?? 0) / 60)} min` : `${((b.distanceM ?? 0) / 1000).toFixed(1)} km`;
-    const hasPace = b.targetPaceMin != null && b.targetPaceMax != null && b.targetPaceMin > 0 && b.targetPaceMax > 0;
+    const band = b.kind === "work" || b.kind === "recovery" ? bandFor(b, pace5kS) : null;
     const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-    const target = hasPace
-      ? `${fmt(Math.min(b.targetPaceMin!, b.targetPaceMax!))} to ${fmt(Math.max(b.targetPaceMin!, b.targetPaceMax!))} /km`
-      : b.kind === "work" || b.kind === "recovery"
-        ? EFFORT_ZONE_LABEL[b.targetEffort ?? "easy"]
-        : "no target";
+    const target = band ? `${fmt(band.min)} to ${fmt(band.max)} /km` : b.kind === "work" || b.kind === "recovery" ? EFFORT_ZONE_LABEL[b.targetEffort ?? "easy"] : "no target";
     return { name: stepName(b, workIndex, total).slice(0, 16), amount, target, kind: b.kind };
   });
 }

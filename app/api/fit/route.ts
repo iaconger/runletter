@@ -4,7 +4,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { encodeWorkout, fitFilename } from "@/lib/fit/encode";
 import { dayTitle } from "@/components/run/RunPieces";
-import { getProgram } from "@/lib/db/programs";
+import { getMyProfile, getProgram } from "@/lib/db/programs";
 import { isConfigured } from "@/lib/supabase/server";
 import { sampleProgram } from "@/lib/sample";
 
@@ -20,7 +20,8 @@ export async function GET(request: NextRequest) {
   if (!pd) return NextResponse.json({ error: "No such day" }, { status: 404 });
   if (pd.kind !== "run" || pd.blocks.length === 0) return NextResponse.json({ error: "Not a run day" }, { status: 400 });
 
-  const bytes = encodeWorkout(pd, { name: dayTitle(pd) });
+  const me = isConfigured() ? await getMyProfile() : null;
+  const bytes = encodeWorkout(pd, { name: dayTitle(pd), pace5kS: me?.pace5kS ?? null });
   return new NextResponse(Buffer.from(bytes), {
     headers: {
       "content-type": "application/vnd.ant.fit",

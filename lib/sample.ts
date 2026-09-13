@@ -14,6 +14,7 @@ export const sampleCreator: Profile = {
   bio: "Marathoner, coach, and the person who will make you do your long run. Chicago.",
   isCreator: true,
   links: { instagram: "https://instagram.com/", strava: "https://strava.com/" },
+  pace5kS: null,
 };
 
 function block(p: Partial<Block> & Pick<Block, "kind" | "position">): Block {

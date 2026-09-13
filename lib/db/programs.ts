@@ -4,7 +4,7 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables, TablesInsert } from "@/lib/database.types";
-import type { Block, Program, ProgramDay, Profile, LetterIssue } from "@/lib/types";
+import { addDays, toISODate, type Block, type Program, type ProgramDay, type Profile, type LetterIssue } from "@/lib/types";
 
 type ProgramRow = Tables<"programs">;
 type DayRow = Tables<"program_days">;
@@ -59,12 +59,13 @@ export function mapProgram(r: ProgramRow, days: DayRow[] = [], blocks: BlockRow[
   };
 }
 
-export function mapProfile(r: Pick<ProfileRow, "id" | "handle" | "display_name" | "avatar_url" | "cover_url" | "bio" | "is_creator" | "links">): Profile {
+export function mapProfile(r: Pick<ProfileRow, "id" | "handle" | "display_name" | "avatar_url" | "cover_url" | "bio" | "is_creator" | "links"> & { pace_5k_s?: number | null }): Profile {
   const links = (r.links && typeof r.links === "object" && !Array.isArray(r.links) ? r.links : {}) as Record<string, string>;
-  return { id: r.id, handle: r.handle, displayName: r.display_name, avatarUrl: r.avatar_url, coverUrl: r.cover_url, bio: r.bio, isCreator: r.is_creator, links };
+  return { id: r.id, handle: r.handle, displayName: r.display_name, avatarUrl: r.avatar_url, coverUrl: r.cover_url, bio: r.bio, isCreator: r.is_creator,
+    pace5kS: r.pace_5k_s ?? null, links };
 }
 
-const PROFILE_COLS = "id, handle, display_name, avatar_url, cover_url, bio, is_creator, links";
+const PROFILE_COLS = "id, handle, display_name, avatar_url, cover_url, bio, is_creator, links, pace_5k_s";
 
 // ---------- reads ----------
 
@@ -225,7 +226,7 @@ export async function duplicateWeek(programId: string, from: number, to: number)
   }
 }
 
-export async function updateMyProfile(patch: Partial<Pick<Profile, "handle" | "displayName" | "bio" | "links" | "avatarUrl" | "coverUrl" | "isCreator">>) {
+export async function updateMyProfile(patch: Partial<Pick<Profile, "handle" | "displayName" | "bio" | "links" | "avatarUrl" | "coverUrl" | "isCreator" | "pace5kS">>) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not signed in");
@@ -237,6 +238,7 @@ export async function updateMyProfile(patch: Partial<Pick<Profile, "handle" | "d
   if (patch.avatarUrl !== undefined) row.avatar_url = patch.avatarUrl;
   if (patch.coverUrl !== undefined) row.cover_url = patch.coverUrl;
   if (patch.isCreator !== undefined) row.is_creator = patch.isCreator;
+  if (patch.pace5kS !== undefined) row.pace_5k_s = patch.pace5kS;
   const { error } = await supabase.from("profiles").update(row).eq("id", user.id);
   if (error) throw error;
 }
@@ -310,5 +312,61 @@ export async function enrolSelf(programId: string, startDate: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not signed in");
   const { error } = await supabase.from("enrollments").insert({ follower_id: user.id, program_id: programId, start_date: startDate });
+  if (error && !/duplicate|unique/i.test(error.message)) throw error;
+}
+
+// ---------- the runner's week ----------
+
+export type RunnerWeek = {
+  program: Program;
+  creator: Profile;
+  enrollmentId: string;
+  week: number;
+  todayDay: number;
+  weekStart: string;
+  done: Set<number>;
+  /** Weeks of a Letter are visible only once sent; plans are visible in full. */
+  sent: boolean;
+  intro: string;
+};
+
+/** What the signed-in runner is on this week: their most recent active enrolment, today's position in it, completions. */
+export async function getMyWeek(today: string): Promise<RunnerWeek | null> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data: enrol } = await supabase.from("enrollments").select("id, program_id, start_date").eq("follower_id", user.id).eq("status", "active").order("created_at", { ascending: false }).limit(1).maybeSingle();
+  if (!enrol) return null;
+  const diff = Math.floor((addDays(today, 0).getTime() - addDays(enrol.start_date, 0).getTime()) / 86400000);
+  if (diff < 0) return null;
+  const week = Math.floor(diff / 7) + 1;
+  const todayDay = (diff % 7) + 1;
+  const program = await getProgram(enrol.program_id);
+  if (!program || week > program.weeks) return null;
+  const creator = await getProfileById(program.creatorId);
+  if (!creator) return null;
+  const dayIds = program.days.filter((d) => d.week === week).map((d) => d.id);
+  const { data: comps } = dayIds.length ? await supabase.from("completions").select("program_day_id").eq("enrollment_id", enrol.id).in("program_day_id", dayIds) : { data: [] };
+  const done = new Set((comps ?? []).map((c) => program.days.find((d) => d.id === c.program_day_id)?.day).filter((d): d is number => !!d));
+  let sent = true;
+  let intro = "";
+  if (program.isLetter) {
+    const { data: issue } = await supabase.from("letter_issues").select("sent_at, intro").eq("program_id", program.id).eq("week", week).maybeSingle();
+    sent = !!issue?.sent_at || program.creatorId === user.id;
+    intro = issue?.intro ?? "";
+  }
+  return { program, creator, enrollmentId: enrol.id, week, todayDay, weekStart: toISODate(addDays(enrol.start_date, (week - 1) * 7)), done, sent, intro };
+}
+
+export async function getProfileById(id: string): Promise<Profile | null> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("profiles").select(PROFILE_COLS).eq("id", id).maybeSingle();
+  return data ? mapProfile(data) : null;
+}
+
+/** Mark a day done by hand. */
+export async function markDone(enrollmentId: string, programDayId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("completions").insert({ enrollment_id: enrollmentId, program_day_id: programDayId, source: "manual" });
   if (error && !/duplicate|unique/i.test(error.message)) throw error;
 }

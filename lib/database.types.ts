@@ -170,6 +170,7 @@ export type Database = {
           id: string;
           is_creator: boolean;
           links: Json;
+          pace_5k_s: number | null;
           strava_athlete_id: string | null;
           strava_tokens: Json | null;
           stripe_account_id: string | null;
@@ -185,6 +186,7 @@ export type Database = {
           id: string;
           is_creator?: boolean;
           links?: Json;
+          pace_5k_s?: number | null;
           strava_athlete_id?: string | null;
           strava_tokens?: Json | null;
           stripe_account_id?: string | null;
@@ -200,6 +202,7 @@ export type Database = {
           id?: string;
           is_creator?: boolean;
           links?: Json;
+          pace_5k_s?: number | null;
           strava_athlete_id?: string | null;
           strava_tokens?: Json | null;
           stripe_account_id?: string | null;

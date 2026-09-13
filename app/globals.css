@@ -633,3 +633,23 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 .rl-btn-strava { background: #FC4C02; color: #fff; gap: 8px; }
 .rl-btn-strava:hover { background: #E34402; color: #fff; }
 .rl-btn-strava::after { content: none; }
+
+/* step cards: grouped, numbered, a colour band per group. Session takes the run type's colour. */
+.rl-steps-list { display: flex; flex-direction: column; gap: 10px; --run-ink: var(--rl-text); --run-soft: var(--rl-surface-sunken); }
+.rl-steps-list[data-run="easy"] { --run-ink: var(--rl-run-easy); --run-soft: var(--rl-run-easy-soft); }
+.rl-steps-list[data-run="long"] { --run-ink: var(--rl-run-long); --run-soft: var(--rl-run-long-soft); }
+.rl-steps-list[data-run="tempo"] { --run-ink: var(--rl-run-tempo); --run-soft: var(--rl-run-tempo-soft); }
+.rl-steps-list[data-run="intervals"] { --run-ink: var(--rl-run-intervals); --run-soft: var(--rl-run-intervals-soft); }
+.rl-steps-list[data-run="recovery"] { --run-ink: var(--rl-run-recovery); --run-soft: var(--rl-run-recovery-soft); }
+.rl-steps-list[data-run="race"] { --run-ink: var(--rl-run-race); --run-soft: var(--rl-run-race-soft); }
+.rl-stepgroup { border-radius: var(--rl-radius-md); overflow: hidden; border: var(--rl-border-hairline) solid var(--rl-hairline); background: var(--rl-surface); }
+.rl-stepgroup > header { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; background: var(--rl-surface-sunken); color: var(--rl-text-secondary); }
+.rl-stepgroup[data-kind="session"] > header { background: var(--run-ink); color: var(--rl-paper-100); }
+.rl-stepgroup[data-kind="session"] > header > b { font-weight: 600; letter-spacing: 0; text-transform: none; font-size: 13px; }
+.rl-stepgroup > ol { list-style: none; margin: 0; padding: 0; }
+.rl-stepgroup > ol > li { display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: center; padding: 10px 12px; border-top: var(--rl-border-hairline) solid var(--rl-hairline); font: var(--rl-text-body-sm); }
+.rl-stepgroup > ol > li > .n { font: var(--rl-text-heading); color: var(--rl-text-muted); font-variant-numeric: tabular-nums; }
+.rl-stepgroup > ol > li > .body > b { font-weight: 600; }
+.rl-stepgroup > ol > li > .tag { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; color: var(--rl-text-muted); }
+.rl-note-by { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.rl-connect-prompt { display: flex; align-items: center; justify-content: space-between; gap: var(--rl-space-3); padding: var(--rl-space-3) var(--rl-space-4); border-radius: var(--rl-radius-md); background: var(--rl-accent-soft); color: var(--rl-on-accent-soft); }

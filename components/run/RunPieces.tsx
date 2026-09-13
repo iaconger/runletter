@@ -3,12 +3,16 @@
 import type { ReactNode } from "react";
 import { DAY_NAMES, addDays, dayDurationS, fmtMinutes, fmtPace, toISODate, type Block, type ProgramDay } from "@/lib/types";
 
-export function CreatorNote({ note, by }: { note: string; by: string }) {
+export function CreatorNote({ note, by, avatarUrl }: { note: string; by: string; avatarUrl?: string | null }) {
   if (!note) return null;
   return (
     <blockquote className="rl-note" style={{ margin: 0 }}>
       <q>{note}</q>
-      <cite>{by}</cite>
+      <cite className={avatarUrl ? "rl-note-by" : undefined}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {avatarUrl && <img src={avatarUrl} alt="" width={22} height={22} style={{ borderRadius: "50%", objectFit: "cover" }} />}
+        {by}
+      </cite>
     </blockquote>
   );
 }

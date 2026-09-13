@@ -111,6 +111,8 @@ export const Profile = z.object({
   bio: z.string().default(""),
   isCreator: z.boolean(),
   links: z.record(z.string(), z.string().url()).default({}),
+  /** Current 5K time in seconds; drives personal paces. */
+  pace5kS: z.number().int().nullable().default(null),
 });
 export type Profile = z.infer<typeof Profile>;
 
