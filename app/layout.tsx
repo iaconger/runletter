@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { ParallaxInk } from "@/components/ui/ParallaxInk";
 
 // Self-hosted, per foundations.md. No third-party font CDN in the app.
 const display = localFont({
@@ -25,7 +26,12 @@ const sans = localFont({
 export const metadata: Metadata = {
   title: { default: "RunLetter", template: "%s · RunLetter" },
   description: "Training plans from the runners you already follow.",
-  icons: { icon: "/brand/runletter-app-icon.svg" },
+  icons: {
+    icon: [{ url: "/brand/runletter-app-icon.svg", type: "image/svg+xml" }, { url: "/brand/icons/runletter-icon-192.png", sizes: "192x192", type: "image/png" }],
+    apple: "/brand/icons/runletter-icon-180.png",
+  },
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "RunLetter", statusBarStyle: "black-translucent" },
 };
 
 export const viewport: Viewport = {
@@ -41,7 +47,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${display.variable} ${sans.variable}`}>
-      <body>{children}</body>
+      <body>
+        <ParallaxInk />
+        {children}
+      </body>
     </html>
   );
 }

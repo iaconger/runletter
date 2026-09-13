@@ -2,6 +2,7 @@
 // Phase 1 renders the sample program. Phase 2 swaps sample* for today_for_follower() via Supabase.
 
 import { BlockBar } from "@/components/run/BlockBar";
+import { Ink } from "@/components/ui/Ink";
 import { BlockList, CreatorNote, WeekStrip, dayTitle } from "@/components/run/RunPieces";
 import { sampleCompletedDays, sampleCreator, sampleProgram, sampleToday, sampleWeek } from "@/lib/sample";
 import { DAY_NAMES_LONG, dayDurationS, fmtMinutes } from "@/lib/types";
@@ -44,6 +45,7 @@ export default async function Today({ searchParams }: { searchParams: Promise<{ 
         </>
       ) : (
         <>
+          <Ink name="breath" style={{ width: "min(100%, 320px)", opacity: 0.8 }} />
           <p className="t-title" style={{ margin: 0 }}>
             Nothing to run. That is the plan.
           </p>
