@@ -148,7 +148,7 @@
   }
 }
 
-:root[data-theme="dark"] {
+:root[data-theme="dark"], .rl-theme-night {
   --rl-bg: var(--rl-ink-900);
   --rl-surface: var(--rl-ink-850);
   --rl-surface-sunken: var(--rl-ink-800);
@@ -179,6 +179,42 @@
 }
 
 /* base */
+/* Two houses. The studio lives on Night, the runner app on Paper, whatever the system says.
+   Creators work in the dark room; runners get the page. Same tokens, one class each. */
+.rl-theme-paper {
+  --rl-bg: var(--rl-paper-100);
+  --rl-surface: var(--rl-paper-50);
+  --rl-surface-sunken: var(--rl-paper-200);
+  --rl-hairline: var(--rl-paper-300);
+  --rl-text: var(--rl-ink-900);
+  --rl-text-secondary: var(--rl-stone-700);
+  --rl-text-muted: var(--rl-stone-600);
+  --rl-text-disabled: var(--rl-stone-500);
+  --rl-accent: var(--rl-cobalt-600);
+  --rl-accent-bright: var(--rl-cobalt-500);
+  --rl-accent-soft: var(--rl-cobalt-100);
+  --rl-on-accent: var(--rl-paper-100);
+  --rl-on-accent-soft: var(--rl-cobalt-700);
+  --rl-primary: var(--rl-ink-900);
+  --rl-on-primary: var(--rl-paper-100);
+  --rl-success: var(--rl-moss-500);
+  --rl-success-soft: var(--rl-moss-100);
+  --rl-on-success-soft: var(--rl-moss-600);
+  --rl-focus: var(--rl-cobalt-600);
+  --rl-run-easy: #256A3D;        --rl-run-easy-soft: #DDEDE2;
+  --rl-run-long: #6B3F8A;        --rl-run-long-soft: #EADFF0;
+  --rl-run-tempo: #9A5B00;       --rl-run-tempo-soft: #F7E8CC;
+  --rl-run-intervals: #1C33A6;   --rl-run-intervals-soft: #E3E8FB;
+  --rl-run-recovery: #1F6B63;    --rl-run-recovery-soft: #D9EEEB;
+  --rl-run-race: #A3352A;        --rl-run-race-soft: #F8DEDA;
+  --rl-run-cross: #4A4741;       --rl-run-cross-soft: #E9E5DC;
+  color-scheme: light;
+}
+.rl-theme-night { color-scheme: dark; }
+/* Ink sketches are drawn for paper; on Night, flip them (invert + hue-rotate keeps the cobalt cobalt). */
+.rl-theme-night img[src$="-ink.svg"] { filter: invert(1) hue-rotate(180deg); opacity: .85; }
+.rl-theme-paper, .rl-theme-night { background: var(--rl-bg); color: var(--rl-text); min-height: 100vh; }
+
 body {
   background: var(--rl-bg);
   color: var(--rl-text);
@@ -399,6 +435,8 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 .rl-tabbar > a { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 0; font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; color: var(--rl-text-muted); }
 .rl-tabbar > a[aria-current="page"] { color: var(--rl-text); }
 .rl-studio { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+.rl-theme-night .rl-btn-primary:hover { background: var(--rl-paper-300); }
+.rl-theme-night .rl-sidebar { background: var(--rl-ink-850); }
 .rl-sidebar { border-right: var(--rl-border-hairline) solid var(--rl-hairline); padding: var(--rl-space-6) var(--rl-space-5); display: flex; flex-direction: column; gap: var(--rl-space-6); }
 .rl-sidebar nav { display: flex; flex-direction: column; gap: 2px; }
 .rl-sidebar nav > a { padding: 8px 10px; border-radius: var(--rl-radius-md); color: var(--rl-text-secondary); font: var(--rl-text-body-medium); }

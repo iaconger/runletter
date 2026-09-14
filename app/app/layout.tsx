@@ -13,7 +13,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const me = isConfigured() ? await getMyProfile() : null;
   if (me?.isCreator) redirect("/studio?kind=creator");
   return (
-    <div className="rl-app">
+    <div className="rl-app-shell rl-theme-paper"><div className="rl-app">
       <SignedInAnalytics role="runner" />
       <header className="rl-app-head">
         <Link href="/app" className="rl-logo" style={{ color: "var(--rl-text)" }} aria-label="RunLetter">
@@ -28,6 +28,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </header>
       <div style={{ flex: 1 }}>{children}</div>
       <TabBar />
-    </div>
+    </div></div>
   );
 }

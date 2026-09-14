@@ -13,7 +13,7 @@ export default async function StudioLayout({ children }: { children: React.React
   const me = isConfigured() ? await getMyProfile() : null;
   if (me && !me.isCreator) redirect("/app?kind=runner");
   return (
-    <div className="rl-studio">
+    <div className="rl-studio rl-theme-night">
       <SignedInAnalytics role="creator" />
       <aside className="rl-sidebar">
         <Link href="/studio" className="rl-logo" style={{ color: "var(--rl-text)" }} aria-label="RunLetter Studio">
