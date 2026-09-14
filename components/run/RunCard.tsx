@@ -12,7 +12,7 @@ export function RunCard({ r, compact = false, action }: { r: ExploreRun; compact
   const cover = r.cover ?? photo;
   return (
     <article className={`rl-runcard${compact ? " compact" : ""}`} data-run={r.day.runType ?? "easy"}>
-      <div className="img">
+      <div className="img" style={cover || r.creator.portrait ? undefined : { background: "var(--run-ink)" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {cover ? <img src={cover} alt="" /> : r.creator.portrait ? <Portrait name={r.creator.portrait} size={120} photo={false} /> : null}
         <span className="band">{type} · {mins} min</span>

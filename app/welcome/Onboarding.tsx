@@ -5,6 +5,7 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { IMAGE_SPEC, prepareImage } from "@/lib/image";
 import { saveIdentityAction, saveImagesAction, saveSocialsAction } from "./actions";
 import type { Profile } from "@/lib/types";
 
@@ -56,9 +57,9 @@ export function Onboarding({ profile, userId, next, role, startStep = 0, stravaC
     setError(null);
     try {
       const supabase = createClient();
-      const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+      const { blob, ext, type } = await prepareImage(file, kind === "avatar" ? IMAGE_SPEC.avatar : IMAGE_SPEC.cover);
       const path = `${userId}/${kind}-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, blob, { upsert: true, contentType: type });
       if (upErr) throw upErr;
       const { data } = supabase.storage.from("avatars").getPublicUrl(path);
       const url = data.publicUrl;

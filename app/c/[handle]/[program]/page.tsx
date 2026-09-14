@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BlockBar } from "@/components/run/BlockBar";
-import { Cover, coverFor } from "@/components/ui/Ink";
+import { ProgramCover } from "@/components/run/ProgramCover";
 import { CreatorNote, WeekStrip, dayTitle } from "@/components/run/RunPieces";
 import { getProfileByHandle, getProgram, getMyAccess, listPublishedPrograms } from "@/lib/db/programs";
 import { JoinButton } from "@/components/run/JoinButton";
@@ -43,7 +43,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ handle
 
   return (
     <main className="rl-page rl-stack" style={{ gap: "var(--rl-space-8)" }}>
-      <Cover name={coverFor(p)} ratio={21 / 9} />
+      <ProgramCover p={p} ratio={21 / 9} />
       <div className="rl-stack" style={{ gap: "var(--rl-space-2)" }}>
         <Link href={`/c/${handle}`} className="t-label">← {c.displayName || `@${c.handle}`}</Link>
         <h1 className="t-display-xl" style={{ margin: 0 }}>{p.title}</h1>

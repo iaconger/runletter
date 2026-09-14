@@ -2,7 +2,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Mark } from "@/components/ui/Logo";
-import { Cover, Ink, Portrait, coverFor } from "@/components/ui/Ink";
+import { Ink, Portrait } from "@/components/ui/Ink";
+import { ProgramCover } from "@/components/run/ProgramCover";
 import { getProfileByHandle, listPublishedPrograms, getMyAccess } from "@/lib/db/programs";
 import { JoinButton, priceLabel } from "@/components/run/JoinButton";
 import { isConfigured } from "@/lib/supabase/server";
@@ -71,7 +72,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
         ) : (
           programs.map((p) => (
             <Link key={p.id} href={`/c/${c.handle}/${p.id}`} className="rl-card" style={{ color: "inherit", textDecoration: "none" }}>
-              <Cover name={coverFor(p)} ratio={21 / 9} />
+              <ProgramCover p={p} ratio={21 / 9} />
               <span className="t-heading">{p.title}</span>
               {p.description && <span className="c-secondary">{p.description}</span>}
               <span className="rl-row">

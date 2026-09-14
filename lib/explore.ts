@@ -14,7 +14,7 @@ export type ExploreRun = {
   programId: string | null; // null for the fictional set
   programTitle: string;
   completions?: number;
-  /** Situation photo for the card; falls back to the creator's photo. */
+  /** Situation photo or the program's cover; falls back to the creator's photo, then the type colour. */
   cover?: string;
   /** URL that returns the .FIT for this run. */
   fitHref: string;

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getMyProfile, listMyPrograms, listIssues } from "@/lib/db/programs";
 import { isConfigured } from "@/lib/supabase/server";
 import { Cover, coverFor } from "@/components/ui/Ink";
+import { ProgramCover } from "@/components/run/ProgramCover";
 import { startLetterAction } from "@/app/studio/actions";
 import { sampleProgram } from "@/lib/sample";
 import { Goal, Level, addDays, weekOfDate, type Program } from "@/lib/types";
@@ -141,14 +142,7 @@ function PlanCard({ p, href, example = false }: { p: Program; href: string; exam
   return (
     <Link href={href} className="rl-card" style={{ color: "inherit", textDecoration: "none" }}>
       <div className="rl-cover-row">
-        {p.coverUrl ? (
-          <span style={{ display: "block", aspectRatio: "4 / 3", borderRadius: "var(--rl-radius-md)", overflow: "hidden" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={p.coverUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-          </span>
-        ) : (
-          <Cover name={coverFor(p)} ratio={4 / 3} />
-        )}
+        <ProgramCover p={p} ratio={4 / 3} />
         <div className="rl-stack" style={{ gap: "var(--rl-space-3)" }}>
           <div className="rl-between">
             <span className="t-heading">{p.title}</span>

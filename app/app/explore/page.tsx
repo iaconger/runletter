@@ -26,7 +26,7 @@ async function realRuns(): Promise<{ popular: ExploreRun[]; fresh: ExploreRun[];
   const toRun = (p: NonNullable<Awaited<ReturnType<typeof getProgram>>>, dayId: string, c: NonNullable<Awaited<ReturnType<typeof getProfileById>>>, completions?: number): ExploreRun | null => {
     const d = p.days.find((x) => x.id === dayId);
     if (!d || d.kind !== "run") return null;
-    return { key: d.id, title: d.note ? dayTitle(d) : dayTitle(d), day: d, creator: { name: c.displayName, handle: c.handle, avatarUrl: c.avatarUrl }, creatorId: c.id, programId: p.id, programTitle: p.title, completions, fitHref: `/api/fit?program=${p.id}&week=${d.week}&day=${d.day}` };
+    return { key: d.id, title: d.note ? dayTitle(d) : dayTitle(d), day: d, creator: { name: c.displayName, handle: c.handle, avatarUrl: c.avatarUrl }, creatorId: c.id, programId: p.id, programTitle: p.title, completions, cover: p.coverUrl ?? undefined, fitHref: `/api/fit?program=${p.id}&week=${d.week}&day=${d.day}` };
   };
   const popular: ExploreRun[] = [];
   for (const row of pop ?? []) {
