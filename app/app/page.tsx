@@ -10,7 +10,7 @@ import { EXAMPLE_CREATORS } from "@/components/ui/Ink";
 import { realRuns } from "@/lib/db/explore";
 import { getMyProfile, getMyWeek, listExtras, listMyRuns } from "@/lib/db/programs";
 import { createClient, isConfigured } from "@/lib/supabase/server";
-import { SAMPLE_EXPLORE } from "@/lib/explore";
+import { SAMPLE_EXPLORE, rankRuns } from "@/lib/explore";
 import { DAY_NAMES_LONG, RUN_TYPE_LABEL, addDays, dayDurationS, toISODate } from "@/lib/types";
 import { markDoneAction } from "./actions";
 
@@ -23,16 +23,18 @@ export default async function Today({ searchParams }: { searchParams: Promise<{ 
   const { day: dayParam } = await searchParams;
   const today = toISODate(new Date());
   const configured = isConfigured();
-  const [me, mine, feed] = configured ? await Promise.all([getMyProfile(), getMyWeek(today), realRuns()]) : [null, null, { popular: [], fresh: [], creators: [] }];
+  const [me, mine, feed] = configured ? await Promise.all([getMyProfile(), getMyWeek(today), realRuns().catch(() => null)]) : [null, null, null];
   const supabase = configured ? await createClient() : null;
   const { data: conns } = me && supabase ? await supabase.from("connections").select("provider").eq("user_id", me.id) : { data: [] };
   const hasWatch = (conns ?? []).length > 0;
   const firstName = me?.displayName?.split(" ")[0];
-  const example = feed.popular.length === 0 && feed.fresh.length === 0;
-  const others = example ? SAMPLE_EXPLORE : [...feed.popular, ...feed.fresh];
+  // Runs from other people: real published runs when there are any, ranked by the runner's goal and days a week.
+  const example = !feed || (feed.popular.length === 0 && feed.fresh.length === 0);
+  const pool = example ? SAMPLE_EXPLORE : [...feed!.popular, ...feed!.fresh.filter((f) => !feed!.popular.some((p) => p.key === f.key))];
+  const others = rankRuns(pool, me);
   const creators = example
     ? EXAMPLE_CREATORS.map((c) => ({ id: c.name, name: c.display, handle: c.name, avatarUrl: `/brand/photo/${c.name}.webp`, bio: `${c.focus} · ${c.city}` }))
-    : feed.creators;
+    : feed!.creators;
 
   // Runs actually done, last 7 days, whether or not anything was planned.
   const weekAgo = toISODate(addDays(today, -6));

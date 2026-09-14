@@ -61,6 +61,8 @@ export const Program = z.object({
 export type Program = z.infer<typeof Program>;
 
 /** Run type colours are tokens in globals.css (--rl-run-<type>); this is the single place that names them. */
+export const GOAL_LABEL: Record<z.infer<typeof Goal>, string> = { other: "Just running", base: "Base building", "5k": "5K", "10k": "10K", half: "Half marathon", marathon: "Marathon" };
+
 export const RUN_TYPE_LABEL: Record<NonNullable<ProgramDay["runType"]>, string> = { easy: "Easy", long: "Long", tempo: "Tempo", intervals: "Intervals", recovery: "Recovery", race: "Race" };
 
 /** Monday of the week containing `d`, as YYYY-MM-DD in local time. */
@@ -113,6 +115,12 @@ export const Profile = z.object({
   links: z.record(z.string(), z.string().url()).default({}),
   /** Current 5K time in seconds; drives personal paces. */
   pace5kS: z.number().int().nullable().default(null),
+  /** Creator has a Stripe account that can take payments; buttons go through Checkout. */
+  stripeChargesEnabled: z.boolean().default(false),
+  /** Runner questionnaire: null = not answered. */
+  goal: Goal.nullable().default(null),
+  raceDate: z.string().date().nullable().default(null),
+  daysPerWeek: z.number().int().min(1).max(7).nullable().default(null),
 });
 export type Profile = z.infer<typeof Profile>;
 
@@ -137,6 +145,13 @@ export function fmtPace(secPerKm: number): string {
   const m = Math.floor(secPerKm / 60);
   const s = secPerKm % 60;
   return `${m}:${s.toString().padStart(2, "0")} /km`;
+}
+
+/** "$7" or "$7/mo". Whole dollars when possible. */
+export function fmtPrice(cents: number | null | undefined, per?: "mo"): string {
+  const n = cents ?? 0;
+  const dollars = n % 100 === 0 ? `$${n / 100}` : `$${(n / 100).toFixed(2)}`;
+  return per ? `${dollars}/${per}` : dollars;
 }
 
 export const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;

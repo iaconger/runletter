@@ -7,6 +7,8 @@ import { z } from "zod";
 import { Goal, Level, ProgramDay, Program, StartRule, Access, mondayOf } from "@/lib/types";
 import * as db from "@/lib/db/programs";
 import { enqueueWeek } from "@/lib/db/sync";
+import { track } from "@/lib/analytics";
+import { getUser } from "@/lib/supabase/server";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -123,6 +125,10 @@ export async function duplicateWeekAction(programId: string, from: number, to: n
 export async function setStatusAction(programId: string, status: Program["status"]): Promise<ActionResult> {
   try {
     await db.setProgramStatus(programId, status);
+    if (status === "published") {
+      const user = await getUser();
+      if (user) track("program_published", { program_id: programId }, user.id);
+    }
     revalidatePath(`/studio/programs/${programId}`);
     revalidatePath("/studio");
     return { ok: true };
@@ -176,6 +182,8 @@ export async function saveIssueAction(input: { programId: string; week: number; 
     revalidatePath(`/studio/programs/${programId}`);
     // Sending a week puts its runs on every connected watch, the creator's included.
     if (send) {
+      const user = await getUser();
+      if (user) track("letter_week_sent", { program_id: programId, week }, user.id);
       try {
         await enqueueWeek(programId, week);
       } catch (e) {

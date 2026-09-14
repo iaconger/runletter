@@ -2,15 +2,17 @@
 import { Connections } from "@/components/connections/Connections";
 import Link from "next/link";
 import { updateProfileAction } from "@/app/studio/actions";
-import { getMyProfile } from "@/lib/db/programs";
+import { getMyLetter, getMyProfile } from "@/lib/db/programs";
+import { GetPaid } from "@/components/studio/GetPaid";
+import { ProfilePhotos } from "@/components/studio/ProfilePhotos";
 import { isConfigured } from "@/lib/supabase/server";
 
 export const metadata = { title: "Your page" };
 export const dynamic = "force-dynamic";
 
-export default async function YourPage({ searchParams }: { searchParams: Promise<{ error?: string; saved?: string; connected?: string }> }) {
-  const { error, saved, connected } = await searchParams;
-  const profile = isConfigured() ? await getMyProfile() : null;
+export default async function YourPage({ searchParams }: { searchParams: Promise<{ error?: string; saved?: string; connected?: string; stripe?: string }> }) {
+  const { error, saved, connected, stripe } = await searchParams;
+  const [profile, letter] = isConfigured() ? await Promise.all([getMyProfile(), getMyLetter()]) : [null, null];
   const handle = profile && !profile.handle.startsWith("u_") ? profile.handle : "";
   return (
     <main className="rl-page rl-stack" style={{ maxWidth: 640, gap: "var(--rl-space-6)" }}>
@@ -21,6 +23,7 @@ export default async function YourPage({ searchParams }: { searchParams: Promise
         </div>
         {handle && <Link href={`/c/${handle}`} className="rl-btn rl-btn-secondary">View page →</Link>}
       </div>
+      {profile && <ProfilePhotos userId={profile.id} avatarUrl={profile.avatarUrl} coverUrl={profile.coverUrl} />}
       <form action={updateProfileAction} className="rl-stack" style={{ gap: "var(--rl-space-5)" }}>
         <div className="rl-field">
           <label htmlFor="handle">Handle</label>
@@ -51,8 +54,8 @@ export default async function YourPage({ searchParams }: { searchParams: Promise
         {error && <span className="rl-help" role="alert" style={{ color: "var(--rl-danger, #b3261e)" }}>{error}</span>}
         {saved && <span className="rl-help" role="status" style={{ color: "var(--rl-success)" }}>Saved.</span>}
         <button type="submit" className="rl-btn rl-btn-primary rl-btn-lg" style={{ alignSelf: "flex-start" }}>Save page</button>
-        <p className="rl-help">Photos and cover: <Link href="/welcome?role=creator&next=/studio/page">update them here</Link>. Programs you publish show on this page automatically.</p>
       </form>
+      {profile && <GetPaid userId={profile.id} letterPriceCents={letter?.priceCents ?? null} notice={{ stripe, error: stripe ? undefined : error }} />}
       <Connections back="/studio/page" notice={{ connected }} />
     </main>
   );

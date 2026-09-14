@@ -2,9 +2,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BlockBar } from "@/components/run/BlockBar";
-import { Cover, coverFor } from "@/components/ui/Ink";
+import { ProgramCover } from "@/components/run/ProgramCover";
 import { CreatorNote, WeekStrip, dayTitle } from "@/components/run/RunPieces";
-import { getProfileByHandle, getProgram } from "@/lib/db/programs";
+import { getProfileByHandle, getProgram, getMyAccess, listPublishedPrograms } from "@/lib/db/programs";
+import { JoinButton } from "@/components/run/JoinButton";
 import { isConfigured } from "@/lib/supabase/server";
 import { sampleCreator, sampleProgram } from "@/lib/sample";
 import { dayDurationS, fmtMinutes, type Profile, type Program } from "@/lib/types";
@@ -30,6 +31,11 @@ export default async function ProgramPage({ params }: { params: Promise<{ handle
   const r = await load(handle, program);
   if (!r) notFound();
   const { c, p } = r;
+  const example = c.id === sampleCreator.id;
+  // A plan "included for subscribers" is joined through the creator's Letter.
+  const letter = !example && p.access === "creator_sub" && !p.isLetter ? (await listPublishedPrograms(c.id)).find((x) => x.isLetter) ?? null : null;
+  const target = letter ?? p;
+  const access = example ? { signedIn: false, subscribed: false, purchased: false } : await getMyAccess(target);
   const firstWeek = p.days.length ? Math.min(...p.days.map((d) => d.week)) : 1;
   const week = p.days.filter((d) => d.week === firstWeek);
   const preview = week.find((d) => d.runType === "tempo" || d.runType === "intervals") ?? week.find((d) => d.kind === "run");
@@ -37,7 +43,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ handle
 
   return (
     <main className="rl-page rl-stack" style={{ gap: "var(--rl-space-8)" }}>
-      <Cover name={coverFor(p)} ratio={21 / 9} />
+      <ProgramCover p={p} ratio={21 / 9} />
       <div className="rl-stack" style={{ gap: "var(--rl-space-2)" }}>
         <Link href={`/c/${handle}`} className="t-label">← {c.displayName || `@${c.handle}`}</Link>
         <h1 className="t-display-xl" style={{ margin: 0 }}>{p.title}</h1>
@@ -68,9 +74,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ handle
       ) : (
         <div className="rl-card rl-sunken"><span className="c-secondary">Subscribe to see the weeks. The plan is {p.weeks} weeks long.</span></div>
       )}
-      <Link href={`/signup?next=/app`} className="rl-btn rl-btn-primary rl-btn-lg">
-        {p.access === "creator_sub" ? `Subscribe to ${c.displayName || c.handle} · $7/mo` : `Buy this program · $${((p.priceCents ?? 0) / 100).toFixed(0)}`}
-      </Link>
+      <JoinButton program={target} creator={c} access={access} back={`/c/${handle}/${p.id}`} example={example} />
     </main>
   );
 }

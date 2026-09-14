@@ -8,6 +8,7 @@ import { getMyProfile, getProgram } from "@/lib/db/programs";
 import { isConfigured } from "@/lib/supabase/server";
 import { sampleProgram } from "@/lib/sample";
 import { sampleExploreByKey } from "@/lib/explore";
+import { track } from "@/lib/analytics";
 
 export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams;
@@ -16,6 +17,7 @@ export async function GET(request: NextRequest) {
     const r = sampleExploreByKey(sample);
     if (!r) return NextResponse.json({ error: "No such run" }, { status: 404 });
     const me = isConfigured() ? await getMyProfile() : null;
+    if (me) track("run_sent_to_watch", { sample, run_type: r.day.runType }, me.id);
     const bytes = encodeWorkout(r.day, { name: r.title, pace5kS: me?.pace5kS ?? null });
     return new NextResponse(Buffer.from(bytes), { headers: { "content-type": "application/vnd.ant.fit", "content-disposition": `attachment; filename="${fitFilename(r.title, r.day)}"`, "cache-control": "no-store" } });
   }
@@ -30,6 +32,7 @@ export async function GET(request: NextRequest) {
   if (pd.kind !== "run" || pd.blocks.length === 0) return NextResponse.json({ error: "Not a run day" }, { status: 400 });
 
   const me = isConfigured() ? await getMyProfile() : null;
+  if (me) track("run_sent_to_watch", { program_id: program.id, week, day, run_type: pd.runType }, me.id);
   const bytes = encodeWorkout(pd, { name: dayTitle(pd), pace5kS: me?.pace5kS ?? null });
   return new NextResponse(Buffer.from(bytes), {
     headers: {

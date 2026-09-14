@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { ParallaxInk } from "@/components/ui/ParallaxInk";
+import { Analytics } from "@/components/analytics/Analytics";
 
 // Self-hosted, per foundations.md. No third-party font CDN in the app.
 const display = localFont({
@@ -49,6 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${display.variable} ${sans.variable}`}>
       <body>
         <ParallaxInk />
+        <Analytics />
         {children}
       </body>
     </html>

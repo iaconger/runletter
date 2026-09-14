@@ -9,6 +9,7 @@ import { BlockBar } from "@/components/run/BlockBar";
 import { watchPreview } from "@/lib/fit/encode";
 import { CreatorNote, WeekStrip, dayTitle, runKey } from "@/components/run/RunPieces";
 import { createClient } from "@/lib/supabase/client";
+import { IMAGE_SPEC, prepareImage } from "@/lib/image";
 import { clearDayAction, createPostAction, duplicateWeekAction, saveDayAction, saveIssueAction, setStatusAction, updateProgramAction } from "@/app/studio/actions";
 import type { Post } from "@/lib/db/programs";
 import { DAY_NAMES_LONG, RUN_TYPE_LABEL, addDays, dayDurationS, fmtMinutes, toISODate, type Block, type LetterIssue, type Program, type ProgramDay } from "@/lib/types";
@@ -191,9 +192,9 @@ export function Editor({
     setUploading(true);
     try {
       const supabase = createClient();
-      const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+      const { blob, ext, type } = await prepareImage(file, IMAGE_SPEC.planCover);
       const path = `${userId}/${program.id}-${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("covers").upload(path, file, { upsert: true, contentType: file.type });
+      const { error } = await supabase.storage.from("covers").upload(path, blob, { upsert: true, contentType: type });
       if (error) throw error;
       const { data } = supabase.storage.from("covers").getPublicUrl(path);
       saveSetting({ coverUrl: data.publicUrl });
@@ -336,10 +337,13 @@ export function Editor({
               {program.coverUrl && <img src={program.coverUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />}
             </div>
             {!readOnly && (
-              <label className="rl-btn rl-btn-secondary rl-btn-sm" style={{ alignSelf: "flex-start", cursor: "pointer" }}>
-                {uploading ? "Uploading…" : program.coverUrl ? "Replace photo" : "Add a photo"}
-                <input type="file" accept="image/jpeg,image/png,image/webp" hidden disabled={uploading} onChange={(e) => e.target.files?.[0] && uploadCover(e.target.files[0])} />
-              </label>
+              <div className="rl-row" style={{ gap: 6 }}>
+                <label className="rl-btn rl-btn-secondary rl-btn-sm" style={{ cursor: "pointer" }}>
+                  {uploading ? "Uploading…" : program.coverUrl ? "Replace" : "Choose photo"}
+                  <input type="file" accept="image/jpeg,image/png,image/webp" hidden disabled={uploading} onChange={(e) => e.target.files?.[0] && uploadCover(e.target.files[0])} />
+                </label>
+                {program.coverUrl && !uploading && <button type="button" className="rl-btn rl-btn-ghost rl-btn-sm" onClick={() => saveSetting({ coverUrl: null })}>Remove</button>}
+              </div>
             )}
 
           </div>
@@ -356,10 +360,18 @@ export function Editor({
             </select>
           </div>
           {letter ? (
-            <div className="rl-field"><label>Started</label>
-              <input className="rl-input" type="date" value={program.fixedStartDate ?? ""} disabled={readOnly} onChange={(e) => e.target.value && saveSetting({ startRule: "fixed", fixedStartDate: e.target.value })} />
-
-            </div>
+            <>
+              <div className="rl-field"><label>Started</label>
+                <input className="rl-input" type="date" value={program.fixedStartDate ?? ""} disabled={readOnly} onChange={(e) => e.target.value && saveSetting({ startRule: "fixed", fixedStartDate: e.target.value })} />
+              </div>
+              <div className="rl-field"><label>Price a month</label>
+                <div className="rl-row" style={{ gap: 6, flexWrap: "nowrap" }}>
+                  <span className="c-muted">$</span>
+                  <input className="rl-input" type="number" min={0} max={100} step={1} value={Math.round((program.priceCents ?? 0) / 100)} disabled={readOnly} onChange={(e) => setProgram({ ...program, priceCents: Math.round(Number(e.target.value) * 100) })} onBlur={(e) => saveSetting({ priceCents: Math.max(0, Math.round(Number(e.target.value) * 100)) })} />
+                </div>
+                <span className="rl-help">0 = free</span>
+              </div>
+            </>
           ) : (
             <>
               <div className="rl-field"><label>Weeks</label><input className="rl-input" type="number" min={1} max={52} value={program.weeks} readOnly={readOnly} onChange={(e) => setProgram({ ...program, weeks: Number(e.target.value) || 1 })} onBlur={(e) => saveSetting({ weeks: Math.min(52, Math.max(1, Number(e.target.value) || 1)) })} /></div>

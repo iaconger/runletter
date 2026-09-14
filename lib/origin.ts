@@ -8,3 +8,13 @@ export function publicOrigin(request: NextRequest): string {
   const proto = request.headers.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
   return `${proto}://${host}`;
 }
+
+/** Same, from a Server Action or Server Component (no request object). */
+export async function publicOriginFromHeaders(): Promise<string> {
+  const { headers } = await import("next/headers");
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  if (!host) return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  return `${proto}://${host}`;
+}

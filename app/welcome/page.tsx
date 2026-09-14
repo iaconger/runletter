@@ -22,7 +22,7 @@ export default async function Welcome({ searchParams }: { searchParams: Promise<
   const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : "";
   const { data: conns } = await supabase.from("connections").select("provider").eq("user_id", user.id);
   const stravaConnected = connected === "strava" || !!conns?.some((c) => c.provider === "strava");
-  const startStep = step === "3" ? 3 : 0;
+  const startStep = step === "3" || step === "connect" ? "connect" : "you";
 
   return (
     <main className="rl-page rl-stack" style={{ maxWidth: 560, minHeight: "100vh", justifyContent: "center", gap: "var(--rl-space-6)" }}>

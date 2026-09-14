@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { publicOrigin } from "@/lib/origin";
 import { createClient } from "@/lib/supabase/server";
 import { stravaAuthorizeUrl, stravaEnabled } from "@/lib/integrations/strava";
+import { track } from "@/lib/analytics";
 
 export async function GET(request: NextRequest) {
   const back = request.nextUrl.searchParams.get("back") ?? "/app/you";
@@ -10,6 +11,7 @@ export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.redirect(new URL(`/login?next=${encodeURIComponent(back)}`, publicOrigin(request)));
+  track("connect_strava_started", { back }, user.id);
   const state = crypto.randomUUID();
   const res = NextResponse.redirect(stravaAuthorizeUrl(`${publicOrigin(request)}/api/connect/strava/callback`, state));
   res.cookies.set("rl_strava_state", `${state}|${back}`, { httpOnly: true, sameSite: "lax", maxAge: 600, path: "/" });
