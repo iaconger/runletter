@@ -1,5 +1,5 @@
 // A run you can do today, from Explore. Photo of the creator (or their ink portrait), the run type's colour
-// as a band, "45 min · Easy", and one action: send to watch. Nothing to start here; the watch runs it.
+// as a band, "45 min · Easy", and one action: send to watch. Photo and title open the run.
 import Link from "next/link";
 import { Portrait } from "@/components/ui/Ink";
 import { dayDurationS, RUN_TYPE_LABEL } from "@/lib/types";
@@ -12,13 +12,13 @@ export function RunCard({ r, compact = false }: { r: ExploreRun; compact?: boole
   const cover = r.cover ?? photo;
   return (
     <article className={`rl-runcard${compact ? " compact" : ""}`} data-run={r.day.runType ?? "easy"}>
-      <div className="img">
+      <Link href={`/app/run/${r.key}`} className="img" aria-label={r.title}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {cover ? <img src={cover} alt="" /> : r.creator.portrait ? <Portrait name={r.creator.portrait} size={120} photo={false} /> : null}
         <span className="band">{type} · {mins} min</span>
-      </div>
+      </Link>
       <div className="body">
-        <span className="t-heading">{r.title}</span>
+        <Link href={`/app/run/${r.key}`} className="t-heading title">{r.title}</Link>
         <Link href={`/c/${r.creator.handle}`} className="by">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {photo && <img src={photo} alt="" width={20} height={20} />}

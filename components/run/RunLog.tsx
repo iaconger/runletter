@@ -1,4 +1,5 @@
 // A list of runs the person actually did: planned ones and off-plan ones, from Strava or by hand.
+import Link from "next/link";
 import type { RunLogItem } from "@/lib/db/programs";
 import { fmtPaceShort } from "@/lib/paces";
 
@@ -12,16 +13,19 @@ export function RunLog({ runs, empty = "No runs yet." }: { runs: RunLogItem[]; e
     <ul className="rl-runlog">
       {runs.map((r) => (
         <li key={r.id}>
-          <span className="d">{label(r.date)}</span>
-          <span className="t">
-            {r.title}
-            {!r.planned && <span className="rl-chip" style={{ marginLeft: 8, fontSize: 11 }}>off plan</span>}
-          </span>
-          <span className="m">
-            {r.distanceM ? `${(r.distanceM / 1000).toFixed(1)} km` : ""}
-            {r.durationS ? ` · ${Math.round(r.durationS / 60)} min` : ""}
-            {r.avgPaceS ? ` · ${fmtPaceShort(r.avgPaceS)} /km` : ""}
-          </span>
+          <Link href={`/app/log/${r.id}`}>
+            <span className="d">{label(r.date)}</span>
+            <span className="t">
+              {r.title}
+              {!r.planned && <span className="rl-chip" style={{ marginLeft: 8, fontSize: 11 }}>off plan</span>}
+            </span>
+            <span className="m">
+              {r.distanceM ? `${(r.distanceM / 1000).toFixed(1)} km` : ""}
+              {r.durationS ? ` · ${Math.round(r.durationS / 60)} min` : ""}
+              {r.avgPaceS ? ` · ${fmtPaceShort(r.avgPaceS)} /km` : ""}
+            </span>
+            <span className="go" aria-hidden>→</span>
+          </Link>
         </li>
       ))}
     </ul>
