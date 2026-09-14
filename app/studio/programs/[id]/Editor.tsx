@@ -63,6 +63,7 @@ export function Editor({
   handle,
   userId,
   today,
+  open,
   readOnly = false,
 }: {
   program: Program;
@@ -72,6 +73,7 @@ export function Editor({
   handle?: string;
   userId?: string;
   today: string;
+  open?: { week: number; day: number };
   readOnly?: boolean;
 }) {
   const [program, setProgram] = useState<Program>(initial);
@@ -82,6 +84,7 @@ export function Editor({
 
   // Open on today's week for a Letter, else on the first day that exists.
   const [sel, setSel] = useState<{ week: number; day: number }>(() => {
+    if (open && open.week >= 1 && open.day >= 1 && open.day <= 7) return open;
     if (start) {
       const diff = Math.floor((addDays(today, 0).getTime() - addDays(start, 0).getTime()) / 86400000);
       if (diff >= 0 && diff < initial.weeks * 7) return { week: Math.floor(diff / 7) + 1, day: (diff % 7) + 1 };

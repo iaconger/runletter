@@ -495,3 +495,31 @@ export async function getMyAccess(program: Pick<Program, "id" | "creatorId">): P
   ]);
   return { signedIn: true, subscribed: !!sub, purchased: !!buy };
 }
+
+export type RunnerCalendar = { program: Program; creator: Profile; enrollmentId: string; start: string; currentWeek: number | null; doneIds: Set<string>; extras: ExtraRun[]; sentWeeks: Set<number> };
+
+/** Everything for the runner's calendar: the whole program from their start date, what's done, and off-plan runs. */
+export async function getMyCalendar(today: string): Promise<RunnerCalendar | null> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data: enrol } = await supabase.from("enrollments").select("id, program_id, start_date").eq("follower_id", user.id).eq("status", "active").order("created_at", { ascending: false }).limit(1).maybeSingle();
+  if (!enrol) return null;
+  const program = await getProgram(enrol.program_id);
+  if (!program) return null;
+  const creator = await getProfileById(program.creatorId);
+  if (!creator) return null;
+  const diff = Math.floor((addDays(today, 0).getTime() - addDays(enrol.start_date, 0).getTime()) / 86400000);
+  const currentWeek = diff >= 0 && diff < program.weeks * 7 ? Math.floor(diff / 7) + 1 : null;
+  const [{ data: comps }, extras] = await Promise.all([
+    supabase.from("completions").select("program_day_id").eq("enrollment_id", enrol.id),
+    listExtras(user.id, enrol.start_date, toISODate(addDays(enrol.start_date, program.weeks * 7 - 1))),
+  ]);
+  let sentWeeks = new Set<number>();
+  if (program.isLetter) {
+    const { data: issues } = await supabase.from("letter_issues").select("week, sent_at").eq("program_id", program.id).not("sent_at", "is", null);
+    sentWeeks = new Set((issues ?? []).map((i) => i.week));
+    if (program.creatorId === user.id) sentWeeks = new Set(Array.from({ length: program.weeks }, (_, i) => i + 1));
+  }
+  return { program, creator, enrollmentId: enrol.id, start: enrol.start_date, currentWeek, doneIds: new Set((comps ?? []).map((c) => c.program_day_id)), extras, sentWeeks };
+}

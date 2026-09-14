@@ -61,9 +61,10 @@ async function withPassword(formData: FormData) {
   const supabase = await createClient();
   if (mode === "signup") {
     const { data, error } = await supabase.auth.signUp({ email, password, options: { data: name ? { display_name: name, role } : { role } } });
-    if (error) fail(/already registered/i.test(error.message) ? "That email already has an account. Sign in instead." : error.message);
+    if (error) fail(/already registered/i.test(error.message) ? "That email already has an account. Sign in, or use another email: runner and creator accounts are separate." : error.message);
     // With email confirmation off (build phase) there is a session right away. With it on, they get an email.
     if (data.user) {
+      if (data.session) await supabase.from("profiles").update({ is_creator: role === "creator" }).eq("id", data.user.id);
       identify(data.user.id, { role });
       track("signup_completed", { role, method: "password" }, data.user.id);
     }
@@ -73,9 +74,14 @@ async function withPassword(formData: FormData) {
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error || !data.user) fail(error && !/invalid/i.test(error.message) ? error.message : "Wrong email or password.");
-  const { data: profile } = await supabase.from("profiles").select("handle").eq("id", data.user!.id).maybeSingle();
-  if (profile && profile.handle.startsWith("u_")) redirect(`/welcome?next=${encodeURIComponent(next)}&role=${role}`);
-  redirect(next.startsWith("/") && !next.startsWith("//") ? next : "/app");
+  const { data: profile } = await supabase.from("profiles").select("handle, is_creator").eq("id", data.user!.id).maybeSingle();
+  const kind = profile?.is_creator ? "creator" : "runner";
+  const home = kind === "creator" ? "/studio" : "/app";
+  if (profile && profile.handle.startsWith("u_")) redirect(`/welcome?next=${encodeURIComponent(home)}&role=${kind}`);
+  const wanted = next.startsWith("/") && !next.startsWith("//") ? next : home;
+  // The switch on the form is a hint; the account decides. A runner can't land in the studio and vice versa.
+  const allowed = kind === "creator" ? !wanted.startsWith("/app") : !wanted.startsWith("/studio");
+  redirect(allowed ? wanted : home);
 }
 
 export function AuthForm({ mode, sent, error, next, role }: { mode: Mode; sent?: string; error?: string; next?: string; role?: string }) {

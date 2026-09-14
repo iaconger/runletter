@@ -15,7 +15,8 @@ const GOAL_LABEL: Record<string, string> = { base: "Base building", "5k": "5K", 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const fmtDate = (d: Date) => `${MONTHS[d.getMonth()]} ${d.getDate()}`;
 
-export default async function StudioHome() {
+export default async function StudioHome({ searchParams }: { searchParams: Promise<{ kind?: string }> }) {
+  const { kind } = await searchParams;
   const configured = isConfigured();
   const [profile, programs] = configured ? await Promise.all([getMyProfile(), listMyPrograms()]) : [null, []];
   const needsHandle = profile && profile.handle.startsWith("u_");
@@ -47,6 +48,11 @@ export default async function StudioHome() {
         )}
       </div>
 
+      {kind === "creator" && (
+        <div className="rl-sunken" style={{ borderRadius: "var(--rl-radius-md)", padding: "10px 14px" }}>
+          <span className="t-body-sm">This is a creator account. To follow someone&rsquo;s runs yourself, <Link href="/signup?as=runner">make a runner account</Link> with another email.</span>
+        </div>
+      )}
       {needsHandle && (
         <div className="rl-card" style={{ borderColor: "var(--rl-accent)", gap: "var(--rl-space-2)" }}>
           <span className="t-heading">Pick your handle first</span>

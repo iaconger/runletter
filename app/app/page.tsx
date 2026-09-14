@@ -19,8 +19,8 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 const DOW = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const fmt = (d: Date) => `${MONTHS[d.getMonth()]} ${d.getDate()}`;
 
-export default async function Today({ searchParams }: { searchParams: Promise<{ day?: string }> }) {
-  const { day: dayParam } = await searchParams;
+export default async function Today({ searchParams }: { searchParams: Promise<{ day?: string; kind?: string }> }) {
+  const { day: dayParam, kind } = await searchParams;
   const today = toISODate(new Date());
   const configured = isConfigured();
   const [me, mine, feed] = configured ? await Promise.all([getMyProfile(), getMyWeek(today), realRuns().catch(() => null)]) : [null, null, null];
@@ -41,6 +41,11 @@ export default async function Today({ searchParams }: { searchParams: Promise<{ 
   const log = me ? await listMyRuns(weekAgo, today) : [];
   const km = log.reduce((s, r) => s + (r.distanceM ?? 0), 0) / 1000;
 
+  const kindNote = kind === "runner" && (
+    <div className="rl-sunken" style={{ borderRadius: "var(--rl-radius-md)", padding: "10px 14px" }}>
+      <span className="t-body-sm">This is a runner account. To write for runners, <Link href="/signup?as=creator">open a studio</Link> with another email.</span>
+    </div>
+  );
   const connect = me && !hasWatch && (
     <div className="rl-connect-prompt">
       <span className="t-body-sm">Connect your watch and Strava</span>
@@ -66,6 +71,7 @@ export default async function Today({ searchParams }: { searchParams: Promise<{ 
           <span className="t-label c-muted">{fmt(new Date())}</span>
           <h1 className="t-display-lg" style={{ margin: 0 }}>{firstName ? `Morning, ${firstName}.` : "Today"}</h1>
         </div>
+        {kindNote}
         {connect}
         <section className="rl-stack" style={{ gap: "var(--rl-space-3)" }}>
           <div className="rl-between" style={{ alignItems: "baseline" }}>
@@ -118,6 +124,7 @@ export default async function Today({ searchParams }: { searchParams: Promise<{ 
 
   return (
     <main className="rl-page rl-stack" style={{ gap: "var(--rl-space-6)" }}>
+      {kindNote}
       {connect}
 
       <div className="rl-stack rl-week-mini" style={{ gap: "var(--rl-space-2)" }}>
@@ -182,7 +189,16 @@ export default async function Today({ searchParams }: { searchParams: Promise<{ 
         <section className="rl-stack" style={{ gap: "var(--rl-space-2)" }}>
           <div className="rl-between" style={{ alignItems: "baseline" }}>
             <h2 className="t-title" style={{ margin: 0 }}>Week {week}</h2>
-            <span className="c-muted t-body-sm" style={{ fontVariantNumeric: "tabular-nums" }}>{doneCount} of {planned} runs</span>
+            {program.isLetter && <span className="c-muted t-body-sm">{creator.displayName}</span>}
+          </div>
+          <div className="rl-weekbar" aria-label="Week progress">
+            <div className="segs">
+              {days.filter((d) => d.kind === "run").map((d) => <i key={d.id} data-on={done.has(d.day) ? "true" : undefined} data-today={d.day === todayDay && !done.has(d.day) ? "true" : undefined} />)}
+            </div>
+            <div className="nums">
+              <span><b>{doneCount}</b> of {planned} runs</span>
+              <span><b>{Math.round(days.filter((d) => done.has(d.day)).reduce((a, d) => a + dayDurationS(d), 0) / 60)}</b> of {Math.round(days.reduce((a, d) => a + dayDurationS(d), 0) / 60)} min</span>
+            </div>
           </div>
           <ul className="rl-daylist">
             {days.map((d) => {

@@ -100,26 +100,33 @@ export function RecipeEditor({ recipe, onChange, readOnly }: { recipe: Recipe; o
       </div>
 
       <div className="row main" data-part="main">
-        <span className="lbl">{r.main.kind === "steady" ? "Run" : "Repeat"}</span>
+        <div className="head">
+          <span className="lbl">{r.main.kind === "steady" ? "Run" : "Repeat"}</span>
+          {!readOnly && (r.main.kind === "steady"
+            ? <button type="button" className="rl-linkbtn muted" onClick={() => set({ main: { kind: "repeat", reps: 6, onMin: 3, onEffort: "hard", offMin: 1.5 } })}>make it repeats</button>
+            : <button type="button" className="rl-linkbtn muted" onClick={() => set({ main: { kind: "steady", min: 20, effort: "moderate" } })}>make it steady</button>)}
+        </div>
         {r.main.kind === "steady" ? (
-          <div className="ctl">
-            <Stepper label="minutes" value={r.main.min} onChange={(v) => set({ main: { kind: "steady", min: v, effort: (r.main as { effort: Effort }).effort } })} step={5} min={5} unit="min" />
-            <EffortPick value={r.main.effort} onChange={(e) => set({ main: { kind: "steady", min: (r.main as { min: number }).min, effort: e } })} />
-            {!readOnly && <button type="button" className="rl-linkbtn muted" onClick={() => set({ main: { kind: "repeat", reps: 6, onMin: 3, onEffort: "hard", offMin: 1.5 } })}>make it repeats</button>}
-          </div>
-        ) : (
-          <div className="ctl stack">
+          <>
             <div className="line">
-              <Stepper label="repeats" value={r.main.reps} onChange={(v) => set({ main: { ...(r.main as Extract<Recipe["main"], { kind: "repeat" }>), reps: v } })} min={2} max={40} unit="×" />
-              <Stepper label="minutes on" value={r.main.onMin} onChange={(v) => set({ main: { ...(r.main as Extract<Recipe["main"], { kind: "repeat" }>), onMin: v } })} step={0.5} min={0.5} max={60} unit="min" />
-              <EffortPick value={r.main.onEffort} onChange={(e) => set({ main: { ...(r.main as Extract<Recipe["main"], { kind: "repeat" }>), onEffort: e } })} />
+              <Stepper label="minutes" value={r.main.min} onChange={(v) => set({ main: { kind: "steady", min: v, effort: (r.main as { effort: Effort }).effort } })} step={5} min={5} unit="min" />
             </div>
+            <EffortPick value={r.main.effort} onChange={(e) => set({ main: { kind: "steady", min: (r.main as { min: number }).min, effort: e } })} />
+          </>
+        ) : (
+          <>
+            <div className="line">
+              <Stepper label="repeats" value={r.main.reps} onChange={(v) => set({ main: { ...(r.main as Extract<Recipe["main"], { kind: "repeat" }>), reps: v } })} min={2} max={40} />
+              <span className="x">×</span>
+              <Stepper label="minutes on" value={r.main.onMin} onChange={(v) => set({ main: { ...(r.main as Extract<Recipe["main"], { kind: "repeat" }>), onMin: v } })} step={0.5} min={0.5} max={60} unit="min" />
+            </div>
+            <EffortPick value={r.main.onEffort} onChange={(e) => set({ main: { ...(r.main as Extract<Recipe["main"], { kind: "repeat" }>), onEffort: e } })} />
             <div className="line">
               <span className="rl-help">then</span>
-              <Stepper label="minutes easy between" value={r.main.offMin} onChange={(v) => set({ main: { ...(r.main as Extract<Recipe["main"], { kind: "repeat" }>), offMin: v } })} step={0.5} min={0.5} max={30} unit="min easy" />
-              {!readOnly && <button type="button" className="rl-linkbtn muted" onClick={() => set({ main: { kind: "steady", min: 20, effort: "moderate" } })}>make it one steady piece</button>}
+              <Stepper label="minutes easy between" value={r.main.offMin} onChange={(v) => set({ main: { ...(r.main as Extract<Recipe["main"], { kind: "repeat" }>), offMin: v } })} step={0.5} min={0.5} max={30} unit="min" />
+              <span className="rl-help">easy, between</span>
             </div>
-          </div>
+          </>
         )}
       </div>
 

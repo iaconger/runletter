@@ -2,10 +2,16 @@ import Link from "next/link";
 import { Lockup } from "@/components/ui/Logo";
 import { StudioNav } from "./StudioNav";
 import { SignedInAnalytics } from "@/components/analytics/SignedInAnalytics";
+import { redirect } from "next/navigation";
+import { getMyProfile } from "@/lib/db/programs";
+import { isConfigured } from "@/lib/supabase/server";
 
 export const metadata = { title: { default: "Studio", template: "%s · RunLetter Studio" } };
 
-export default function StudioLayout({ children }: { children: React.ReactNode }) {
+export default async function StudioLayout({ children }: { children: React.ReactNode }) {
+  // Creator accounts only. A runner account lives in the app.
+  const me = isConfigured() ? await getMyProfile() : null;
+  if (me && !me.isCreator) redirect("/app?kind=runner");
   return (
     <div className="rl-studio">
       <SignedInAnalytics role="creator" />
