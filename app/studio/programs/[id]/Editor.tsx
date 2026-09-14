@@ -6,8 +6,9 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { BlockBar } from "@/components/run/BlockBar";
+import { RecipeEditor, parseRecipe, recipeToBlocks } from "@/components/studio/Recipe";
 import { watchPreview } from "@/lib/fit/encode";
-import { CreatorNote, WeekStrip, dayTitle, runKey } from "@/components/run/RunPieces";
+import { WeekStrip, dayTitle, runKey } from "@/components/run/RunPieces";
 import { createClient } from "@/lib/supabase/client";
 import { IMAGE_SPEC, prepareImage } from "@/lib/image";
 import { clearDayAction, createPostAction, duplicateWeekAction, saveDayAction, saveIssueAction, setStatusAction, updateProgramAction } from "@/app/studio/actions";
@@ -59,7 +60,6 @@ export function Editor({
   program: initial,
   issues: initialIssues = [],
   posts: initialPosts = [],
-  creatorName,
   handle,
   userId,
   today,
@@ -92,6 +92,9 @@ export function Editor({
   const [draft, setDraft] = useState<ProgramDay | null>(() => initial.days.find((d) => d.week === sel.week && d.day === sel.day) ?? null);
   const [saveState, setSaveState] = useState<"idle" | "pending" | "saving" | "saved" | "error">("idle");
   const [fineTune, setFineTune] = useState(false);
+  const [shapesOpen, setShapesOpen] = useState(false);
+  const [talkOpen, setTalkOpen] = useState(false);
+  const recipe = useMemo(() => (draft && draft.kind === "run" ? parseRecipe(draft.blocks) : null), [draft]);
   const [toast, setToast] = useState<string | null>(null);
   const [pending, start_] = useTransition();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -156,6 +159,8 @@ export function Editor({
     latest.current = d;
     setSaveState("idle");
     setFineTune(false);
+    setShapesOpen(false);
+    setTalkOpen(false);
   }
 
   function applyShape(s: Shape) {
@@ -482,61 +487,73 @@ export function Editor({
               </div>
               {draft && draft.kind === "run" && <span className="t-numeral-lg">{fmtMinutes(dayDurationS(draft))}</span>}
             </div>
-            <div className="rl-between">
-              <span className="rl-help">{readOnly ? "Example" : saveState === "saving" ? "Saving…" : saveState === "error" ? "Could not save" : ""}</span>
-              {draft && !readOnly && <button type="button" className="rl-btn rl-btn-ghost rl-btn-sm" onClick={removeDay} disabled={pending}>Clear day</button>}
-            </div>
 
-            {/* shapes: the whole point. One tap fills the day. */}
-            <div className="rl-stack" style={{ gap: 6 }}>
-              <div className="rl-shapes">
-                {SHAPES.map((s) => (
-                  <button key={s.key} type="button" className="rl-shape" data-run={s.kind === "cross" ? "cross" : s.runType ?? undefined} disabled={readOnly} onClick={() => applyShape(s)}>
-                    <b>{s.label}</b>
-                    <small>{s.sub}</small>
-                  </button>
-                ))}
+            {/* 1. Shape. One tap fills the day; after that it folds away behind "Change". */}
+            {(!draft || shapesOpen) && (
+              <div className="rl-stack" style={{ gap: 6 }}>
+                {draft && <span className="t-label c-muted">Change to</span>}
+                <div className="rl-shapes">
+                  {SHAPES.map((s) => (
+                    <button key={s.key} type="button" className="rl-shape" data-run={s.kind === "cross" ? "cross" : s.runType ?? undefined} disabled={readOnly} onClick={() => { applyShape(s); setShapesOpen(false); }}>
+                      <b>{s.label}</b>
+                      <small>{s.sub}</small>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {draft && (
               <>
+                <div className="rl-between" style={{ alignItems: "center" }}>
+                  <div className="rl-row" style={{ gap: 6 }} role="radiogroup" aria-label="Run type">
+                    {draft.kind === "run" && RUN_TYPES.map((t) => (
+                      <button key={t} type="button" className="rl-chip rl-run-chip" data-run={t} aria-pressed={draft.runType === t} disabled={readOnly} onClick={() => edit({ ...draft, runType: t })} style={{ cursor: "pointer" }}>{RUN_TYPE_LABEL[t]}</button>
+                    ))}
+                  </div>
+                  <div className="rl-row" style={{ gap: 4, flexWrap: "nowrap" }}>
+                    {!readOnly && <button type="button" className="rl-btn rl-btn-ghost rl-btn-sm" onClick={() => setShapesOpen((v) => !v)} aria-expanded={shapesOpen}>{shapesOpen ? "Keep" : "Change"}</button>}
+                    {!readOnly && <button type="button" className="rl-btn rl-btn-ghost rl-btn-sm" onClick={removeDay} disabled={pending}>Clear</button>}
+                  </div>
+                </div>
+
+                {/* 2. The numbers. A recipe when the run has one; pieces for anything else. */}
                 {draft.kind === "run" && (
-                  <>
-                    <div className="rl-row" style={{ gap: 6 }} role="radiogroup" aria-label="Run type">
-                      {RUN_TYPES.map((t) => (
-                        <button key={t} type="button" className="rl-chip rl-run-chip" data-run={t} aria-pressed={draft.runType === t} disabled={readOnly} onClick={() => edit({ ...draft, runType: t })} style={{ cursor: "pointer" }}>{RUN_TYPE_LABEL[t]}</button>
-                      ))}
-                    </div>
-                    {draft.blocks.length === 1 && draft.blocks[0]!.measure === "time" ? (
-                      <div className="rl-between">
-                        <span className="c-secondary">How long</span>
-                        <div className="rl-row" style={{ gap: 4, flexWrap: "nowrap" }}>
-                          <button type="button" className="rl-btn rl-btn-secondary rl-btn-sm" disabled={readOnly} onClick={() => edit({ ...draft, blocks: [{ ...draft.blocks[0]!, durationS: Math.max(300, (draft.blocks[0]!.durationS ?? 0) - 300) }] })}>−5</button>
-                          <input className="rl-input" type="number" min={5} step={5} style={{ width: 72, textAlign: "center" }} value={Math.round((draft.blocks[0]!.durationS ?? 0) / 60)} disabled={readOnly} onChange={(e) => edit({ ...draft, blocks: [{ ...draft.blocks[0]!, durationS: Math.max(300, Math.round(Number(e.target.value) * 60)) }] })} />
-                          <button type="button" className="rl-btn rl-btn-secondary rl-btn-sm" disabled={readOnly} onClick={() => edit({ ...draft, blocks: [{ ...draft.blocks[0]!, durationS: (draft.blocks[0]!.durationS ?? 0) + 300 }] })}>+5</button>
-                        </div>
-                      </div>
-                    ) : (
+                  recipe && !fineTune ? (
+                    <RecipeEditor recipe={recipe} readOnly={readOnly} onChange={(r) => edit({ ...draft, blocks: recipeToBlocks(r, draft.blocks) })} />
+                  ) : (
+                    <>
                       <BlockBar blocks={draft.blocks} legend={false} />
-                    )}
-                    <button type="button" className="rl-btn rl-btn-ghost rl-btn-sm" style={{ alignSelf: "flex-start" }} onClick={() => setFineTune((v) => !v)} aria-expanded={fineTune}>{fineTune ? "Hide pieces" : "Pieces"}</button>
-                    {fineTune && <BlocksEditor blocks={draft.blocks} readOnly={readOnly} onChange={(blocks) => edit({ ...draft, blocks })} />}
-                    <WatchPreview day={draft} programId={program.id} />
-                  </>
+                      <BlocksEditor blocks={draft.blocks} readOnly={readOnly} onChange={(blocks) => edit({ ...draft, blocks })} />
+                    </>
+                  )
                 )}
 
+                {/* 3. The note. The part nobody else can write. */}
                 <div className="rl-field">
-                  <label>Note</label>
-                  <textarea className="rl-input" value={draft.note} readOnly={readOnly} maxLength={400} rows={3} onChange={(e) => edit({ ...draft, note: e.target.value })} placeholder="Optional" />
+                  <label>Your note</label>
+                  <textarea className="rl-input" value={draft.note} readOnly={readOnly} maxLength={400} rows={3} onChange={(e) => edit({ ...draft, note: e.target.value })} placeholder={draft.kind === "run" ? "Why this run. What to feel, what to ignore." : "Optional"} />
                 </div>
-                {draft.note && <CreatorNote note={draft.note} by={creatorName} />}
+
+                {draft.kind === "run" && (
+                  <div className="rl-row" style={{ gap: 6 }}>
+                    {recipe && <button type="button" className="rl-btn rl-btn-ghost rl-btn-sm" onClick={() => setFineTune((v) => !v)} aria-expanded={fineTune}>{fineTune ? "Back to the recipe" : "Pieces"}</button>}
+                    <WatchPreview day={draft} programId={program.id} />
+                  </div>
+                )}
+                <span className="rl-help">{readOnly ? "Example" : saveState === "saving" ? "Saving…" : saveState === "error" ? "Could not save" : saveState === "saved" ? "Saved" : ""}</span>
 
                 {!readOnly && (
                   <div className="rl-field" style={{ borderTop: "var(--rl-border-hairline) solid var(--rl-hairline)", paddingTop: "var(--rl-space-3)" }}>
-                    <label>Say something to your runners about this workout</label>
-                    <textarea className="rl-input" rows={2} value={comment} maxLength={2000} placeholder="Reps felt long today? Cut to 5. Or: who's in for the Sunday long run at the lake?" onChange={(e) => setComment(e.target.value)} />
-                    <button type="button" className="rl-btn rl-btn-secondary rl-btn-sm" style={{ alignSelf: "flex-start" }} disabled={pending || !comment.trim() || saveState === "pending" || saveState === "saving"} onClick={postComment}>Post</button>
+                    {!talkOpen && dayPosts.length === 0 ? (
+                      <button type="button" className="rl-linkbtn" style={{ alignSelf: "flex-start", font: "var(--rl-text-body-sm)" }} onClick={() => setTalkOpen(true)}>Say something to your runners about this run</button>
+                    ) : (
+                      <>
+                        <label>To your runners</label>
+                        <textarea className="rl-input" rows={2} value={comment} maxLength={2000} placeholder="Reps felt long today? Cut to 5. Or: who's in for the Sunday long run at the lake?" onChange={(e) => setComment(e.target.value)} />
+                        <button type="button" className="rl-btn rl-btn-secondary rl-btn-sm" style={{ alignSelf: "flex-start" }} disabled={pending || !comment.trim() || saveState === "pending" || saveState === "saving"} onClick={postComment}>Post</button>
+                      </>
+                    )}
                     {dayPosts.length > 0 && (
                       <ul className="rl-stack" style={{ listStyle: "none", margin: 0, padding: 0, gap: 6 }}>
                         {dayPosts.map((p) => (
@@ -700,12 +717,12 @@ function WatchPreview({ day, programId }: { day: ProgramDay; programId: string }
   const steps = watchPreview(day);
   const hasZones = steps.some((s) => s.target.startsWith("HR"));
   return (
-    <div className="rl-stack" style={{ gap: 6 }}>
-      <button type="button" className="rl-btn rl-btn-ghost rl-btn-sm" style={{ alignSelf: "flex-start" }} onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+    <>
+      <button type="button" className="rl-btn rl-btn-ghost rl-btn-sm" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
         {open ? "Hide watch" : "Watch"}
       </button>
       {open && (
-        <div className="rl-watch">
+        <div className="rl-watch" style={{ flexBasis: "100%" }}>
           <ol>
             {steps.map((st, i) => (
               <li key={i} data-kind={st.kind}>
@@ -723,6 +740,6 @@ function WatchPreview({ day, programId }: { day: ProgramDay; programId: string }
           )}
         </div>
       )}
-    </div>
+    </>
   );
 }
