@@ -446,13 +446,14 @@ export async function listMyRuns(from: string, to: string): Promise<RunLogItem[]
 
 // ---------- access (through RLS: a runner sees only their own rows) ----------
 
-export type MyAccess = { signedIn: boolean; subscribed: boolean; purchased: boolean };
+export type MyAccess = { signedIn: boolean; subscribed: boolean; purchased: boolean; own?: boolean };
 
 /** Does the signed-in runner already have this program: subscribed to its creator (Letter) or bought it (plan). */
 export async function getMyAccess(program: Pick<Program, "id" | "creatorId">): Promise<MyAccess> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { signedIn: false, subscribed: false, purchased: false };
+  if (user.id === program.creatorId) return { signedIn: true, subscribed: true, purchased: true, own: true };
   const [{ data: sub }, { data: buy }] = await Promise.all([
     supabase.from("subscriptions").select("status").eq("follower_id", user.id).eq("creator_id", program.creatorId).eq("status", "active").maybeSingle(),
     supabase.from("purchases").select("id").eq("follower_id", user.id).eq("program_id", program.id).maybeSingle(),

@@ -26,6 +26,7 @@ export function JoinButton({ program, creator, access, back, className = "rl-btn
   const paid = (program.priceCents ?? 0) > 0 && creator.stripeChargesEnabled;
   const label = paid ? `${verb} · ${priceLabel(program, creator)}` : `${verb} · free`;
   if (example) return <Link href="/signup" className={className}>{label}</Link>;
+  if (access.own) return <Link href="/studio" className={className}>Open in the studio →</Link>;
   if (!access.signedIn) return <Link href={`/signup?next=${encodeURIComponent(back)}`} className={className}>{label}</Link>;
   if ((program.isLetter && access.subscribed) || (!program.isLetter && (access.purchased || (program.access === "creator_sub" && access.subscribed)))) {
     return <Link href="/app" className={className}>Open in the app →</Link>;
