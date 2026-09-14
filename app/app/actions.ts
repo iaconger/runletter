@@ -13,6 +13,9 @@ export async function markDoneAction(formData: FormData) {
   const parsed = z.object({ enrollmentId: z.string().uuid(), programDayId: z.string().uuid() }).safeParse({ enrollmentId: formData.get("enrollmentId"), programDayId: formData.get("programDayId") });
   if (!parsed.success) return;
   await db.markDone(parsed.data.enrollmentId, parsed.data.programDayId);
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) track("run_marked_done", { source: "manual", program_day_id: parsed.data.programDayId }, user.id);
   revalidatePath("/app");
 }
 

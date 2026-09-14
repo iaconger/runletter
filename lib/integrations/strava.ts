@@ -4,6 +4,7 @@ import "server-only";
 // Docs: https://developers.strava.com/docs/authentication/ and /docs/webhooks/
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { track } from "@/lib/analytics";
 
 const AUTH = "https://www.strava.com/oauth/authorize";
 const TOKEN = "https://www.strava.com/oauth/token";
@@ -116,6 +117,7 @@ async function recordActivity(userId: string, a: Activity): Promise<"done" | "ex
       { user_id: c.user_id, run_date: date, source: "strava", strava_activity_id: String(a.id), name: a.name ?? null, distance_m: Math.round(a.distance), duration_s: a.moving_time, avg_pace_s: avgPace },
       { onConflict: "strava_activity_id" },
     );
+    track("extra_run_synced", { distance_m: Math.round(a.distance), duration_s: a.moving_time }, c.user_id);
     return "extra";
   }
 
@@ -132,5 +134,6 @@ async function recordActivity(userId: string, a: Activity): Promise<"done" | "ex
     },
     { onConflict: "enrollment_id,program_day_id" },
   );
+  track("run_marked_done", { source: "strava", program_day_id: hit.program_day_id }, c.user_id);
   return "done";
 }

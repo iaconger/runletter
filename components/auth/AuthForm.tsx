@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { identify, track } from "@/lib/analytics";
 import { Mark } from "@/components/ui/Logo";
 import { createClient, isConfigured } from "@/lib/supabase/server";
 
@@ -62,6 +63,10 @@ async function withPassword(formData: FormData) {
     const { data, error } = await supabase.auth.signUp({ email, password, options: { data: name ? { display_name: name, role } : { role } } });
     if (error) fail(/already registered/i.test(error.message) ? "That email already has an account. Sign in instead." : error.message);
     // With email confirmation off (build phase) there is a session right away. With it on, they get an email.
+    if (data.user) {
+      identify(data.user.id, { role });
+      track("signup_completed", { role, method: "password" }, data.user.id);
+    }
     if (!data.session) redirect(`${path}?${q}&sent=${encodeURIComponent(email)}`);
     redirect(`/welcome?next=${encodeURIComponent(next)}&role=${role}`);
   }

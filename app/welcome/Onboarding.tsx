@@ -9,6 +9,7 @@ import { IMAGE_SPEC, prepareImage } from "@/lib/image";
 import { saveIdentityAction, saveImagesAction, saveSocialsAction } from "./actions";
 import type { Profile } from "@/lib/types";
 import { RunningForm } from "@/components/run/RunningForm";
+import { track } from "@/lib/analytics";
 
 const SOCIALS: { key: string; label: string; prefix: string; hint: string }[] = [
   { key: "instagram", label: "Instagram", prefix: "instagram.com/", hint: "yourname" },
@@ -81,7 +82,10 @@ export function Onboarding({ profile, userId, next, role, startStep = "you", str
     }
   }
 
-  const finish = () => router.push(next || (isCreator ? "/studio" : "/app"));
+  const finish = () => {
+    track("onboarding_completed", { role, strava: stravaConnected });
+    router.push(next || (isCreator ? "/studio" : "/app"));
+  };
 
   return (
     <div className="rl-stack" style={{ gap: "var(--rl-space-6)" }}>

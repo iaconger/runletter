@@ -1,4 +1,5 @@
 // Magic-link landing. Exchanges the code for a session, then sends the user on.
+import { track } from "@/lib/analytics";
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { publicOrigin } from "@/lib/origin";
@@ -18,6 +19,7 @@ export async function GET(request: NextRequest) {
       const { data: profile } = await supabase.from("profiles").select("handle").eq("id", data.user.id).maybeSingle();
       if (profile && profile.handle.startsWith("u_")) {
         const role = (data.user.user_metadata?.role as string | undefined) === "creator" ? "creator" : "runner";
+        track("signup_completed", { role, method: "magic_link" }, data.user.id);
         return NextResponse.redirect(`${origin}/welcome?next=${encodeURIComponent(safeNext)}&role=${role}`);
       }
       return NextResponse.redirect(`${origin}${safeNext}`);

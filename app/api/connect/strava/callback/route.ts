@@ -4,6 +4,7 @@ import { publicOrigin } from "@/lib/origin";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { stravaExchange, syncRecentStrava } from "@/lib/integrations/strava";
+import { track } from "@/lib/analytics";
 
 export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams;
@@ -23,6 +24,7 @@ export async function GET(request: NextRequest) {
       { onConflict: "user_id,provider" },
     );
     if (error) throw error;
+    track("connect_strava_completed", { athlete_id: t.athlete ? String(t.athlete.id) : null }, user.id);
     // Bring in the last month so the week isn't empty on day one. Best effort.
     try { await syncRecentStrava(user.id, 30); } catch (e) { console.error("strava sync", e); }
   } catch (e) {
