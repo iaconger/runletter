@@ -1,6 +1,11 @@
 // Studio home. Two things a creator makes: the Letter (one, ongoing, subscription) and Plans (many, fixed, bought once).
 import Link from "next/link";
-import { getMyProfile, listMyPrograms, listIssues } from "@/lib/db/programs";
+import { getMyProfile, listMyPrograms, listIssues, listExtras } from "@/lib/db/programs";
+import { shareRunAction } from "@/app/studio/actions";
+import { RouteSketch } from "@/components/run/RouteSketch";
+import { fmtPaceShort } from "@/lib/paces";
+import { createClient } from "@/lib/supabase/server";
+import { toISODate } from "@/lib/types";
 import { isConfigured } from "@/lib/supabase/server";
 import { Cover, coverFor } from "@/components/ui/Ink";
 import { ProgramCover } from "@/components/run/ProgramCover";
@@ -29,6 +34,13 @@ export default async function StudioHome({ searchParams }: { searchParams: Promi
   const thisWeekDays = letter && thisWeek ? letter.days.filter((d) => d.week === thisWeek).length : 0;
   const sent = issues.filter((i) => i.sentAt).length;
   const firstName = profile?.displayName?.split(" ")[0];
+  // The creator's own running, from Strava: the raw material for the week.
+  const todayIso = toISODate(today);
+  const myRuns = profile ? (await listExtras(profile.id, toISODate(addDays(todayIso, -14)), todayIso)).filter((x) => ["Run", "TrailRun", "VirtualRun"].includes(x.sportType)).reverse() : [];
+  const supabase = configured ? await createClient() : null;
+  const { data: conns } = profile && supabase ? await supabase.from("connections").select("provider").eq("user_id", profile.id).eq("provider", "strava") : { data: [] };
+  const hasStrava = (conns ?? []).length > 0;
+  const sharedIds = new Set(letter ? letter.days.map((d) => d.note) : []);
 
   return (
     <main className="rl-page rl-wide rl-stack" style={{ gap: "var(--rl-space-7, 40px)" }}>
@@ -65,8 +77,8 @@ export default async function StudioHome({ searchParams }: { searchParams: Promi
       <section className="rl-stack" style={{ gap: "var(--rl-space-3)" }} aria-label="Your Letter">
         <div className="rl-between" style={{ alignItems: "baseline" }}>
           <div className="rl-stack" style={{ gap: 2 }}>
-            <span className="t-label c-muted">Your Letter</span>
-            <h2 className="t-title" style={{ margin: 0 }}>{letter ? letter.title : "Start your Letter"}</h2>
+            <span className="t-label c-muted">Your week</span>
+            <h2 className="t-title" style={{ margin: 0 }}>{letter ? letter.title : "Open your week"}</h2>
           </div>
           {letter && <Link href={`/studio/programs/${letter.id}`} className="rl-btn rl-btn-primary rl-btn-sm">Open this week</Link>}
         </div>
@@ -95,7 +107,7 @@ export default async function StudioHome({ searchParams }: { searchParams: Promi
           <form action={startLetterAction} className="rl-lettercard">
             <div className="img"><Cover name="dawn-road" ratio={5 / 4} /></div>
             <div className="rl-stack" style={{ padding: "var(--rl-space-4)", gap: "var(--rl-space-3)" }}>
-              <span className="c-secondary">Your running, week by week, sent every Sunday. No race required.</span>
+              <span className="c-secondary">The runs you do, shared as a week. Subscribers get them on their watch. No race required.</span>
               <div className="rl-row" style={{ alignItems: "stretch" }}>
                 <div className="rl-field" style={{ flex: 2, minWidth: 200 }}>
                   <label htmlFor="ltitle">Call it</label>
@@ -114,11 +126,53 @@ export default async function StudioHome({ searchParams }: { searchParams: Promi
                   </select>
                 </div>
               </div>
-              <button type="submit" className="rl-btn rl-btn-primary" style={{ alignSelf: "flex-start" }} disabled={!configured}>Start my Letter</button>
+              <button type="submit" className="rl-btn rl-btn-primary" style={{ alignSelf: "flex-start" }} disabled={!configured}>Open my week →</button>
             </div>
           </form>
         )}
       </section>
+
+      {/* ---------- your runs, from Strava: share one into the week ---------- */}
+      {profile && (
+        <section className="rl-stack" style={{ gap: "var(--rl-space-3)" }} aria-label="Your runs">
+          <div className="rl-between" style={{ alignItems: "baseline" }}>
+            <div className="rl-stack" style={{ gap: 2 }}>
+              <span className="t-label c-muted">From your Strava</span>
+              <h2 className="t-title" style={{ margin: 0 }}>Runs you could share</h2>
+            </div>
+            <Link href="/studio/page#connections" className="rl-help">{hasStrava ? "Sync →" : "Connect Strava →"}</Link>
+          </div>
+          {!hasStrava ? (
+            <div className="rl-connect-prompt">
+              <span className="t-body-sm">Connect Strava and your runs show up here, ready to share into your week.</span>
+              <Link href="/studio/page#connections" className="rl-btn rl-btn-primary rl-btn-sm">Connect</Link>
+            </div>
+          ) : myRuns.length === 0 ? (
+            <span className="rl-help">Nothing in the last two weeks. Go run, then come back.</span>
+          ) : (
+            <ul className="rl-sharelist">
+              {myRuns.slice(0, 6).map((x) => (
+                <li key={x.id}>
+                  {x.polyline ? <RouteSketch polyline={x.polyline} size={56} /> : <span className="rl-avatar" style={{ width: 56, height: 56 }} />}
+                  <div className="rl-stack" style={{ gap: 2, minWidth: 0 }}>
+                    <span className="t-body-medium" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{x.name ?? "Run"}</span>
+                    <span className="rl-help">{fmtDate(addDays(x.date, 0))}{x.distanceM ? ` · ${(x.distanceM / 1000).toFixed(1)} km` : ""}{x.durationS ? ` · ${Math.round(x.durationS / 60)} min` : ""}{x.avgPaceS ? ` · ${fmtPaceShort(x.avgPaceS)} /km` : ""}{x.elevationM ? ` · ${x.elevationM} m` : ""}</span>
+                  </div>
+                  {letter ? (
+                    sharedIds.has(x.name ?? "") ? <span className="rl-chip rl-chip-success">Shared</span> : (
+                      <form action={shareRunAction} className="rl-row" style={{ gap: 6, flexWrap: "nowrap" }}>
+                        <input type="hidden" name="extraId" value={x.id} />
+                        <input name="note" className="rl-input" placeholder="Why this run" maxLength={400} style={{ height: 34, minWidth: 0, width: 180 }} />
+                        <button type="submit" className="rl-btn rl-btn-primary rl-btn-sm">Share →</button>
+                      </form>
+                    )
+                  ) : <span className="rl-help">Open your week first</span>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       {/* ---------- plans ---------- */}
       <section className="rl-stack" style={{ gap: "var(--rl-space-3)" }} aria-label="Plans">

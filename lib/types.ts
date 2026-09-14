@@ -121,6 +121,8 @@ export const Profile = z.object({
   goal: Goal.nullable().default(null),
   raceDate: z.string().date().nullable().default(null),
   daysPerWeek: z.number().int().min(1).max(7).nullable().default(null),
+  /** Strava athlete totals, when connected. Shape mirrors lib/integrations/strava StravaStats. */
+  stravaStats: z.unknown().nullable().default(null),
 });
 export type Profile = z.infer<typeof Profile>;
 

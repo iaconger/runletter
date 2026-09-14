@@ -4,7 +4,7 @@
 // link" swaps the form to the magic link (also the forgot-password path).
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Mark } from "@/components/ui/Logo";
 import { Ink } from "@/components/ui/Ink";
 
@@ -29,6 +29,15 @@ export function AuthFormClient({
   configured: boolean;
 }) {
   const [role, setRole] = useState<Role>(initialRole);
+  // The room changes with the choice: Night for creators, Paper for runners. Set on <html> so the whole page follows.
+  useEffect(() => {
+    const html = document.documentElement;
+    html.dataset.theme = role === "creator" ? "dark" : "light";
+    const main = html.querySelector("main.rl-auth");
+    main?.classList.toggle("rl-theme-night", role === "creator");
+    main?.classList.toggle("rl-theme-paper", role !== "creator");
+    return () => { delete html.dataset.theme; };
+  }, [role]);
   const [viaLink, setViaLink] = useState(false);
   const signup = mode === "signup";
   const asCreator = role === "creator";
@@ -42,7 +51,7 @@ export function AuthFormClient({
         <Mark size={36} />
       </Link>
       <Ink key={role} name={asCreator ? "pace-group" : "stride"} style={{ width: asCreator ? 240 : 200, opacity: 0.85, marginBottom: "calc(-1 * var(--rl-space-3))" }} />
-      <form action={viaLink ? linkAction : action} className="rl-stack" style={{ gap: "var(--rl-space-5)" }}>
+      <form action={viaLink ? linkAction : action} className="rl-stack" style={{ gap: "var(--rl-space-5)", width: "min(100%, 408px)" }}>
         <div className="rl-stack" style={{ gap: "var(--rl-space-2)" }}>
           <h1 className="t-display-lg" style={{ margin: 0 }}>
             {signup ? (asCreator ? "Open your studio" : "Start running with them") : asCreator ? "Back to the studio" : "Back to your week"}

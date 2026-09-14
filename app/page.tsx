@@ -76,31 +76,19 @@ export default function Landing() {
         </div>
         <div className="rl-page rl-wide rl-hero" style={{ paddingBlock: 0, position: "relative", zIndex: 1 }}>
           <div className="rl-stack" style={{ gap: "var(--rl-space-6)" }}>
-            <p className="t-label rl-rise" style={{ opacity: 0.7, margin: 0 }}>Find the runners who inspire you</p>
+            <p className="t-label rl-kicker rl-rise" style={{ opacity: 0.75, margin: 0 }}>This week, from runners you follow</p>
             <h1 className="t-display-hero rl-rise" style={{ maxWidth: "12ch", margin: 0, ["--rise-delay" as string]: "80ms" }}>
-              Train alongside the runners who inspire you.
+              Run what they&rsquo;re running.
             </h1>
             <p className="t-title rl-rise" style={{ margin: 0, maxWidth: "30ch", ["--rise-delay" as string]: "160ms" }}>
-              This week, run with a{" "}
-              <span className="rl-rotate" aria-hidden="true">
-                <span>trail runner.</span>
-                <span>run club captain.</span>
-                <span>Sunday long-run person.</span>
-                <span>marathon coach.</span>
-                <span>runner who just likes running.</span>
-              </span>
-              <span className="sr-only">runner you admire.</span>
+              Creators share their week. It lands on your watch. No AI, no plan, just their runs.
             </p>
-            <p className="t-body rl-rise" style={{ maxWidth: "46ch", opacity: 0.85, margin: 0, ["--rise-delay" as string]: "240ms" }}>
-              Pick a creator whose running you admire. Their week lands in your app Sunday night, one run a day, already on
-              your watch, marked done the moment it hits Strava. You&rsquo;re not following a plan. You&rsquo;re running with them.
-            </p>
-            <div className="rl-row rl-rise" style={{ ["--rise-delay" as string]: "320ms" }}>
+            <div className="rl-row rl-rise" style={{ alignItems: "center", gap: "var(--rl-space-5)", ["--rise-delay" as string]: "320ms" }}>
               <Link href="/signup" className="rl-btn rl-btn-lg rl-btn-paper rl-btn-shine">
-                Find your runner
+                Start free &rarr;
               </Link>
-              <Link href="/creators" className="rl-btn rl-btn-lg rl-btn-secondary">
-                I&rsquo;m the runner people follow
+              <Link href="/creators" className="rl-textlink" style={{ color: "inherit", opacity: 0.8 }}>
+                I&rsquo;m a creator &rarr;
               </Link>
             </div>
             <div className="rl-row rl-rise" style={{ gap: "var(--rl-space-3)", ["--rise-delay" as string]: "400ms" }}>

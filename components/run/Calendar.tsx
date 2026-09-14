@@ -31,13 +31,13 @@ export function Calendar({ weeks, today, currentWeek }: { weeks: CalWeek[]; toda
         const runs = w.cells.filter((c) => c.day?.kind === "run");
         const mins = Math.round(w.cells.reduce((a, c) => a + (c.day ? dayDurationS(c.day) : 0), 0) / 60);
         const done = w.cells.filter((c) => c.done).length;
-        const empty = w.cells.every((c) => !c.day && !c.extra) && currentWeek !== w.week;
+        const empty = w.cells.every((c) => !c.day && !c.extra) && currentWeek !== w.week && !w.cells.some((c) => c.date === today);
         return (
           <section key={w.week} className={`rl-cal-week${empty ? " empty" : ""}`} data-current={currentWeek === w.week ? "true" : undefined} aria-label={`Week ${w.week}`}>
             <header>
-              <b>Week {w.week}</b>
-              <span>{mon(w.start)} {dnum(w.start)} – {mon(end) === mon(w.start) ? "" : `${mon(end)} `}{dnum(end)}</span>
-              <span className="tot">{runs.length ? `${done}/${runs.length} runs · ${mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60 ? `${mins % 60}m` : ""}` : `${mins} min`}` : "empty"}</span>
+              {w.week > 0 ? <b>Week {w.week}</b> : <b>{mon(w.start)} {dnum(w.start)}</b>}
+              <span>{w.week > 0 ? `${mon(w.start)} ${dnum(w.start)} – ` : "to "}{mon(end) === mon(w.start) && w.week > 0 ? "" : `${mon(end)} `}{dnum(end)}</span>
+              <span className="tot">{runs.length ? `${done}/${runs.length} runs · ${mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60 ? `${mins % 60}m` : ""}` : `${mins} min`}` : w.cells.some((c) => c.extra) ? `${w.cells.filter((c) => c.extra).length} active days` : "nothing yet"}</span>
               {w.stamp && <span className="rl-stamp" data-state={w.stamp}>{w.stamp}</span>}
             </header>
             <div className="days">

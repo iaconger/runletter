@@ -64,7 +64,8 @@
   --rl-text-body: 400 16px/24px var(--rl-font-sans);
   --rl-text-body-medium: 500 16px/24px var(--rl-font-sans);
   --rl-text-body-sm: 400 14px/20px var(--rl-font-sans);
-  --rl-text-label: 500 12px/16px var(--rl-font-sans);
+  --rl-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --rl-text-label: 500 12px/16px var(--rl-font-mono);
   --rl-text-numeral-xl: 500 56px/56px var(--rl-font-sans);
   --rl-text-numeral-lg: 500 32px/36px var(--rl-font-sans);
 
@@ -213,7 +214,9 @@
 .rl-theme-night { color-scheme: dark; }
 /* Ink sketches are drawn for paper; on Night, flip them (invert + hue-rotate keeps the cobalt cobalt). */
 .rl-theme-night img[src$="-ink.svg"] { filter: invert(1) hue-rotate(180deg); opacity: .85; }
-.rl-theme-paper, .rl-theme-night { background: var(--rl-bg); color: var(--rl-text); min-height: 100vh; }
+.rl-theme-paper, .rl-theme-night { background: var(--rl-bg); color: var(--rl-text); min-height: 100vh; transition: background-color .35s ease, color .35s ease; }
+.rl-auth > * { width: min(100%, 408px); }
+.rl-welcome > * { width: min(100%, 560px); }
 
 body {
   background: var(--rl-bg);
@@ -421,9 +424,9 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 
 /* ---------- nav ---------- */
 /* follower app shell: header with the mark, the nav and sign out; tabs drop to the bottom only on phones */
-.rl-app { min-height: 100vh; display: flex; flex-direction: column; max-width: calc(640px + 2 * var(--rl-gutter)); margin: 0 auto; }
+.rl-app { min-height: 100vh; display: flex; flex-direction: column; max-width: none; margin: 0 auto; }
 .rl-app > div { flex: 1; }
-.rl-app-head { display: flex; align-items: center; gap: var(--rl-space-5); padding: var(--rl-space-4) var(--rl-gutter) 0; }
+.rl-app-head { display: flex; align-items: center; gap: var(--rl-space-5); padding: var(--rl-space-4) var(--rl-gutter) 0; width: 100%; max-width: calc(1100px + 2 * var(--rl-gutter)); margin: 0 auto; }
 .rl-app-head > form { margin-left: auto; }
 .rl-topnav { display: flex; gap: 2px; }
 .rl-topnav > a { padding: 6px 10px; border-radius: 999px; font: var(--rl-text-body-medium); color: var(--rl-text-secondary); }
@@ -445,8 +448,13 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 @media (max-width: 900px) { .rl-studio { grid-template-columns: 1fr; } .rl-sidebar { border-right: 0; border-bottom: var(--rl-border-hairline) solid var(--rl-hairline); } }
 
 /* ---------- program editor ---------- */
-.rl-editor { display: grid; grid-template-columns: 250px 1fr 340px; gap: var(--rl-space-6); align-items: start; }
-@media (max-width: 1100px) { .rl-editor { grid-template-columns: 1fr; } }
+.rl-editor { display: grid; grid-template-columns: 250px minmax(560px, 1fr) 340px; grid-template-areas: "settings weeks panel"; gap: var(--rl-space-6); align-items: start; }
+.rl-editor > :nth-child(1) { grid-area: settings; }
+.rl-editor > :nth-child(2) { grid-area: weeks; }
+.rl-editor > :nth-child(3) { grid-area: panel; }
+/* Mid widths: the week grid keeps its room; settings drop under it. */
+@media (max-width: 1380px) { .rl-editor { grid-template-columns: minmax(0, 1fr) 340px; grid-template-areas: "weeks panel" "settings panel"; } }
+@media (max-width: 960px) { .rl-editor { grid-template-columns: 1fr; grid-template-areas: "weeks" "panel" "settings"; } }
 .rl-weekrow { display: grid; grid-template-columns: 64px 1fr; gap: var(--rl-space-3); align-items: start; }
 .rl-weekrow > .w { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; color: var(--rl-text-muted); padding-top: 10px; }
 
@@ -859,7 +867,7 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 .rl-cal .cell > .d > i { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; color: var(--rl-text-muted); font-style: normal; }
 .rl-cal .cell > .t { font: var(--rl-text-body-medium); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rl-cal .cell > .m { color: var(--rl-text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.rl-cal .cell > .m > em { font-style: normal; color: var(--rl-accent); margin-left: 6px; }
+.rl-cal .cell > .m > em { font-style: normal; color: var(--rl-accent); margin-left: 6px; white-space: normal; }
 .rl-cal .cell > .ok { width: 18px; height: 18px; border-radius: 50%; background: var(--rl-text); color: var(--rl-bg); font-size: 11px; display: grid; place-items: center; }
 .rl-cal .cell.today { background: var(--rl-surface-sunken); }
 .rl-cal .cell.today > .d { color: var(--rl-accent); }
@@ -890,3 +898,26 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
   .rl-cal .cell.today { outline: 1px solid var(--rl-accent); outline-offset: 1px; }
   .rl-cal a.cell:hover { background: var(--run-soft, var(--rl-surface-sunken)); border-color: var(--rl-text-secondary); }
 }
+
+/* Share list: your Strava runs, one line each, a note box and a Share button. */
+.rl-sharelist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border-radius: var(--rl-radius-lg); border: var(--rl-border-hairline) solid var(--rl-hairline); background: var(--rl-surface); overflow: hidden; }
+.rl-sharelist > li { display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: 12px; padding: 10px 14px; border-top: var(--rl-border-hairline) solid var(--rl-hairline); }
+.rl-sharelist > li:first-child { border-top: 0; }
+.rl-sharelist svg { color: var(--rl-text); }
+@media (max-width: 719px) { .rl-sharelist > li { grid-template-columns: 44px 1fr; } .rl-sharelist > li > form, .rl-sharelist > li > .rl-chip, .rl-sharelist > li > .rl-help { grid-column: 2; } .rl-sharelist > li > form input { width: 100% !important; } }
+
+/* Totals from Strava: three columns, big numerals. */
+.rl-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--rl-space-4); }
+.rl-totals > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rl-totals .k { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; color: var(--rl-text-muted); }
+.rl-totals .n { font: 500 28px/32px var(--rl-font-sans); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.rl-totals .n > small { font: var(--rl-text-body-sm); color: var(--rl-text-muted); }
+.rl-totals .s { font: var(--rl-text-body-sm); color: var(--rl-text-secondary); font-variant-numeric: tabular-nums; }
+@media (max-width: 480px) { .rl-totals { grid-template-columns: 1fr; } }
+
+/* Attitude: bracketed mono kickers, arrow CTAs, pill buttons. The brand holds still; the labels got a uniform. */
+.rl-kicker::before { content: "[ "; opacity: .6; }
+.rl-kicker::after { content: " ]"; opacity: .6; }
+.rl-btn { border-radius: var(--rl-radius-pill); }
+.rl-textlink { font: var(--rl-text-body-medium); text-decoration: none; border-bottom: 1px solid currentColor; padding-bottom: 1px; }
+.rl-textlink:hover { text-decoration: none; opacity: 1 !important; }

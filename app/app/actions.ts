@@ -34,7 +34,7 @@ export async function syncStravaAction() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
-  try { await syncRecentStrava(user.id, 30); } catch (e) { console.error("strava sync", e); }
+  try { await syncRecentStrava(user.id, 90); } catch (e) { console.error("strava sync", e); }
   revalidatePath("/app");
   revalidatePath("/app/you");
 }

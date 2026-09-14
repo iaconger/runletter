@@ -25,8 +25,8 @@ export async function GET(request: NextRequest) {
     );
     if (error) throw error;
     track("connect_strava_completed", { athlete_id: t.athlete ? String(t.athlete.id) : null }, user.id);
-    // Bring in the last month so the week isn't empty on day one. Best effort.
-    try { await syncRecentStrava(user.id, 30); } catch (e) { console.error("strava sync", e); }
+    // Bring in the last three months and the athlete totals so the app is theirs on day one. Best effort.
+    try { await syncRecentStrava(user.id, 90); } catch (e) { console.error("strava sync", e); }
   } catch (e) {
     return fail(e instanceof Error ? e.message : "Could not connect Strava");
   }

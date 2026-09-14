@@ -6,6 +6,7 @@ import { dayTitle } from "@/components/run/RunPieces";
 import { fmtPaceShort } from "@/lib/paces";
 import { isConfigured } from "@/lib/supabase/server";
 import { RUN_TYPE_LABEL } from "@/lib/types";
+import { RouteSketch } from "@/components/run/RouteSketch";
 
 export const dynamic = "force-dynamic";
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -19,7 +20,8 @@ export default async function LoggedRun({ params }: { params: Promise<{ id: stri
   if (!run) notFound();
   const planned = run.programDayId ? await getRunDay(run.programDayId) : null;
   const km = run.distanceM ? run.distanceM / 1000 : null;
-  const type = planned?.day.runType ? RUN_TYPE_LABEL[planned.day.runType] : null;
+  const isRun = ["Run", "TrailRun", "VirtualRun"].includes(run.sportType);
+  const type = planned?.day.runType ? RUN_TYPE_LABEL[planned.day.runType] : isRun ? null : run.sportType.replace(/([a-z])([A-Z])/g, "$1 $2");
 
   return (
     <main className="rl-page rl-stack" style={{ gap: "var(--rl-space-6)" }}>
@@ -27,15 +29,21 @@ export default async function LoggedRun({ params }: { params: Promise<{ id: stri
 
       <article className="rl-today" data-run={planned?.day.runType ?? "easy"}>
         <div className="top">
-          <span className="kicker">{longDate(run.date)}{type ? ` · ${type}` : ""}{run.planned ? " · done" : " · off plan"}</span>
+          <span className="kicker">{longDate(run.date)}{type ? ` · ${type}` : ""}{run.planned ? " · done" : isRun ? " · off plan" : ""}</span>
           <h1>{planned ? dayTitle(planned.day) : run.title}</h1>
           {planned && <span className="facts">{planned.creator.displayName} · week {planned.day.week}</span>}
         </div>
         <div className="body">
-          <div className="rl-stats">
-            {km != null && <div><span className="n">{km.toFixed(km >= 10 ? 1 : 2)}</span><span className="l">km</span></div>}
-            {run.durationS != null && <div><span className="n">{hms(run.durationS)}</span><span className="l">time</span></div>}
-            {run.avgPaceS != null && <div><span className="n">{fmtPaceShort(run.avgPaceS)}</span><span className="l">/km</span></div>}
+          <div className="rl-row" style={{ alignItems: "flex-start", gap: "var(--rl-space-5)" }}>
+            <div className="rl-stats" style={{ flex: 1 }}>
+              {km != null && <div><span className="n">{km.toFixed(km >= 10 ? 1 : 2)}</span><span className="l">km</span></div>}
+              {run.durationS != null && <div><span className="n">{hms(run.durationS)}</span><span className="l">time</span></div>}
+              {run.avgPaceS != null && <div><span className="n">{fmtPaceShort(run.avgPaceS)}</span><span className="l">/km</span></div>}
+              {run.elevationM ? <div><span className="n">{run.elevationM}</span><span className="l">m up</span></div> : null}
+              {run.avgHr ? <div><span className="n">{run.avgHr}</span><span className="l">avg bpm</span></div> : null}
+              {run.kudos ? <div><span className="n">{run.kudos}</span><span className="l">kudos</span></div> : null}
+            </div>
+            {run.polyline && <RouteSketch polyline={run.polyline} size={140} style={{ flex: "none", color: "var(--rl-text)" }} />}
           </div>
           <div className="rl-row" style={{ alignItems: "center" }}>
             {run.stravaActivityId && (

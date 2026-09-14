@@ -88,7 +88,7 @@ export function AuthForm({ mode, sent, error, next, role }: { mode: Mode; sent?:
   const signup = mode === "signup";
   const initialRole: Role = role === "creator" ? "creator" : "runner";
   return (
-    <main className="rl-page rl-stack" style={{ maxWidth: 440, minHeight: "100vh", justifyContent: "center", gap: "var(--rl-space-6)" }}>
+    <main className={`rl-page rl-stack rl-auth ${initialRole === "creator" ? "rl-theme-night" : "rl-theme-paper"}`} style={{ maxWidth: "none", padding: "0 var(--rl-gutter)", minHeight: "100vh", justifyContent: "center", alignItems: "center", gap: "var(--rl-space-6)" }}>
       {sent ? (
         <>
           <Link href="/" className="rl-logo" style={{ color: "var(--rl-text)" }} aria-label="RunLetter home">

@@ -59,15 +59,15 @@ export function mapProgram(r: ProgramRow, days: DayRow[] = [], blocks: BlockRow[
   };
 }
 
-export function mapProfile(r: Pick<ProfileRow, "id" | "handle" | "display_name" | "avatar_url" | "cover_url" | "bio" | "is_creator" | "links"> & { pace_5k_s?: number | null; stripe_charges_enabled?: boolean | null; goal?: Program["goal"] | null; race_date?: string | null; days_per_week?: number | null }): Profile {
+export function mapProfile(r: Pick<ProfileRow, "id" | "handle" | "display_name" | "avatar_url" | "cover_url" | "bio" | "is_creator" | "links"> & { pace_5k_s?: number | null; stripe_charges_enabled?: boolean | null; goal?: Program["goal"] | null; race_date?: string | null; days_per_week?: number | null; strava_stats?: unknown }): Profile {
   const links = (r.links && typeof r.links === "object" && !Array.isArray(r.links) ? r.links : {}) as Record<string, string>;
   return { id: r.id, handle: r.handle, displayName: r.display_name, avatarUrl: r.avatar_url, coverUrl: r.cover_url, bio: r.bio, isCreator: r.is_creator,
-    pace5kS: r.pace_5k_s ?? null, stripeChargesEnabled: r.stripe_charges_enabled ?? false, goal: r.goal ?? null, raceDate: r.race_date ?? null, daysPerWeek: r.days_per_week ?? null, links };
+    pace5kS: r.pace_5k_s ?? null, stripeChargesEnabled: r.stripe_charges_enabled ?? false, goal: r.goal ?? null, raceDate: r.race_date ?? null, daysPerWeek: r.days_per_week ?? null, stravaStats: r.strava_stats ?? null, links };
 }
 
 const PROFILE_COLS = "id, handle, display_name, avatar_url, cover_url, bio, is_creator, links, pace_5k_s, stripe_charges_enabled";
 /** The signed-in user's own row also carries the questionnaire (not granted to anon). */
-const MY_PROFILE_COLS = "id, handle, display_name, avatar_url, cover_url, bio, is_creator, links, pace_5k_s, stripe_charges_enabled, goal, race_date, days_per_week";
+const MY_PROFILE_COLS = "id, handle, display_name, avatar_url, cover_url, bio, is_creator, links, pace_5k_s, stripe_charges_enabled, goal, race_date, days_per_week, strava_stats, strava_synced_at";
 
 // ---------- reads ----------
 
@@ -377,13 +377,19 @@ export async function markDone(enrollmentId: string, programDayId: string) {
   if (error && !/duplicate|unique/i.test(error.message)) throw error;
 }
 
-export type ExtraRun = { id: string; date: string; name: string | null; distanceM: number | null; durationS: number | null };
+export type ExtraRun = {
+  id: string; date: string; name: string | null; distanceM: number | null; durationS: number | null;
+  sportType: string; avgPaceS: number | null; elevationM: number | null; avgHr: number | null; kudos: number | null; polyline: string | null; stravaActivityId: string | null;
+};
+const EXTRA_COLS = "id, run_date, name, distance_m, duration_s, sport_type, avg_pace_s, elevation_m, avg_hr, kudos, polyline, strava_activity_id";
+type ExtraRow = { id: string; run_date: string; name: string | null; distance_m: number | null; duration_s: number | null; sport_type: string; avg_pace_s: number | null; elevation_m: number | null; avg_hr: number | null; kudos: number | null; polyline: string | null; strava_activity_id: string | null };
+const mapExtra = (r: ExtraRow): ExtraRun => ({ id: r.id, date: r.run_date, name: r.name, distanceM: r.distance_m, durationS: r.duration_s, sportType: r.sport_type, avgPaceS: r.avg_pace_s, elevationM: r.elevation_m, avgHr: r.avg_hr, kudos: r.kudos, polyline: r.polyline, stravaActivityId: r.strava_activity_id });
 
 /** Unplanned runs for a user in a date range (inclusive). */
 export async function listExtras(userId: string, from: string, to: string): Promise<ExtraRun[]> {
   const supabase = await createClient();
-  const { data } = await supabase.from("extra_runs").select("id, run_date, name, distance_m, duration_s").eq("user_id", userId).gte("run_date", from).lte("run_date", to).order("run_date");
-  return (data ?? []).map((r) => ({ id: r.id, date: r.run_date, name: r.name, distanceM: r.distance_m, durationS: r.duration_s }));
+  const { data } = await supabase.from("extra_runs").select(EXTRA_COLS).eq("user_id", userId).gte("run_date", from).lte("run_date", to).order("run_date");
+  return (data ?? []).map(mapExtra);
 }
 
 export type RunnerRow = { profile: Profile; programTitle: string; week: number; planned: number; done: number; extras: ExtraRun[]; lastRun: string | null };
@@ -425,6 +431,7 @@ export type RunLogItem = {
   /** Set for planned runs: the program day this completed. */
   programDayId: string | null; programId: string | null;
   stravaActivityId: string | null;
+  sportType: string; elevationM: number | null; avgHr: number | null; kudos: number | null; polyline: string | null;
 };
 
 /** Everything the signed-in runner ran in a date range: planned days done, plus off-plan runs. Newest first. */
@@ -434,7 +441,7 @@ export async function listMyRuns(from: string, to: string): Promise<RunLogItem[]
   if (!user) return [];
   const [{ data: comps }, { data: extras }] = await Promise.all([
     supabase.from("completions").select("id, completed_at, distance_m, duration_s, avg_pace_s, source, program_day_id, strava_activity_id, enrollments!inner(follower_id, program_id)").eq("enrollments.follower_id", user.id).gte("completed_at", `${from}T00:00:00`).lte("completed_at", `${to}T23:59:59`),
-    supabase.from("extra_runs").select("id, run_date, name, distance_m, duration_s, avg_pace_s, source, strava_activity_id").eq("user_id", user.id).gte("run_date", from).lte("run_date", to),
+    supabase.from("extra_runs").select("id, run_date, name, distance_m, duration_s, avg_pace_s, source, strava_activity_id, sport_type, elevation_m, avg_hr, kudos, polyline").eq("user_id", user.id).gte("run_date", from).lte("run_date", to),
   ]);
   const dayIds = (comps ?? []).map((c) => c.program_day_id);
   const { data: days } = dayIds.length ? await supabase.from("program_days").select("id, kind, run_type, week, day").in("id", dayIds) : { data: [] };
@@ -445,8 +452,8 @@ export async function listMyRuns(from: string, to: string): Promise<RunLogItem[]
     return `${t[0]!.toUpperCase()}${t.slice(1)} · week ${d.week}`;
   };
   const items: RunLogItem[] = [
-    ...(comps ?? []).map((c) => ({ id: c.id, date: c.completed_at.slice(0, 10), title: titleFor(c.program_day_id), planned: true, distanceM: c.distance_m, durationS: c.duration_s, avgPaceS: c.avg_pace_s, source: c.source as "strava" | "manual", programDayId: c.program_day_id, programId: (c.enrollments as unknown as { program_id: string }).program_id, stravaActivityId: c.strava_activity_id })),
-    ...(extras ?? []).map((x) => ({ id: x.id, date: x.run_date, title: x.name ?? "Run", planned: false, distanceM: x.distance_m, durationS: x.duration_s, avgPaceS: x.avg_pace_s, source: x.source as "strava" | "manual", programDayId: null, programId: null, stravaActivityId: x.strava_activity_id })),
+    ...(comps ?? []).map((c) => ({ id: c.id, date: c.completed_at.slice(0, 10), title: titleFor(c.program_day_id), planned: true, distanceM: c.distance_m, durationS: c.duration_s, avgPaceS: c.avg_pace_s, source: c.source as "strava" | "manual", programDayId: c.program_day_id, programId: (c.enrollments as unknown as { program_id: string }).program_id, stravaActivityId: c.strava_activity_id, sportType: "Run", elevationM: null, avgHr: null, kudos: null, polyline: null })),
+    ...(extras ?? []).map((x) => ({ id: x.id, date: x.run_date, title: x.name ?? x.sport_type, planned: false, distanceM: x.distance_m, durationS: x.duration_s, avgPaceS: x.avg_pace_s, source: x.source as "strava" | "manual", programDayId: null, programId: null, stravaActivityId: x.strava_activity_id, sportType: x.sport_type, elevationM: x.elevation_m, avgHr: x.avg_hr, kudos: x.kudos, polyline: x.polyline })),
   ];
   return items.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 }
@@ -460,11 +467,13 @@ export async function getMyRun(id: string): Promise<RunLogItem | null> {
   if (c) {
     const { data: d } = await supabase.from("program_days").select("run_type, week").eq("id", c.program_day_id).maybeSingle();
     const t = d?.run_type ?? "run";
-    return { id: c.id, date: c.completed_at.slice(0, 10), title: d ? `${t[0]!.toUpperCase()}${t.slice(1)} · week ${d.week}` : "Run", planned: true, distanceM: c.distance_m, durationS: c.duration_s, avgPaceS: c.avg_pace_s, source: c.source as "strava" | "manual", programDayId: c.program_day_id, programId: (c.enrollments as unknown as { program_id: string }).program_id, stravaActivityId: c.strava_activity_id };
+    // The Strava row for this completion carries the rich fields (route, heart rate, elevation) if we have it.
+    const { data: x } = c.strava_activity_id ? await supabase.from("extra_runs").select("sport_type, elevation_m, avg_hr, kudos, polyline").eq("strava_activity_id", c.strava_activity_id).maybeSingle() : { data: null };
+    return { id: c.id, date: c.completed_at.slice(0, 10), title: d ? `${t[0]!.toUpperCase()}${t.slice(1)} · week ${d.week}` : "Run", planned: true, distanceM: c.distance_m, durationS: c.duration_s, avgPaceS: c.avg_pace_s, source: c.source as "strava" | "manual", programDayId: c.program_day_id, programId: (c.enrollments as unknown as { program_id: string }).program_id, stravaActivityId: c.strava_activity_id, sportType: x?.sport_type ?? "Run", elevationM: x?.elevation_m ?? null, avgHr: x?.avg_hr ?? null, kudos: x?.kudos ?? null, polyline: x?.polyline ?? null };
   }
-  const { data: x } = await supabase.from("extra_runs").select("id, run_date, name, distance_m, duration_s, avg_pace_s, source, strava_activity_id").eq("id", id).eq("user_id", user.id).maybeSingle();
+  const { data: x } = await supabase.from("extra_runs").select("id, run_date, name, distance_m, duration_s, avg_pace_s, source, strava_activity_id, sport_type, elevation_m, avg_hr, kudos, polyline").eq("id", id).eq("user_id", user.id).maybeSingle();
   if (!x) return null;
-  return { id: x.id, date: x.run_date, title: x.name ?? "Run", planned: false, distanceM: x.distance_m, durationS: x.duration_s, avgPaceS: x.avg_pace_s, source: x.source as "strava" | "manual", programDayId: null, programId: null, stravaActivityId: x.strava_activity_id };
+  return { id: x.id, date: x.run_date, title: x.name ?? x.sport_type, planned: false, distanceM: x.distance_m, durationS: x.duration_s, avgPaceS: x.avg_pace_s, source: x.source as "strava" | "manual", programDayId: null, programId: null, stravaActivityId: x.strava_activity_id, sportType: x.sport_type, elevationM: x.elevation_m, avgHr: x.avg_hr, kudos: x.kudos, polyline: x.polyline };
 }
 
 /** A program day with its program and creator, for the run detail page. RLS decides what the viewer may see. */
@@ -522,4 +531,13 @@ export async function getMyCalendar(today: string): Promise<RunnerCalendar | nul
     if (program.creatorId === user.id) sentWeeks = new Set(Array.from({ length: program.weeks }, (_, i) => i + 1));
   }
   return { program, creator, enrollmentId: enrol.id, start: enrol.start_date, currentWeek, doneIds: new Set((comps ?? []).map((c) => c.program_day_id)), extras, sentWeeks };
+}
+
+/** One of the signed-in user's own Strava activities. */
+export async function getMyExtra(id: string): Promise<ExtraRun | null> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data } = await supabase.from("extra_runs").select(EXTRA_COLS).eq("id", id).eq("user_id", user.id).maybeSingle();
+  return data ? mapExtra(data) : null;
 }

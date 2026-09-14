@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Calendar } from "@/components/run/Calendar";
 import { getMyProfile, listIssues, listMyPrograms, listExtras } from "@/lib/db/programs";
-import { buildWeeks } from "@/lib/calendar";
+import { buildWeeks, mondayOf } from "@/lib/calendar";
 import { createClient, isConfigured } from "@/lib/supabase/server";
 import { addDays, toISODate, weekOfDate } from "@/lib/types";
 
@@ -30,10 +30,13 @@ export default async function StudioCalendar({ searchParams }: { searchParams: P
   const issues = program.isLetter ? await listIssues(program.id) : [];
   const supabase = await createClient();
   const { data: comps } = await supabase.from("completions").select("program_day_id, enrollments!inner(follower_id)").eq("enrollments.follower_id", me.id);
-  const extras = await listExtras(me.id, start, toISODate(addDays(start, program.weeks * 7 - 1)));
+  const from = mondayOf(start < toISODate(addDays(today, -28)) ? start : toISODate(addDays(today, -28)));
+  const end = toISODate(addDays(start, program.weeks * 7 - 1));
+  const nWeeks = Math.ceil((addDays(end, 0).getTime() - addDays(from, 0).getTime()) / (7 * 86400000)) + 1;
+  const extras = await listExtras(me.id, from, end);
   const weeks = buildWeeks({
-    program, start, doneIds: new Set((comps ?? []).map((c) => c.program_day_id)), extras,
-    hrefFor: (_id, _date, week, day) => `/studio/programs/${program.id}?week=${week}&day=${day}`,
+    from, weeks: nWeeks, program: { program, start }, doneIds: new Set((comps ?? []).map((c) => c.program_day_id)), extras,
+    hrefFor: (_id, _date, week, day) => (week ? `/studio/programs/${program.id}?week=${week}&day=${day}` : undefined),
     stampFor: (w) => { const i = issues.find((x) => x.week === w); return program.isLetter ? (i?.sentAt ? "sent" : i?.scheduledFor ? "scheduled" : "draft") : undefined; },
   });
   return (

@@ -195,3 +195,31 @@ export async function saveIssueAction(input: { programId: string; week: number; 
     return fail(e);
   }
 }
+
+/**
+ * Share a run you did (from Strava) into your week: it becomes that day in your Letter, with your note.
+ * Steady run of the same length at the effort the pace suggests; the creator can reshape it in the editor.
+ */
+export async function shareRunAction(formData: FormData): Promise<void> {
+  const extraId = String(formData.get("extraId") ?? "");
+  const note = String(formData.get("note") ?? "").trim().slice(0, 400);
+  const letter = await db.getMyLetter();
+  if (!letter || !letter.fixedStartDate) redirect("/studio");
+  const x = await db.getMyExtra(extraId);
+  if (!x) redirect("/studio?shared=0");
+  const diff = Math.floor((new Date(`${x.date}T00:00:00`).getTime() - new Date(`${letter.fixedStartDate}T00:00:00`).getTime()) / 86400000);
+  if (diff < 0) redirect("/studio?shared=0");
+  const week = Math.floor(diff / 7) + 1;
+  const day = (diff % 7) + 1;
+  if (week > letter.weeks) await db.updateProgram(letter.id, { weeks: week });
+  const mins = Math.max(5, Math.round((x.durationS ?? 1800) / 60));
+  const pace = x.avgPaceS ?? 360;
+  // Long if over 75 minutes, tempo if quick, otherwise easy. The creator can change it.
+  const runType = mins >= 75 ? "long" : pace < 300 ? "tempo" : "easy";
+  const effort = runType === "tempo" ? "moderate" : "easy";
+  const blocks = [{ id: crypto.randomUUID(), position: 0, kind: "work" as const, measure: "time" as const, durationS: mins * 60, distanceM: null, targetEffort: effort as "easy" | "moderate", targetPaceMin: null, targetPaceMax: null, repeatGroup: null, repeatCount: null }];
+  await db.saveDay(letter.id, { week, day, kind: "run", runType, note: note || (x.name ?? ""), blocks });
+  revalidatePath("/studio");
+  revalidatePath(`/studio/programs/${letter.id}`);
+  redirect(`/studio/programs/${letter.id}?week=${week}&day=${day}`);
+}

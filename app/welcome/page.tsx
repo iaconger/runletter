@@ -25,7 +25,7 @@ export default async function Welcome({ searchParams }: { searchParams: Promise<
   const startStep = step === "3" || step === "connect" ? "connect" : "you";
 
   return (
-    <main className="rl-page rl-stack" style={{ maxWidth: 560, minHeight: "100vh", justifyContent: "center", gap: "var(--rl-space-6)" }}>
+    <main className={`rl-page rl-stack rl-welcome ${r === "creator" ? "rl-theme-night" : "rl-theme-paper"}`} style={{ maxWidth: "none", padding: "0 var(--rl-gutter)", minHeight: "100vh", justifyContent: "center", alignItems: "center", gap: "var(--rl-space-6)" }}>
       <Link href="/" className="rl-logo" style={{ color: "var(--rl-text)" }} aria-label="RunLetter home"><Mark size={36} /></Link>
       <Onboarding profile={profile} userId={user.id} next={safeNext} role={r} startStep={startStep} stravaConnected={stravaConnected} />
     </main>

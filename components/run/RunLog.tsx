@@ -17,7 +17,8 @@ export function RunLog({ runs, empty = "No runs yet." }: { runs: RunLogItem[]; e
             <span className="d">{label(r.date)}</span>
             <span className="t">
               {r.title}
-              {!r.planned && <span className="rl-chip" style={{ marginLeft: 8, fontSize: 11 }}>off plan</span>}
+              {!r.planned && ["Run", "TrailRun", "VirtualRun"].includes(r.sportType) && <span className="rl-chip" style={{ marginLeft: 8, fontSize: 11 }}>off plan</span>}
+              {!["Run", "TrailRun", "VirtualRun"].includes(r.sportType) && <span className="rl-chip" style={{ marginLeft: 8, fontSize: 11 }}>{r.sportType.replace(/([a-z])([A-Z])/g, "$1 $2")}</span>}
             </span>
             <span className="m">
               {r.distanceM ? `${(r.distanceM / 1000).toFixed(1)} km` : ""}

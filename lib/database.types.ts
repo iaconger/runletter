@@ -112,9 +112,9 @@ export type Database = {
         ];
       };
       extra_runs: {
-        Row: { avg_pace_s: number | null; created_at: string; distance_m: number | null; duration_s: number | null; id: string; name: string | null; run_date: string; source: Database["public"]["Enums"]["completion_source"]; strava_activity_id: string | null; user_id: string };
-        Insert: { avg_pace_s?: number | null; created_at?: string; distance_m?: number | null; duration_s?: number | null; id?: string; name?: string | null; run_date: string; source?: Database["public"]["Enums"]["completion_source"]; strava_activity_id?: string | null; user_id: string };
-        Update: { avg_pace_s?: number | null; created_at?: string; distance_m?: number | null; duration_s?: number | null; id?: string; name?: string | null; run_date?: string; source?: Database["public"]["Enums"]["completion_source"]; strava_activity_id?: string | null; user_id?: string };
+        Row: { avg_pace_s: number | null; created_at: string; distance_m: number | null; duration_s: number | null; id: string; name: string | null; run_date: string; source: Database["public"]["Enums"]["completion_source"]; strava_activity_id: string | null; user_id: string; sport_type: string; start_time: string | null; elevation_m: number | null; avg_hr: number | null; max_hr: number | null; kudos: number | null; polyline: string | null; city: string | null };
+        Insert: { avg_pace_s?: number | null; created_at?: string; distance_m?: number | null; duration_s?: number | null; id?: string; name?: string | null; run_date: string; source?: Database["public"]["Enums"]["completion_source"]; strava_activity_id?: string | null; user_id: string; sport_type?: string; start_time?: string | null; elevation_m?: number | null; avg_hr?: number | null; max_hr?: number | null; kudos?: number | null; polyline?: string | null; city?: string | null };
+        Update: { avg_pace_s?: number | null; created_at?: string; distance_m?: number | null; duration_s?: number | null; id?: string; name?: string | null; run_date?: string; source?: Database["public"]["Enums"]["completion_source"]; strava_activity_id?: string | null; user_id?: string; sport_type?: string; start_time?: string | null; elevation_m?: number | null; avg_hr?: number | null; max_hr?: number | null; kudos?: number | null; polyline?: string | null; city?: string | null };
         Relationships: [
           { foreignKeyName: "extra_runs_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
         ];
@@ -184,6 +184,8 @@ export type Database = {
           stripe_account_id: string | null;
           stripe_customer_id: string | null;
           stripe_charges_enabled: boolean;
+          strava_stats: Json | null;
+          strava_synced_at: string | null;
           stripe_details_submitted: boolean;
           platform_fee_pct: number | null;
           goal: Database["public"]["Enums"]["program_goal"] | null;
@@ -206,6 +208,8 @@ export type Database = {
           stripe_account_id?: string | null;
           stripe_customer_id?: string | null;
           stripe_charges_enabled?: boolean;
+          strava_stats?: Json | null;
+          strava_synced_at?: string | null;
           stripe_details_submitted?: boolean;
           platform_fee_pct?: number | null;
           goal?: Database["public"]["Enums"]["program_goal"] | null;
@@ -228,6 +232,8 @@ export type Database = {
           stripe_account_id?: string | null;
           stripe_customer_id?: string | null;
           stripe_charges_enabled?: boolean;
+          strava_stats?: Json | null;
+          strava_synced_at?: string | null;
           stripe_details_submitted?: boolean;
           platform_fee_pct?: number | null;
           goal?: Database["public"]["Enums"]["program_goal"] | null;
