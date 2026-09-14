@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { IMAGE_SPEC, prepareImage } from "@/lib/image";
 import { saveIdentityAction, saveImagesAction, saveSocialsAction } from "./actions";
 import type { Profile } from "@/lib/types";
+import { RunningForm } from "@/components/run/RunningForm";
 
 const SOCIALS: { key: string; label: string; prefix: string; hint: string }[] = [
   { key: "instagram", label: "Instagram", prefix: "instagram.com/", hint: "yourname" },
@@ -21,9 +22,12 @@ function usernameFrom(url: string | undefined): string {
   return url.replace(/^https?:\/\/(www\.)?[^/]+\//, "").replace(/^(athletes\/|@)/, "").replace(/\/.*$/, "");
 }
 
-export function Onboarding({ profile, userId, next, role, startStep = 0, stravaConnected = false }: { profile: Profile; userId: string; next: string; role: "creator" | "runner"; startStep?: number; stravaConnected?: boolean }) {
+type StepKey = "you" | "socials" | "running" | "photo" | "connect";
+const STEP_LABEL: Record<StepKey, string> = { you: "You", socials: "Socials", running: "Running", photo: "Photo", connect: "Connect" };
+
+export function Onboarding({ profile, userId, next, role, startStep = "you", stravaConnected = false }: { profile: Profile; userId: string; next: string; role: "creator" | "runner"; startStep?: StepKey; stravaConnected?: boolean }) {
   const router = useRouter();
-  const [step, setStep] = useState(startStep);
+  const [step, setStep] = useState<StepKey>(startStep);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const isCreator = role === "creator" || profile.isCreator;
@@ -41,7 +45,10 @@ export function Onboarding({ profile, userId, next, role, startStep = 0, stravaC
   const avatarInput = useRef<HTMLInputElement>(null);
   const coverInput = useRef<HTMLInputElement>(null);
 
-  const steps = isCreator ? ["You", "Socials", "Photos", "Connect"] : ["You", "Socials", "Photo", "Connect"];
+  // Runners get one extra screen: what they run for, days a week, 5K time. Skippable.
+  const steps: StepKey[] = isCreator ? ["you", "socials", "photo", "connect"] : ["you", "socials", "running", "photo", "connect"];
+  const after = (k: StepKey): StepKey => steps[Math.min(steps.indexOf(k) + 1, steps.length - 1)]!;
+  const stepIndex = steps.indexOf(step);
 
   function go(fn: () => Promise<{ ok: boolean; error?: string }>, then: () => void) {
     setError(null);
@@ -80,12 +87,12 @@ export function Onboarding({ profile, userId, next, role, startStep = 0, stravaC
     <div className="rl-stack" style={{ gap: "var(--rl-space-6)" }}>
       <ol className="rl-row" style={{ listStyle: "none", margin: 0, padding: 0, gap: "var(--rl-space-2)" }} aria-label="Steps">
         {steps.map((s, i) => (
-          <li key={s} className={`rl-chip ${i === step ? "rl-chip-on" : i < step ? "rl-chip-success" : ""}`}>{i + 1}. {s}</li>
+          <li key={s} className={`rl-chip ${i === stepIndex ? "rl-chip-on" : i < stepIndex ? "rl-chip-success" : ""}`}>{i + 1}. {isCreator && s === "photo" ? "Photos" : STEP_LABEL[s]}</li>
         ))}
       </ol>
 
-      {step === 0 && (
-        <form className="rl-stack" style={{ gap: "var(--rl-space-5)" }} onSubmit={(e) => { e.preventDefault(); go(() => saveIdentityAction({ handle, displayName: name, bio, isCreator }), () => setStep(1)); }}>
+      {step === "you" && (
+        <form className="rl-stack" style={{ gap: "var(--rl-space-5)" }} onSubmit={(e) => { e.preventDefault(); go(() => saveIdentityAction({ handle, displayName: name, bio, isCreator }), () => setStep("socials")); }}>
           <div className="rl-stack" style={{ gap: 4 }}>
             <h1 className="t-display-lg" style={{ margin: 0 }}>{isCreator ? "Your page starts here." : "First, the basics."}</h1>
 
@@ -111,8 +118,8 @@ export function Onboarding({ profile, userId, next, role, startStep = 0, stravaC
         </form>
       )}
 
-      {step === 1 && (
-        <form className="rl-stack" style={{ gap: "var(--rl-space-5)" }} onSubmit={(e) => { e.preventDefault(); go(() => saveSocialsAction(socials), () => setStep(2)); }}>
+      {step === "socials" && (
+        <form className="rl-stack" style={{ gap: "var(--rl-space-5)" }} onSubmit={(e) => { e.preventDefault(); go(() => saveSocialsAction(socials), () => setStep(after("socials"))); }}>
           <div className="rl-stack" style={{ gap: 4 }}>
             <h1 className="t-display-lg" style={{ margin: 0 }}>Where do people find you?</h1>
             <p className="c-secondary" style={{ margin: 0 }}>Usernames only.</p>
@@ -129,12 +136,21 @@ export function Onboarding({ profile, userId, next, role, startStep = 0, stravaC
           {error && <span className="rl-help" role="alert" style={{ color: "var(--rl-danger, #b3261e)" }}>{error}</span>}
           <div className="rl-row">
             <button type="submit" className="rl-btn rl-btn-primary rl-btn-lg" disabled={pending}>{pending ? "Saving…" : "Continue"}</button>
-            <button type="button" className="rl-btn rl-btn-ghost rl-btn-lg" onClick={() => setStep(2)}>Skip</button>
+            <button type="button" className="rl-btn rl-btn-ghost rl-btn-lg" onClick={() => setStep(after("socials"))}>Skip</button>
           </div>
         </form>
       )}
 
-      {step === 2 && (
+      {step === "running" && (
+        <div className="rl-stack" style={{ gap: "var(--rl-space-5)" }}>
+          <div className="rl-stack" style={{ gap: 4 }}>
+            <h1 className="t-display-lg" style={{ margin: 0 }}>What are you running for?</h1>
+          </div>
+          <RunningForm profile={profile} onDone={() => setStep("photo")} onSkip={() => setStep("photo")} />
+        </div>
+      )}
+
+      {step === "photo" && (
         <div className="rl-stack" style={{ gap: "var(--rl-space-5)" }}>
           <div className="rl-stack" style={{ gap: 4 }}>
             <h1 className="t-display-lg" style={{ margin: 0 }}>{isCreator ? "Put a face on it." : "Add a photo."}</h1>
@@ -168,13 +184,13 @@ export function Onboarding({ profile, userId, next, role, startStep = 0, stravaC
 
           {error && <span className="rl-help" role="alert" style={{ color: "var(--rl-danger, #b3261e)" }}>{error}</span>}
           <div className="rl-row">
-            <button type="button" className="rl-btn rl-btn-primary rl-btn-lg" onClick={() => setStep(3)} disabled={uploading !== null}>Continue</button>
-            <button type="button" className="rl-btn rl-btn-ghost rl-btn-lg" onClick={() => setStep(3)}>Skip</button>
+            <button type="button" className="rl-btn rl-btn-primary rl-btn-lg" onClick={() => setStep("connect")} disabled={uploading !== null}>Continue</button>
+            <button type="button" className="rl-btn rl-btn-ghost rl-btn-lg" onClick={() => setStep("connect")}>Skip</button>
           </div>
         </div>
       )}
 
-      {step === 3 && (
+      {step === "connect" && (
         <div className="rl-stack" style={{ gap: "var(--rl-space-4)" }}>
           <div className="rl-connect-hero">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -185,7 +201,7 @@ export function Onboarding({ profile, userId, next, role, startStep = 0, stravaC
             </div>
           </div>
           <div className="rl-stack" style={{ gap: 8 }}>
-            <a href={`/api/connect/strava?back=${encodeURIComponent(`/welcome?role=${role}&next=${encodeURIComponent(next)}&step=3&connected=strava`)}`} className="rl-btn rl-btn-lg rl-btn-strava" style={{ justifyContent: "center" }}>
+            <a href={`/api/connect/strava?back=${encodeURIComponent(`/welcome?role=${role}&next=${encodeURIComponent(next)}&step=connect&connected=strava`)}`} className="rl-btn rl-btn-lg rl-btn-strava" style={{ justifyContent: "center" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/brand/partners/strava-96.png" alt="" width={20} height={20} style={{ borderRadius: 5 }} />
               {stravaConnected ? "Strava connected" : "Connect with Strava"}

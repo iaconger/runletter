@@ -8,7 +8,8 @@ import { StepCards } from "@/components/run/StepCards";
 import { WeekStrip, dayTitle } from "@/components/run/RunPieces";
 import { getMyProfile, getMyWeek, listExtras, listMyRuns } from "@/lib/db/programs";
 import { createClient, isConfigured } from "@/lib/supabase/server";
-import { SAMPLE_EXPLORE } from "@/lib/explore";
+import { SAMPLE_EXPLORE, rankRuns } from "@/lib/explore";
+import { realRuns } from "@/lib/db/explore";
 import { DAY_NAMES_LONG, RUN_TYPE_LABEL, addDays, dayDurationS, toISODate } from "@/lib/types";
 import { markDoneAction } from "./actions";
 
@@ -31,6 +32,10 @@ export default async function Today({ searchParams }: { searchParams: Promise<{ 
   const log = me ? await listMyRuns(weekAgo, today) : [];
 
   if (!mine) {
+    // Runs to try: real published runs when there are any, ranked by the runner's goal and days a week.
+    const real = configured ? await realRuns().catch(() => null) : null;
+    const pool = real && (real.popular.length || real.fresh.length) ? [...real.popular, ...real.fresh.filter((f) => !real.popular.some((p) => p.key === f.key))] : SAMPLE_EXPLORE;
+    const picks = rankRuns(pool, me).slice(0, 4);
     return (
       <main className="rl-page rl-stack" style={{ gap: "var(--rl-space-6)" }}>
         <div className="rl-stack" style={{ gap: 2 }}>
@@ -46,7 +51,7 @@ export default async function Today({ searchParams }: { searchParams: Promise<{ 
         <section className="rl-stack" style={{ gap: "var(--rl-space-3)" }}>
           <h2 className="t-title" style={{ margin: 0 }}>Nothing planned. Pick one.</h2>
           <div className="rl-rail">
-            {SAMPLE_EXPLORE.slice(0, 4).map((r) => <RunCard key={r.key} r={r} compact />)}
+            {picks.map((r) => <RunCard key={r.key} r={r} compact />)}
           </div>
           <Link href="/app/explore" className="rl-btn rl-btn-secondary" style={{ alignSelf: "flex-start" }}>Explore creators</Link>
         </section>

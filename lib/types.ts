@@ -61,6 +61,8 @@ export const Program = z.object({
 export type Program = z.infer<typeof Program>;
 
 /** Run type colours are tokens in globals.css (--rl-run-<type>); this is the single place that names them. */
+export const GOAL_LABEL: Record<z.infer<typeof Goal>, string> = { other: "Just running", base: "Base building", "5k": "5K", "10k": "10K", half: "Half marathon", marathon: "Marathon" };
+
 export const RUN_TYPE_LABEL: Record<NonNullable<ProgramDay["runType"]>, string> = { easy: "Easy", long: "Long", tempo: "Tempo", intervals: "Intervals", recovery: "Recovery", race: "Race" };
 
 /** Monday of the week containing `d`, as YYYY-MM-DD in local time. */
@@ -115,6 +117,10 @@ export const Profile = z.object({
   pace5kS: z.number().int().nullable().default(null),
   /** Creator has a Stripe account that can take payments; buttons go through Checkout. */
   stripeChargesEnabled: z.boolean().default(false),
+  /** Runner questionnaire: null = not answered. */
+  goal: Goal.nullable().default(null),
+  raceDate: z.string().date().nullable().default(null),
+  daysPerWeek: z.number().int().min(1).max(7).nullable().default(null),
 });
 export type Profile = z.infer<typeof Profile>;
 

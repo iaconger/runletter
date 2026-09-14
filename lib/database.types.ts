@@ -186,6 +186,9 @@ export type Database = {
           stripe_charges_enabled: boolean;
           stripe_details_submitted: boolean;
           platform_fee_pct: number | null;
+          goal: Database["public"]["Enums"]["program_goal"] | null;
+          race_date: string | null;
+          days_per_week: number | null;
         };
         Insert: {
           avatar_url?: string | null;
@@ -205,6 +208,9 @@ export type Database = {
           stripe_charges_enabled?: boolean;
           stripe_details_submitted?: boolean;
           platform_fee_pct?: number | null;
+          goal?: Database["public"]["Enums"]["program_goal"] | null;
+          race_date?: string | null;
+          days_per_week?: number | null;
         };
         Update: {
           avatar_url?: string | null;
@@ -224,6 +230,9 @@ export type Database = {
           stripe_charges_enabled?: boolean;
           stripe_details_submitted?: boolean;
           platform_fee_pct?: number | null;
+          goal?: Database["public"]["Enums"]["program_goal"] | null;
+          race_date?: string | null;
+          days_per_week?: number | null;
         };
         Relationships: [];
       };

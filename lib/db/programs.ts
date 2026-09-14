@@ -59,13 +59,15 @@ export function mapProgram(r: ProgramRow, days: DayRow[] = [], blocks: BlockRow[
   };
 }
 
-export function mapProfile(r: Pick<ProfileRow, "id" | "handle" | "display_name" | "avatar_url" | "cover_url" | "bio" | "is_creator" | "links"> & { pace_5k_s?: number | null; stripe_charges_enabled?: boolean | null }): Profile {
+export function mapProfile(r: Pick<ProfileRow, "id" | "handle" | "display_name" | "avatar_url" | "cover_url" | "bio" | "is_creator" | "links"> & { pace_5k_s?: number | null; stripe_charges_enabled?: boolean | null; goal?: Program["goal"] | null; race_date?: string | null; days_per_week?: number | null }): Profile {
   const links = (r.links && typeof r.links === "object" && !Array.isArray(r.links) ? r.links : {}) as Record<string, string>;
   return { id: r.id, handle: r.handle, displayName: r.display_name, avatarUrl: r.avatar_url, coverUrl: r.cover_url, bio: r.bio, isCreator: r.is_creator,
-    pace5kS: r.pace_5k_s ?? null, stripeChargesEnabled: r.stripe_charges_enabled ?? false, links };
+    pace5kS: r.pace_5k_s ?? null, stripeChargesEnabled: r.stripe_charges_enabled ?? false, goal: r.goal ?? null, raceDate: r.race_date ?? null, daysPerWeek: r.days_per_week ?? null, links };
 }
 
 const PROFILE_COLS = "id, handle, display_name, avatar_url, cover_url, bio, is_creator, links, pace_5k_s, stripe_charges_enabled";
+/** The signed-in user's own row also carries the questionnaire (not granted to anon). */
+const MY_PROFILE_COLS = "id, handle, display_name, avatar_url, cover_url, bio, is_creator, links, pace_5k_s, stripe_charges_enabled, goal, race_date, days_per_week";
 
 // ---------- reads ----------
 
@@ -73,7 +75,7 @@ export async function getMyProfile(): Promise<Profile | null> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data } = await supabase.from("profiles").select(PROFILE_COLS).eq("id", user.id).single();
+  const { data } = await supabase.from("profiles").select(MY_PROFILE_COLS).eq("id", user.id).single();
   return data ? mapProfile(data) : null;
 }
 
@@ -227,7 +229,7 @@ export async function duplicateWeek(programId: string, from: number, to: number)
   }
 }
 
-export async function updateMyProfile(patch: Partial<Pick<Profile, "handle" | "displayName" | "bio" | "links" | "avatarUrl" | "coverUrl" | "isCreator" | "pace5kS">>) {
+export async function updateMyProfile(patch: Partial<Pick<Profile, "handle" | "displayName" | "bio" | "links" | "avatarUrl" | "coverUrl" | "isCreator" | "pace5kS" | "goal" | "raceDate" | "daysPerWeek">>) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not signed in");
@@ -240,6 +242,9 @@ export async function updateMyProfile(patch: Partial<Pick<Profile, "handle" | "d
   if (patch.coverUrl !== undefined) row.cover_url = patch.coverUrl;
   if (patch.isCreator !== undefined) row.is_creator = patch.isCreator;
   if (patch.pace5kS !== undefined) row.pace_5k_s = patch.pace5kS;
+  if (patch.goal !== undefined) row.goal = patch.goal;
+  if (patch.raceDate !== undefined) row.race_date = patch.raceDate;
+  if (patch.daysPerWeek !== undefined) row.days_per_week = patch.daysPerWeek;
   const { error } = await supabase.from("profiles").update(row).eq("id", user.id);
   if (error) throw error;
 }

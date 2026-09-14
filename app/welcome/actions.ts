@@ -59,3 +59,24 @@ export async function saveImagesAction(input: { avatarUrl?: string | null; cover
     return { ok: false, error: e instanceof Error ? e.message : "Could not save" };
   }
 }
+
+/** Runner questionnaire: goal, race date, days a week, 5K time. All optional; the step is skippable. */
+export async function saveRunningAction(input: { goal: string; raceDate: string; daysPerWeek: number | null; time5k: string }): Promise<ActionResult> {
+  const { Goal } = await import("@/lib/types");
+  const goal = Goal.safeParse(input.goal);
+  const raceDate = /^\d{4}-\d{2}-\d{2}$/.test(input.raceDate) ? input.raceDate : null;
+  const days = input.daysPerWeek && input.daysPerWeek >= 1 && input.daysPerWeek <= 7 ? Math.round(input.daysPerWeek) : null;
+  const raw = input.time5k.trim();
+  const parts = raw.split(":").map(Number);
+  const s = parts.length === 2 ? parts[0]! * 60 + parts[1]! : parts.length === 3 ? parts[0]! * 3600 + parts[1]! * 60 + parts[2]! : NaN;
+  const pace5kS = !raw ? null : Number.isFinite(s) && s >= 600 && s <= 3600 ? s : undefined;
+  if (pace5kS === undefined) return { ok: false, error: "5K time like 24:30 (10:00 to 60:00)" };
+  try {
+    await db.updateMyProfile({ goal: goal.success ? goal.data : "other", raceDate, daysPerWeek: days, pace5kS });
+    revalidatePath("/app");
+    revalidatePath("/app/you");
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Could not save" };
+  }
+}
