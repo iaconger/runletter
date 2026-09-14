@@ -111,6 +111,7 @@
   --rl-control-lg: 52px;
   --rl-icon: 20px;
   --rl-content-max: 640px;
+  --rl-gutter: var(--rl-space-4); /* side margin; grows with the viewport below */
 
   color-scheme: light;
 }
@@ -216,7 +217,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .c-secondary { color: var(--rl-text-secondary); }
 
 /* ---------- layout ---------- */
-.rl-page { max-width: var(--rl-content-max); margin: 0 auto; padding-block: var(--rl-space-6) var(--rl-space-16); padding-inline: var(--rl-space-4); }
+.rl-page { max-width: var(--rl-content-max); margin: 0 auto; padding-block: var(--rl-space-6) var(--rl-space-16); padding-inline: var(--rl-gutter); }
+@media (min-width: 640px) { :root { --rl-gutter: var(--rl-space-8); } }
+@media (min-width: 1024px) { :root { --rl-gutter: var(--rl-space-12); } }
+.rl-page.rl-wide { max-width: calc(1120px + 2 * var(--rl-gutter)); }
 .rl-wide { max-width: 1120px; }
 .rl-stack { display: flex; flex-direction: column; gap: var(--rl-space-4); }
 .rl-row { display: flex; align-items: center; gap: var(--rl-space-3); flex-wrap: wrap; }
@@ -381,9 +385,9 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 
 /* ---------- nav ---------- */
 /* follower app shell: header with the mark, the nav and sign out; tabs drop to the bottom only on phones */
-.rl-app { min-height: 100vh; display: flex; flex-direction: column; max-width: 640px; margin: 0 auto; }
+.rl-app { min-height: 100vh; display: flex; flex-direction: column; max-width: calc(640px + 2 * var(--rl-gutter)); margin: 0 auto; }
 .rl-app > div { flex: 1; }
-.rl-app-head { display: flex; align-items: center; gap: var(--rl-space-5); padding: var(--rl-space-4) var(--rl-space-4) 0; }
+.rl-app-head { display: flex; align-items: center; gap: var(--rl-space-5); padding: var(--rl-space-4) var(--rl-gutter) 0; }
 .rl-app-head > form { margin-left: auto; }
 .rl-topnav { display: flex; gap: 2px; }
 .rl-topnav > a { padding: 6px 10px; border-radius: 999px; font: var(--rl-text-body-medium); color: var(--rl-text-secondary); }
@@ -395,7 +399,7 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 .rl-tabbar > a { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 0; font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; color: var(--rl-text-muted); }
 .rl-tabbar > a[aria-current="page"] { color: var(--rl-text); }
 .rl-studio { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
-.rl-sidebar { border-right: var(--rl-border-hairline) solid var(--rl-hairline); padding: var(--rl-space-6) var(--rl-space-4); display: flex; flex-direction: column; gap: var(--rl-space-6); }
+.rl-sidebar { border-right: var(--rl-border-hairline) solid var(--rl-hairline); padding: var(--rl-space-6) var(--rl-space-5); display: flex; flex-direction: column; gap: var(--rl-space-6); }
 .rl-sidebar nav { display: flex; flex-direction: column; gap: 2px; }
 .rl-sidebar nav > a { padding: 8px 10px; border-radius: var(--rl-radius-md); color: var(--rl-text-secondary); font: var(--rl-text-body-medium); }
 .rl-sidebar nav > a:hover { background: var(--rl-surface-sunken); text-decoration: none; }
@@ -676,12 +680,12 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 .rl-runcard .by { display: inline-flex; align-items: center; gap: 6px; font: var(--rl-text-body-sm); color: var(--rl-text-secondary); }
 .rl-runcard .by > img { border-radius: 50%; object-fit: cover; }
 .rl-runcard.compact > .img { aspect-ratio: 16 / 10; }
-.rl-rail { display: grid; grid-auto-flow: column; grid-auto-columns: min(78%, 300px); gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 0 6px; margin-inline: calc(-1 * var(--rl-space-4)); padding-inline: var(--rl-space-4); scrollbar-width: none; }
+.rl-rail { display: grid; grid-auto-flow: column; grid-auto-columns: min(78%, 300px); gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 0 6px; margin-inline: calc(-1 * var(--rl-gutter)); padding-inline: var(--rl-gutter); scrollbar-width: none; }
 .rl-rail::-webkit-scrollbar { display: none; }
 .rl-rail > * { scroll-snap-align: start; }
 @media (min-width: 640px) { .rl-rail { grid-auto-columns: 300px; margin-inline: 0; padding-inline: 0; } }
 /* Picks: a swipe rail on phones, a two-up grid from tablet. */
-.rl-picks { display: grid; grid-auto-flow: column; grid-auto-columns: min(78%, 300px); gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 0 6px; margin-inline: calc(-1 * var(--rl-space-4)); padding-inline: var(--rl-space-4); scrollbar-width: none; }
+.rl-picks { display: grid; grid-auto-flow: column; grid-auto-columns: min(78%, 300px); gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 0 6px; margin-inline: calc(-1 * var(--rl-gutter)); padding-inline: var(--rl-gutter); scrollbar-width: none; }
 .rl-picks::-webkit-scrollbar { display: none; }
 .rl-picks > * { scroll-snap-align: start; }
 @media (min-width: 640px) { .rl-picks { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-columns: auto; overflow: visible; margin-inline: 0; padding-inline: 0; } }

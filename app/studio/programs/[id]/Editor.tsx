@@ -302,7 +302,7 @@ export function Editor({
   const filled = selWeekDays.length;
 
   return (
-    <main className="rl-page rl-wide rl-stack" style={{ maxWidth: 1320, gap: "var(--rl-space-6)" }}>
+    <main className="rl-page rl-wide rl-stack" style={{ maxWidth: "calc(1320px + 2 * var(--rl-gutter))", gap: "var(--rl-space-6)" }}>
       <div className="rl-between" style={{ flexWrap: "wrap", gap: "var(--rl-space-3)" }}>
         <div className="rl-stack" style={{ gap: 2 }}>
           <span className="t-label c-muted">{readOnly ? "Example plan" : letter ? "Your Letter" : "Plan"}</span>

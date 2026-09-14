@@ -37,7 +37,7 @@ export default async function StudioCalendar({ searchParams }: { searchParams: P
     stampFor: (w) => { const i = issues.find((x) => x.week === w); return program.isLetter ? (i?.sentAt ? "sent" : i?.scheduledFor ? "scheduled" : "draft") : undefined; },
   });
   return (
-    <main className="rl-page rl-wide rl-stack" style={{ maxWidth: 1100, gap: "var(--rl-space-5)" }}>
+    <main className="rl-page rl-wide rl-stack" style={{ maxWidth: "calc(1100px + 2 * var(--rl-gutter))", gap: "var(--rl-space-5)" }}>
       <div className="rl-between" style={{ alignItems: "baseline", flexWrap: "wrap", gap: "var(--rl-space-2)" }}>
         <div className="rl-stack" style={{ gap: 2 }}>
           <span className="t-label c-muted">{program.isLetter ? "Your Letter" : "Plan"}</span>

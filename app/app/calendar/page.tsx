@@ -36,7 +36,7 @@ export default async function CalendarPage() {
   });
   const shown = cal.program.isLetter ? weeks.filter((w) => cal.sentWeeks.has(w.week) || w.week === cal.currentWeek || w.week === (cal.currentWeek ?? 0) + 1) : weeks;
   return (
-    <main className="rl-page rl-wide rl-stack" style={{ maxWidth: 1100, gap: "var(--rl-space-5)" }}>
+    <main className="rl-page rl-wide rl-stack" style={{ maxWidth: "calc(1100px + 2 * var(--rl-gutter))", gap: "var(--rl-space-5)" }}>
       <div className="rl-between" style={{ alignItems: "baseline", flexWrap: "wrap", gap: "var(--rl-space-2)" }}>
         <div className="rl-stack" style={{ gap: 2 }}>
           <span className="t-label c-muted">{cal.creator.displayName}</span>
