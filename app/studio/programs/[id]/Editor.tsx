@@ -356,10 +356,18 @@ export function Editor({
             </select>
           </div>
           {letter ? (
-            <div className="rl-field"><label>Started</label>
-              <input className="rl-input" type="date" value={program.fixedStartDate ?? ""} disabled={readOnly} onChange={(e) => e.target.value && saveSetting({ startRule: "fixed", fixedStartDate: e.target.value })} />
-
-            </div>
+            <>
+              <div className="rl-field"><label>Started</label>
+                <input className="rl-input" type="date" value={program.fixedStartDate ?? ""} disabled={readOnly} onChange={(e) => e.target.value && saveSetting({ startRule: "fixed", fixedStartDate: e.target.value })} />
+              </div>
+              <div className="rl-field"><label>Price a month</label>
+                <div className="rl-row" style={{ gap: 6, flexWrap: "nowrap" }}>
+                  <span className="c-muted">$</span>
+                  <input className="rl-input" type="number" min={0} max={100} step={1} value={Math.round((program.priceCents ?? 0) / 100)} disabled={readOnly} onChange={(e) => setProgram({ ...program, priceCents: Math.round(Number(e.target.value) * 100) })} onBlur={(e) => saveSetting({ priceCents: Math.max(0, Math.round(Number(e.target.value) * 100)) })} />
+                </div>
+                <span className="rl-help">0 = free</span>
+              </div>
+            </>
           ) : (
             <>
               <div className="rl-field"><label>Weeks</label><input className="rl-input" type="number" min={1} max={52} value={program.weeks} readOnly={readOnly} onChange={(e) => setProgram({ ...program, weeks: Number(e.target.value) || 1 })} onBlur={(e) => saveSetting({ weeks: Math.min(52, Math.max(1, Number(e.target.value) || 1)) })} /></div>

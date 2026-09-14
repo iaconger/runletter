@@ -6,7 +6,6 @@ const ITEMS = [
   { href: "/studio", label: "Letter & plans" },
   { href: "/studio/subscribers", label: "Runners" },
   { href: "/studio/page", label: "Your page" },
-  { href: "/studio/payouts", label: "Payouts" },
 ];
 
 export function StudioNav() {

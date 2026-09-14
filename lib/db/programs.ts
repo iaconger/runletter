@@ -59,13 +59,13 @@ export function mapProgram(r: ProgramRow, days: DayRow[] = [], blocks: BlockRow[
   };
 }
 
-export function mapProfile(r: Pick<ProfileRow, "id" | "handle" | "display_name" | "avatar_url" | "cover_url" | "bio" | "is_creator" | "links"> & { pace_5k_s?: number | null }): Profile {
+export function mapProfile(r: Pick<ProfileRow, "id" | "handle" | "display_name" | "avatar_url" | "cover_url" | "bio" | "is_creator" | "links"> & { pace_5k_s?: number | null; stripe_charges_enabled?: boolean | null }): Profile {
   const links = (r.links && typeof r.links === "object" && !Array.isArray(r.links) ? r.links : {}) as Record<string, string>;
   return { id: r.id, handle: r.handle, displayName: r.display_name, avatarUrl: r.avatar_url, coverUrl: r.cover_url, bio: r.bio, isCreator: r.is_creator,
-    pace5kS: r.pace_5k_s ?? null, links };
+    pace5kS: r.pace_5k_s ?? null, stripeChargesEnabled: r.stripe_charges_enabled ?? false, links };
 }
 
-const PROFILE_COLS = "id, handle, display_name, avatar_url, cover_url, bio, is_creator, links, pace_5k_s";
+const PROFILE_COLS = "id, handle, display_name, avatar_url, cover_url, bio, is_creator, links, pace_5k_s, stripe_charges_enabled";
 
 // ---------- reads ----------
 
@@ -125,7 +125,8 @@ export async function createProgram(input: { title: string; weeks: number; goal:
     start_rule: input.isLetter ? "fixed" : "rolling",
     fixed_start_date: input.isLetter ? (input.fixedStartDate ?? null) : null,
     access: input.access ?? (input.isLetter ? "creator_sub" : "one_time"),
-    price_cents: input.isLetter ? null : (input.priceCents ?? 2900),
+    // Letters default to $7 a month (pricing.md: $5 to 10, set by the creator; 0 keeps it free). Plans default to $29 once.
+    price_cents: input.priceCents ?? (input.isLetter ? 700 : 2900),
   };
   const { data, error } = await supabase.from("programs").insert(row).select("id").single();
   if (error) throw error;
@@ -436,4 +437,20 @@ export async function listMyRuns(from: string, to: string): Promise<RunLogItem[]
     ...(extras ?? []).map((x) => ({ id: x.id, date: x.run_date, title: x.name ?? "Run", planned: false, distanceM: x.distance_m, durationS: x.duration_s, avgPaceS: x.avg_pace_s, source: x.source as "strava" | "manual" })),
   ];
   return items.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+}
+
+// ---------- access (through RLS: a runner sees only their own rows) ----------
+
+export type MyAccess = { signedIn: boolean; subscribed: boolean; purchased: boolean };
+
+/** Does the signed-in runner already have this program: subscribed to its creator (Letter) or bought it (plan). */
+export async function getMyAccess(program: Pick<Program, "id" | "creatorId">): Promise<MyAccess> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { signedIn: false, subscribed: false, purchased: false };
+  const [{ data: sub }, { data: buy }] = await Promise.all([
+    supabase.from("subscriptions").select("status").eq("follower_id", user.id).eq("creator_id", program.creatorId).eq("status", "active").maybeSingle(),
+    supabase.from("purchases").select("id").eq("follower_id", user.id).eq("program_id", program.id).maybeSingle(),
+  ]);
+  return { signedIn: true, subscribed: !!sub, purchased: !!buy };
 }

@@ -5,7 +5,7 @@ import { Portrait } from "@/components/ui/Ink";
 import { dayDurationS, RUN_TYPE_LABEL } from "@/lib/types";
 import type { ExploreRun } from "@/lib/explore";
 
-export function RunCard({ r, compact = false }: { r: ExploreRun; compact?: boolean }) {
+export function RunCard({ r, compact = false, action }: { r: ExploreRun; compact?: boolean; action?: React.ReactNode }) {
   const mins = Math.round(dayDurationS(r.day) / 60);
   const type = r.day.runType ? RUN_TYPE_LABEL[r.day.runType] : "Run";
   const photo = r.creator.avatarUrl ?? (r.creator.portrait ? `/brand/photo/${r.creator.portrait}.webp` : null);
@@ -27,6 +27,7 @@ export function RunCard({ r, compact = false }: { r: ExploreRun; compact?: boole
         {!compact && r.day.note && <span className="rl-help">{r.day.note}</span>}
         <div className="rl-row" style={{ gap: 6, marginTop: 4 }}>
           <a href={r.fitHref} download className="rl-btn rl-btn-primary rl-btn-sm">Send to watch</a>
+          {action}
           {r.completions ? <span className="rl-chip">{r.completions} ran it</span> : null}
         </div>
       </div>

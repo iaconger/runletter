@@ -9,6 +9,8 @@ export type ExploreRun = {
   title: string;
   day: ProgramDay;
   creator: { name: string; handle: string; portrait?: PortraitName; avatarUrl?: string | null };
+  /** Real creator id (undefined for the fictional set). */
+  creatorId?: string;
   programId: string | null; // null for the fictional set
   programTitle: string;
   completions?: number;

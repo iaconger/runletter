@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Mark } from "@/components/ui/Logo";
 import { Cover, Ink, Portrait, coverFor } from "@/components/ui/Ink";
-import { getProfileByHandle, listPublishedPrograms } from "@/lib/db/programs";
+import { getProfileByHandle, listPublishedPrograms, getMyAccess } from "@/lib/db/programs";
+import { JoinButton, priceLabel } from "@/components/run/JoinButton";
 import { isConfigured } from "@/lib/supabase/server";
 import { sampleCreator, sampleProgram } from "@/lib/sample";
 import type { Profile, Program } from "@/lib/types";
@@ -31,6 +32,8 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
   const r = await load(handle);
   if (!r) notFound();
   const { c, programs, example } = r;
+  const letter = programs.find((p) => p.isLetter) ?? null;
+  const access = letter && !example ? await getMyAccess(letter) : { signedIn: false, subscribed: false, purchased: false };
 
   return (
     <main>
@@ -45,8 +48,12 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
           <h1 className="t-display-xl" style={{ margin: 0 }}>{c.displayName || `@${c.handle}`}</h1>
           {c.bio && <p className="t-body" style={{ margin: 0, maxWidth: "48ch" }}>{c.bio}</p>}
           <div className="rl-row">
-            <Link href={`/signup?next=/c/${c.handle}`} className={`rl-btn rl-btn-lg ${c.coverUrl ? "rl-btn-paper" : "rl-btn-ink"}`}>Subscribe · $7/mo</Link>
-            <span className="rl-help" style={{ color: "inherit", opacity: 0.7 }}>Cancel any time. Sold on the web.</span>
+            {letter ? (
+              <JoinButton program={letter} creator={c} access={access} back={`/c/${c.handle}`} example={example} className={`rl-btn rl-btn-lg ${c.coverUrl ? "rl-btn-paper" : "rl-btn-ink"}`} />
+            ) : example ? (
+              <Link href="/signup" className={`rl-btn rl-btn-lg ${c.coverUrl ? "rl-btn-paper" : "rl-btn-ink"}`}>Subscribe · $7/mo</Link>
+            ) : null}
+            {letter && <span className="rl-help" style={{ color: "inherit", opacity: 0.7 }}>{priceLabel(letter, c) === "Free" ? "The Letter, every week." : "Monthly. Cancel any time."}</span>}
           </div>
           {Object.keys(c.links).length > 0 && (
             <div className="rl-row" style={{ gap: "var(--rl-space-2)" }}>
@@ -70,7 +77,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
               <span className="rl-row">
                 <span className="rl-chip">{p.weeks} weeks</span>
                 <span className="rl-chip">{p.level}</span>
-                <span className="rl-chip rl-chip-accent">{p.access === "creator_sub" ? "Included" : `$${((p.priceCents ?? 0) / 100).toFixed(0)}`}</span>
+                <span className="rl-chip rl-chip-accent">{p.isLetter ? priceLabel(p, c) : p.access === "creator_sub" ? "Included" : priceLabel(p, c)}</span>
               </span>
             </Link>
           ))

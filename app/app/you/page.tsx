@@ -1,5 +1,6 @@
 import { Ink } from "@/components/ui/Ink";
 import { Connections } from "@/components/connections/Connections";
+import { Subscriptions } from "@/components/run/Subscriptions";
 import { getMyProfile, listMyRuns } from "@/lib/db/programs";
 import { RunLog } from "@/components/run/RunLog";
 import { addDays, toISODate } from "@/lib/types";
@@ -31,6 +32,7 @@ export default async function You({ searchParams }: { searchParams: Promise<{ co
         <span className="rl-help">Turns &ldquo;easy&rdquo; and &ldquo;hard&rdquo; into your own paces, on screen and on the watch.</span>
       </form>
       <Connections back="/app/you" notice={notice} />
+      <Subscriptions />
       {me && (
         <section className="rl-card" style={{ gap: "var(--rl-space-2)" }}>
           <span className="t-heading">Last 30 days</span>

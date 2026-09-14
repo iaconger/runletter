@@ -15,6 +15,7 @@ export const sampleCreator: Profile = {
   isCreator: true,
   links: { instagram: "https://instagram.com/", strava: "https://strava.com/" },
   pace5kS: null,
+  stripeChargesEnabled: false,
 };
 
 function block(p: Partial<Block> & Pick<Block, "kind" | "position">): Block {

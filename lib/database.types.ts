@@ -183,6 +183,9 @@ export type Database = {
           strava_tokens: Json | null;
           stripe_account_id: string | null;
           stripe_customer_id: string | null;
+          stripe_charges_enabled: boolean;
+          stripe_details_submitted: boolean;
+          platform_fee_pct: number | null;
         };
         Insert: {
           avatar_url?: string | null;
@@ -199,6 +202,9 @@ export type Database = {
           strava_tokens?: Json | null;
           stripe_account_id?: string | null;
           stripe_customer_id?: string | null;
+          stripe_charges_enabled?: boolean;
+          stripe_details_submitted?: boolean;
+          platform_fee_pct?: number | null;
         };
         Update: {
           avatar_url?: string | null;
@@ -215,6 +221,9 @@ export type Database = {
           strava_tokens?: Json | null;
           stripe_account_id?: string | null;
           stripe_customer_id?: string | null;
+          stripe_charges_enabled?: boolean;
+          stripe_details_submitted?: boolean;
+          platform_fee_pct?: number | null;
         };
         Relationships: [];
       };
@@ -313,13 +322,19 @@ export type Database = {
         ];
       };
       purchases: {
-        Row: { created_at: string; follower_id: string; id: string; program_id: string; stripe_payment_intent_id: string | null };
-        Insert: { created_at?: string; follower_id: string; id?: string; program_id: string; stripe_payment_intent_id?: string | null };
-        Update: { created_at?: string; follower_id?: string; id?: string; program_id?: string; stripe_payment_intent_id?: string | null };
+        Row: { created_at: string; follower_id: string; id: string; program_id: string; stripe_payment_intent_id: string | null; stripe_checkout_session_id: string | null; amount_cents: number | null };
+        Insert: { created_at?: string; follower_id: string; id?: string; program_id: string; stripe_payment_intent_id?: string | null; stripe_checkout_session_id?: string | null; amount_cents?: number | null };
+        Update: { created_at?: string; follower_id?: string; id?: string; program_id?: string; stripe_payment_intent_id?: string | null; stripe_checkout_session_id?: string | null; amount_cents?: number | null };
         Relationships: [
           { foreignKeyName: "purchases_follower_id_fkey"; columns: ["follower_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
           { foreignKeyName: "purchases_program_id_fkey"; columns: ["program_id"]; isOneToOne: false; referencedRelation: "programs"; referencedColumns: ["id"] },
         ];
+      };
+      stripe_events: {
+        Row: { id: string; type: string; received_at: string };
+        Insert: { id: string; type: string; received_at?: string };
+        Update: { id?: string; type?: string; received_at?: string };
+        Relationships: [];
       };
       subscriptions: {
         Row: {
@@ -328,6 +343,10 @@ export type Database = {
           follower_id: string;
           status: Database["public"]["Enums"]["subscription_status"];
           stripe_subscription_id: string | null;
+          stripe_customer_id: string | null;
+          current_period_end: string | null;
+          cancel_at_period_end: boolean;
+          updated_at: string;
         };
         Insert: {
           created_at?: string;
@@ -335,6 +354,10 @@ export type Database = {
           follower_id: string;
           status?: Database["public"]["Enums"]["subscription_status"];
           stripe_subscription_id?: string | null;
+          stripe_customer_id?: string | null;
+          current_period_end?: string | null;
+          cancel_at_period_end?: boolean;
+          updated_at?: string;
         };
         Update: {
           created_at?: string;
@@ -342,6 +365,10 @@ export type Database = {
           follower_id?: string;
           status?: Database["public"]["Enums"]["subscription_status"];
           stripe_subscription_id?: string | null;
+          stripe_customer_id?: string | null;
+          current_period_end?: string | null;
+          cancel_at_period_end?: boolean;
+          updated_at?: string;
         };
         Relationships: [
           { foreignKeyName: "subscriptions_creator_id_fkey"; columns: ["creator_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
