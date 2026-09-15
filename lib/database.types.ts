@@ -119,6 +119,15 @@ export type Database = {
           { foreignKeyName: "extra_runs_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
         ];
       };
+      scheduled_runs: {
+        Row: { id: string; user_id: string; program_day_id: string; run_date: string; created_at: string };
+        Insert: { id?: string; user_id: string; program_day_id: string; run_date: string; created_at?: string };
+        Update: { id?: string; user_id?: string; program_day_id?: string; run_date?: string; created_at?: string };
+        Relationships: [
+          { foreignKeyName: "scheduled_runs_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+          { foreignKeyName: "scheduled_runs_program_day_id_fkey"; columns: ["program_day_id"]; isOneToOne: false; referencedRelation: "program_days"; referencedColumns: ["id"] },
+        ];
+      };
       creator_posts: {
         Row: { body: string; created_at: string; creator_id: string; id: string; program_day_id: string | null; program_id: string | null };
         Insert: { body: string; created_at?: string; creator_id: string; id?: string; program_day_id?: string | null; program_id?: string | null };

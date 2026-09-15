@@ -899,6 +899,41 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
   .rl-cal a.cell:hover { background: var(--run-soft, var(--rl-surface-sunken)); border-color: var(--rl-text-secondary); }
 }
 
+/* Calendar days as drop targets: each cell is wrapped so it can take a dragged run and carry a remove button. */
+.rl-cal .cellwrap { position: relative; display: flex; flex-direction: column; min-width: 0; }
+.rl-cal .cellwrap > .cell { flex: 1; }
+.rl-cal .cellwrap:not(:first-child) > .cell { border-top: var(--rl-border-hairline) solid var(--rl-hairline); }
+.rl-cal[data-dropzone] .cellwrap[data-over] > .cell { background: var(--rl-surface-sunken); box-shadow: inset 0 0 0 2px var(--rl-accent); }
+.rl-cal .cellwrap > .off { position: absolute; right: 6px; bottom: 6px; width: 20px; height: 20px; border-radius: 50%; border: var(--rl-border-hairline) solid var(--rl-hairline); background: var(--rl-surface); color: var(--rl-text-muted); font-size: 13px; line-height: 1; cursor: pointer; opacity: 0; transition: opacity 120ms; }
+.rl-cal .cellwrap:hover > .off, .rl-cal .cellwrap:focus-within > .off { opacity: 1; }
+.rl-cal .cellwrap > .off:hover { color: var(--rl-text); border-color: var(--rl-text-secondary); }
+
+/* The tray under the calendar: runs from the people you follow, dragged onto a day. */
+.rl-tray { display: flex; gap: var(--rl-space-3); overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.rl-traycard { --run-ink: var(--rl-hairline); --run-soft: var(--rl-surface); flex: 0 0 210px; display: flex; flex-direction: column; gap: 4px; padding: 10px 12px 10px 16px; position: relative; border-radius: var(--rl-radius-md); border: var(--rl-border-hairline) solid var(--rl-hairline); background: var(--run-soft); cursor: grab; user-select: none; }
+.rl-traycard:active { cursor: grabbing; }
+.rl-traycard::before { content: ""; position: absolute; left: 6px; top: 10px; bottom: 10px; width: 3px; border-radius: 3px; background: var(--run-ink); }
+.rl-traycard[data-run="easy"] { --run-ink: var(--rl-run-easy); --run-soft: var(--rl-run-easy-soft); }
+.rl-traycard[data-run="long"] { --run-ink: var(--rl-run-long); --run-soft: var(--rl-run-long-soft); }
+.rl-traycard[data-run="tempo"] { --run-ink: var(--rl-run-tempo); --run-soft: var(--rl-run-tempo-soft); }
+.rl-traycard[data-run="intervals"] { --run-ink: var(--rl-run-intervals); --run-soft: var(--rl-run-intervals-soft); }
+.rl-traycard[data-run="recovery"] { --run-ink: var(--rl-run-recovery); --run-soft: var(--rl-run-recovery-soft); }
+.rl-traycard[data-run="race"] { --run-ink: var(--rl-run-race); --run-soft: var(--rl-run-race-soft); }
+.rl-traycard > .t { font: var(--rl-text-body-medium); overflow-wrap: anywhere; }
+.rl-traycard > .w { font: var(--rl-text-body-sm); color: var(--rl-text-secondary); }
+.rl-traycard > .pick { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.rl-traycard > .pick > button { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; padding: 3px 7px; border-radius: 999px; border: var(--rl-border-hairline) solid var(--rl-hairline); background: transparent; color: var(--rl-text-secondary); cursor: pointer; }
+.rl-traycard > .pick > button:hover { color: var(--rl-text); border-color: var(--rl-text-secondary); }
+
+/* Dashboard: this week's activity, one line each. */
+.rl-actlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border-radius: var(--rl-radius-lg); border: var(--rl-border-hairline) solid var(--rl-hairline); background: var(--rl-surface); overflow: hidden; }
+.rl-actlist > li > a, .rl-actlist > li > div { display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 12px; padding: 10px 14px; border-top: var(--rl-border-hairline) solid var(--rl-hairline); color: inherit; text-decoration: none; }
+.rl-actlist > li:first-child > a, .rl-actlist > li:first-child > div { border-top: 0; }
+.rl-actlist > li > a:hover { background: var(--rl-surface-sunken); }
+.rl-actlist .nm { font: var(--rl-text-body-medium); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rl-actlist .sub { font: var(--rl-text-body-sm); color: var(--rl-text-muted); font-variant-numeric: tabular-nums; }
+.rl-actlist .rt { font: var(--rl-text-body-sm); color: var(--rl-text-secondary); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+
 /* Share list: your Strava runs, one line each, a note box and a Share button. */
 .rl-sharelist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border-radius: var(--rl-radius-lg); border: var(--rl-border-hairline) solid var(--rl-hairline); background: var(--rl-surface); overflow: hidden; }
 .rl-sharelist > li { display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: 12px; padding: 10px 14px; border-top: var(--rl-border-hairline) solid var(--rl-hairline); }

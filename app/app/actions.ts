@@ -87,3 +87,18 @@ export async function cancelSubscriptionAction(formData: FormData) {
   revalidatePath("/app/you");
   revalidatePath("/app");
 }
+
+/** Drag a creator's run onto a day of your own calendar. */
+export async function scheduleRunAction(programDayId: string, date: string) {
+  const parsed = z.object({ programDayId: z.string().uuid(), date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }).safeParse({ programDayId, date });
+  if (!parsed.success) return;
+  await db.scheduleRun(parsed.data.programDayId, parsed.data.date);
+  track("run_scheduled", { program_day_id: parsed.data.programDayId });
+  revalidatePath("/app", "layout");
+}
+
+export async function unscheduleRunAction(id: string) {
+  if (!z.string().uuid().safeParse(id).success) return;
+  await db.unscheduleRun(id);
+  revalidatePath("/app", "layout");
+}

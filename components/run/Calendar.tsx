@@ -1,9 +1,13 @@
-// The calendar. Every week of a program as a row of seven days: what's planned (in the run's colour), what got
-// done, and the runs that happened off plan. Seven columns from tablet up, a vertical list per week on phones.
-// Server component; each cell is a link the caller decides.
+"use client";
+// The calendar. Every week as a row of seven days: what's planned (in the run's colour), what got done, and the
+// runs that happened off plan. Seven columns from tablet up, a vertical list per week on phones.
+// When `schedule` is passed the days accept drops, so a run from the tray below lands on a date.
 import Link from "next/link";
+import { useState, useTransition } from "react";
 import { dayTitle, runKey } from "@/components/run/RunPieces";
 import { addDays, dayDurationS, toISODate, type ProgramDay } from "@/lib/types";
+
+export const DRAG_TYPE = "text/rl-run";
 
 export type CalCell = {
   date: string; // ISO
@@ -11,6 +15,8 @@ export type CalCell = {
   done: boolean;
   extra?: string; // "+5.2 km"
   href?: string;
+  /** Set when the day came from the runner dragging it here: they can take it off again. */
+  scheduledId?: string;
 };
 export type CalWeek = { week: number; start: string; cells: CalCell[]; stamp?: "sent" | "scheduled" | "draft"; note?: string };
 
@@ -19,9 +25,24 @@ const DOW = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const dnum = (iso: string) => Number(iso.slice(8, 10));
 const mon = (iso: string) => MONTHS[Number(iso.slice(5, 7)) - 1];
 
-export function Calendar({ weeks, today, currentWeek }: { weeks: CalWeek[]; today: string; currentWeek?: number | null }) {
+export function Calendar({ weeks, today, currentWeek, schedule, unschedule }: {
+  weeks: CalWeek[];
+  today: string;
+  currentWeek?: number | null;
+  /** Server action: put this run on this date. Passing it turns the days into drop targets. */
+  schedule?: (programDayId: string, date: string) => Promise<void>;
+  unschedule?: (id: string) => Promise<void>;
+}) {
+  const [over, setOver] = useState<string | null>(null);
+  const [, start] = useTransition();
+  const drop = (date: string) => (e: React.DragEvent) => {
+    e.preventDefault();
+    setOver(null);
+    const id = e.dataTransfer.getData(DRAG_TYPE) || e.dataTransfer.getData("text/plain");
+    if (id && schedule) start(() => { void schedule(id, date); });
+  };
   return (
-    <div className="rl-cal">
+    <div className="rl-cal" data-dropzone={schedule ? "true" : undefined}>
       <div className="rl-cal-dow" aria-hidden>
         <span />
         {DOW.map((d) => <span key={d}>{d}</span>)}
@@ -57,10 +78,26 @@ export function Calendar({ weeks, today, currentWeek }: { weeks: CalWeek[]; toda
                   </>
                 );
                 const cls = ["cell", isToday ? "today" : "", past && !c.done && c.day?.kind === "run" ? "missed" : "", c.done ? "done" : ""].join(" ").trim();
+                const dnd = schedule ? {
+                  onDragOver: (e: React.DragEvent) => { e.preventDefault(); setOver(c.date); },
+                  onDragLeave: () => setOver((d) => (d === c.date ? null : d)),
+                  onDrop: drop(c.date),
+                  "data-over": over === c.date ? "true" : undefined,
+                } : {};
+                const off = c.scheduledId && unschedule ? (
+                  <button type="button" className="off" aria-label="Take this run off the day"
+                    onClick={(e) => { e.preventDefault(); start(() => { void unschedule(c.scheduledId!); }); }}>×</button>
+                ) : null;
                 return c.href ? (
-                  <Link key={c.date} href={c.href} className={cls} data-run={kind}>{inner}</Link>
+                  <div key={c.date} className="cellwrap" {...dnd}>
+                    <Link href={c.href} className={cls} data-run={kind}>{inner}</Link>
+                    {off}
+                  </div>
                 ) : (
-                  <div key={c.date} className={cls} data-run={kind}>{inner}</div>
+                  <div key={c.date} className="cellwrap" {...dnd}>
+                    <div className={cls} data-run={kind}>{inner}</div>
+                    {off}
+                  </div>
                 );
               })}
             </div>

@@ -542,3 +542,56 @@ export async function getMyExtra(id: string): Promise<ExtraRun | null> {
   const { data } = await supabase.from("extra_runs").select(EXTRA_COLS).eq("id", id).eq("user_id", user.id).maybeSingle();
   return data ? mapExtra(data) : null;
 }
+
+// ---------- scheduled runs (a creator's run dragged onto the runner's own calendar) ----------
+
+export type ScheduledRun = { id: string; date: string; day: ProgramDay; programId: string; programTitle: string; creator: { name: string; handle: string } };
+
+/** Runs the signed-in runner has put on their calendar, in a date range (inclusive). */
+export async function listScheduled(from: string, to: string): Promise<ScheduledRun[]> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data: rows } = await supabase.from("scheduled_runs").select("id, run_date, program_day_id").eq("user_id", user.id).gte("run_date", from).lte("run_date", to).order("run_date");
+  if (!rows?.length) return [];
+  const { data: days } = await supabase.from("program_days").select("*").in("id", rows.map((r) => r.program_day_id));
+  if (!days?.length) return [];
+  const { data: blocks } = await supabase.from("blocks").select("*").in("program_day_id", days.map((d) => d.id));
+  const { data: programs } = await supabase.from("programs").select("id, title, creator_id").in("id", [...new Set(days.map((d) => d.program_id))]);
+  const { data: people } = await supabase.from("profiles").select("id, display_name, handle").in("id", [...new Set((programs ?? []).map((p) => p.creator_id))]);
+  const dayById = new Map(days.map((d) => [d.id, mapDay(d, (blocks ?? []).filter((b) => b.program_day_id === d.id))]));
+  const progById = new Map((programs ?? []).map((p) => [p.id, p]));
+  const rawById = new Map(days.map((d) => [d.id, d]));
+  const whoById = new Map((people ?? []).map((p) => [p.id, p]));
+  const out: ScheduledRun[] = [];
+  for (const r of rows) {
+    const day = dayById.get(r.program_day_id);
+    const prog = progById.get(rawById.get(r.program_day_id)?.program_id ?? "");
+    const who = prog ? whoById.get(prog.creator_id) : null;
+    if (day && prog) out.push({ id: r.id, date: r.run_date, day, programId: prog.id, programTitle: prog.title, creator: { name: who?.display_name ?? "", handle: who?.handle ?? "" } });
+  }
+  return out;
+}
+
+/** Put a run on a day. Idempotent: dropping the same run on the same day twice changes nothing. */
+export async function scheduleRun(programDayId: string, date: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not signed in");
+  const { error } = await supabase.from("scheduled_runs").upsert({ user_id: user.id, program_day_id: programDayId, run_date: date }, { onConflict: "user_id,run_date,program_day_id" });
+  if (error) throw error;
+}
+
+export async function moveScheduled(id: string, date: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not signed in");
+  await supabase.from("scheduled_runs").update({ run_date: date }).eq("id", id).eq("user_id", user.id);
+}
+
+export async function unscheduleRun(id: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not signed in");
+  await supabase.from("scheduled_runs").delete().eq("id", id).eq("user_id", user.id);
+}

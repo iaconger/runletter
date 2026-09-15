@@ -15,6 +15,7 @@ export const EVENTS = {
   checkout_completed: "checkout_completed",
   subscription_cancelled: "subscription_cancelled",
   extra_run_synced: "extra_run_synced",
+  run_scheduled: "run_scheduled",
 } as const;
 export type AnalyticsEvent = keyof typeof EVENTS;
 

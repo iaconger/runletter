@@ -1,7 +1,7 @@
 // Build calendar weeks over a date range. A program (with its start date) lays planned days onto the grid;
 // Strava activities land on their dates whether or not anything was planned. Shared by runner and creator views.
 import type { CalWeek } from "@/components/run/Calendar";
-import type { ExtraRun } from "@/lib/db/programs";
+import type { ExtraRun, ScheduledRun } from "@/lib/db/programs";
 import { addDays, toISODate, type Program } from "@/lib/types";
 import { distanceLabel, fmtDistance, type Units } from "@/lib/units";
 
@@ -22,13 +22,17 @@ export function buildWeeks(opts: {
   program?: { program: Program; start: string } | null;
   doneIds: Set<string>;
   extras: ExtraRun[];
+  /** Runs the runner dragged onto their own days; they fill days the program left empty. */
+  scheduled?: ScheduledRun[];
   sentWeeks?: Set<number>;
   hideUnsent?: boolean;
   units?: Units;
   hrefFor: (dayId: string | null, date: string, week: number | null, day: number, extra: ExtraRun | null) => string | undefined;
   stampFor?: (week: number) => CalWeek["stamp"];
 }): CalWeek[] {
-  const { from, weeks, program, doneIds, extras, sentWeeks, hideUnsent, hrefFor, stampFor, units = "km" } = opts;
+  const { from, weeks, program, doneIds, extras, scheduled = [], sentWeeks, hideUnsent, hrefFor, stampFor, units = "km" } = opts;
+  const schedByDate = new Map<string, ScheduledRun>();
+  for (const s of scheduled) if (!schedByDate.has(s.date)) schedByDate.set(s.date, s);
   const extraByDate = new Map<string, ExtraRun[]>();
   for (const x of extras) extraByDate.set(x.date, [...(extraByDate.get(x.date) ?? []), x]);
   const progWeek = (date: string): { week: number; day: number } | null => {
@@ -48,10 +52,12 @@ export function buildWeeks(opts: {
       cells: Array.from({ length: 7 }, (_, d) => {
         const date = toISODate(addDays(ws, d));
         const p = progWeek(date);
-        const day = visible && p ? program!.program.days.find((x) => x.week === p.week && x.day === p.day) ?? null : null;
+        const planned = visible && p ? program!.program.days.find((x) => x.week === p.week && x.day === p.day) ?? null : null;
+        const drop = planned ? null : schedByDate.get(date) ?? null;
+        const day = planned ?? drop?.day ?? null;
         const xs = extraByDate.get(date) ?? [];
         const extra = xs.length ? xs.map((a) => activityLabel(a, units)).join(" ") : undefined;
-        return { date, day, done: !!day && doneIds.has(day.id), extra, href: hrefFor(day?.id ?? null, date, p?.week ?? null, d + 1, xs[0] ?? null) };
+        return { date, day, done: !!day && doneIds.has(day.id), extra, scheduledId: drop?.id, href: hrefFor(day?.id ?? null, date, p?.week ?? null, d + 1, xs[0] ?? null) };
       }),
     };
   });

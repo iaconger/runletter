@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { getMyProfile } from "@/lib/db/programs";
 import { isConfigured } from "@/lib/supabase/server";
 
-export const metadata = { title: "Today" };
+export const metadata = { title: "Home" };
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   // Runner accounts only. A creator account lives in the studio.

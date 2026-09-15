@@ -50,3 +50,35 @@ export async function realRuns(): Promise<ExploreData> {
   return { popular, fresh, creators, letters };
 }
 
+
+/** Runs from the creators you follow (subscribed or bought), newest weeks first. The calendar's drag tray. */
+export async function followedRuns(limit = 12): Promise<ExploreRun[]> {
+  if (!isConfigured()) return [];
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  const [{ data: subs }, { data: buys }] = await Promise.all([
+    supabase.from("subscriptions").select("creator_id").eq("follower_id", user.id).eq("status", "active"),
+    supabase.from("purchases").select("program_id").eq("follower_id", user.id),
+  ]);
+  const creatorIds = [...new Set((subs ?? []).map((s) => s.creator_id))];
+  const programIds = [...new Set((buys ?? []).map((b) => b.program_id))];
+  if (!creatorIds.length && !programIds.length) return [];
+  const q = supabase.from("programs").select("id, creator_id, title").eq("status", "published");
+  const { data: programs } = creatorIds.length && programIds.length
+    ? await q.or(`creator_id.in.(${creatorIds.join(",")}),id.in.(${programIds.join(",")})`)
+    : creatorIds.length ? await q.in("creator_id", creatorIds) : await q.in("id", programIds);
+  if (!programs?.length) return [];
+  const out: ExploreRun[] = [];
+  for (const pr of programs) {
+    const p = await getProgram(pr.id);
+    const c = p ? await getProfileById(p.creatorId) : null;
+    if (!p || !c) continue;
+    const runs = p.days.filter((d) => d.kind === "run").sort((a, b) => b.week - a.week || a.day - b.day);
+    for (const d of runs.slice(0, 6)) {
+      out.push({ key: d.id, title: dayTitle(d), day: d, creator: { name: c.displayName, handle: c.handle, avatarUrl: c.avatarUrl }, creatorId: c.id, programId: p.id, programTitle: p.title, cover: p.coverUrl ?? undefined, goal: p.goal, runsPerWeek: p.days.filter((x) => x.week === d.week && x.kind === "run").length || undefined, fitHref: `/api/fit?program=${p.id}&week=${d.week}&day=${d.day}` });
+      if (out.length >= limit) return out;
+    }
+  }
+  return out;
+}
