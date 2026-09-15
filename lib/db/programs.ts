@@ -469,7 +469,7 @@ export async function getMyRun(id: string): Promise<RunLogItem | null> {
     const { data: d } = await supabase.from("program_days").select("run_type, week").eq("id", c.program_day_id).maybeSingle();
     const t = d?.run_type ?? "run";
     // The Strava row for this completion carries the rich fields (route, heart rate, elevation) if we have it.
-    const { data: x } = c.strava_activity_id ? await supabase.from("extra_runs").select("sport_type, elevation_m, avg_hr, kudos, polyline").eq("strava_activity_id", c.strava_activity_id).maybeSingle() : { data: null };
+    const { data: x } = c.strava_activity_id ? await supabase.from("extra_runs").select("sport_type, elevation_m, avg_hr, kudos, polyline").eq("strava_activity_id", c.strava_activity_id).eq("user_id", user.id).maybeSingle() : { data: null };
     return { id: c.id, date: c.completed_at.slice(0, 10), title: d ? `${t[0]!.toUpperCase()}${t.slice(1)} · week ${d.week}` : "Run", planned: true, distanceM: c.distance_m, durationS: c.duration_s, avgPaceS: c.avg_pace_s, source: c.source as "strava" | "manual", programDayId: c.program_day_id, programId: (c.enrollments as unknown as { program_id: string }).program_id, stravaActivityId: c.strava_activity_id, sportType: x?.sport_type ?? "Run", elevationM: x?.elevation_m ?? null, avgHr: x?.avg_hr ?? null, kudos: x?.kudos ?? null, polyline: x?.polyline ?? null };
   }
   const { data: x } = await supabase.from("extra_runs").select("id, run_date, name, distance_m, duration_s, avg_pace_s, source, strava_activity_id, sport_type, elevation_m, avg_hr, kudos, polyline").eq("id", id).eq("user_id", user.id).maybeSingle();

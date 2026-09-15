@@ -167,7 +167,7 @@ async function recordActivity(userId: string, a: Activity): Promise<"done" | "ex
   };
   // Everything that isn't a run (rides, walks, swims, gym) is kept as an activity; it never completes a planned run.
   if (!isRun) {
-    await admin.from("extra_runs").upsert(extraRow, { onConflict: "strava_activity_id" });
+    await admin.from("extra_runs").upsert(extraRow, { onConflict: "user_id,strava_activity_id" });
     return "not_a_run";
   }
   const { data: rows } = await admin.rpc("today_for_follower", { p_follower_id: c.user_id, p_date: date });
@@ -179,10 +179,7 @@ async function recordActivity(userId: string, a: Activity): Promise<"done" | "ex
     : { data: null };
   const isRestOrCross = hit?.program_day_id ? (await admin.from("program_days").select("kind").eq("id", hit.program_day_id).single()).data?.kind !== "run" : true;
   if (!hit?.program_day_id || isRestOrCross || (existing && existing.strava_activity_id && existing.strava_activity_id !== String(a.id))) {
-    await admin.from("extra_runs").upsert(
-      { user_id: c.user_id, run_date: date, source: "strava", strava_activity_id: String(a.id), name: a.name ?? null, distance_m: Math.round(a.distance), duration_s: a.moving_time, avg_pace_s: avgPace },
-      { onConflict: "strava_activity_id" },
-    );
+    await admin.from("extra_runs").upsert(extraRow, { onConflict: "user_id,strava_activity_id" });
     track("extra_run_synced", { distance_m: Math.round(a.distance), duration_s: a.moving_time }, c.user_id);
     return "extra";
   }

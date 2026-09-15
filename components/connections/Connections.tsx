@@ -82,7 +82,7 @@ function Row({ name, role, detail, connected, action, back, provider }: { name: 
         <span className="rl-row" style={{ gap: 4 }}>
           {provider === "strava" && (
             <form action={syncStravaAction}>
-              <button type="submit" className="rl-btn rl-btn-secondary rl-btn-sm">Sync last 30 days</button>
+              <button type="submit" className="rl-btn rl-btn-secondary rl-btn-sm">Sync last 90 days</button>
             </form>
           )}
           <form action="/api/connect/disconnect" method="post">

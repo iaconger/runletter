@@ -35,8 +35,8 @@ export async function syncStravaAction() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
   try { await syncRecentStrava(user.id, 90); } catch (e) { console.error("strava sync", e); }
-  revalidatePath("/app");
-  revalidatePath("/app/you");
+  revalidatePath("/app", "layout");
+  revalidatePath("/studio", "layout");
 }
 
 /** Subscribe to a creator's Letter or buy a plan. Free programs enrol at once; paid ones go to Stripe Checkout. */
