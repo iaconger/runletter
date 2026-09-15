@@ -13,6 +13,7 @@ const SOCIAL_BASE: Record<string, (u: string) => string> = {
   tiktok: (u) => `https://tiktok.com/@${u}`,
 };
 
+const errMsg = (e: unknown) => (e instanceof Error ? e.message : (e as { message?: string })?.message ?? "Could not save");
 const clean = (v: unknown) => String(v ?? "").trim().replace(/^@/, "").replace(/^https?:\/\/(www\.)?[^/]+\/(@)?/, "").replace(/\/.*$/, "");
 
 export async function saveIdentityAction(input: { handle: string; displayName: string; bio: string; isCreator: boolean }): Promise<ActionResult> {
@@ -28,8 +29,11 @@ export async function saveIdentityAction(input: { handle: string; displayName: s
   try {
     await db.updateMyProfile(parsed.data);
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return { ok: false, error: /duplicate|unique/i.test(msg) ? "That handle is taken. Try another." : msg };
+    // Supabase errors are plain objects, not Error instances: read code and message off them.
+    const err = e as { code?: string; message?: string } | Error;
+    const code = "code" in err ? err.code : undefined;
+    const msg = err instanceof Error ? err.message : err.message ?? "Could not save";
+    return { ok: false, error: code === "23505" || /duplicate|unique/i.test(msg) ? "That handle is taken. Try another." : msg };
   }
   revalidatePath(`/c/${parsed.data.handle}`);
   return { ok: true };
@@ -45,7 +49,7 @@ export async function saveSocialsAction(input: Record<string, string>): Promise<
     await db.updateMyProfile({ links });
     return { ok: true };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Could not save" };
+    return { ok: false, error: errMsg(e) };
   }
 }
 
@@ -56,7 +60,7 @@ export async function saveImagesAction(input: { avatarUrl?: string | null; cover
     await db.updateMyProfile(parsed.data);
     return { ok: true };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Could not save" };
+    return { ok: false, error: errMsg(e) };
   }
 }
 
@@ -77,6 +81,6 @@ export async function saveRunningAction(input: { goal: string; raceDate: string;
     revalidatePath("/app/you");
     return { ok: true };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Could not save" };
+    return { ok: false, error: errMsg(e) };
   }
 }
