@@ -34,23 +34,25 @@ export default async function LoggedRun({ params }: { params: Promise<{ id: stri
           {planned && <span className="facts">{planned.creator.displayName} · week {planned.day.week}</span>}
         </div>
         <div className="body">
-          <div className="rl-row" style={{ alignItems: "flex-start", gap: "var(--rl-space-5)" }}>
-            <div className="rl-stats" style={{ flex: 1 }}>
-              {km != null && <div><span className="n">{km.toFixed(km >= 10 ? 1 : 2)}</span><span className="l">km</span></div>}
-              {run.durationS != null && <div><span className="n">{hms(run.durationS)}</span><span className="l">time</span></div>}
-              {run.avgPaceS != null && <div><span className="n">{fmtPaceShort(run.avgPaceS)}</span><span className="l">/km</span></div>}
-              {run.elevationM ? <div><span className="n">{run.elevationM}</span><span className="l">m up</span></div> : null}
-              {run.avgHr ? <div><span className="n">{run.avgHr}</span><span className="l">avg bpm</span></div> : null}
-              {run.kudos ? <div><span className="n">{run.kudos}</span><span className="l">kudos</span></div> : null}
-            </div>
-            {run.polyline && <RouteSketch polyline={run.polyline} size={140} style={{ flex: "none", color: "var(--rl-text)" }} />}
+          <span className="rl-help">{run.source === "strava" ? "Tracked with Strava" : "Marked by hand"}</span>
+          <div className="rl-facts">
+            {run.durationS != null && <div><span className="k">Duration</span><span className="v">{hms(run.durationS)}</span></div>}
+            {km != null && <div><span className="k">Distance</span><span className="v">{km.toFixed(km >= 10 ? 1 : 2)} km</span></div>}
+            {run.avgPaceS != null && <div><span className="k">Average pace</span><span className="v">{fmtPaceShort(run.avgPaceS)} /km</span></div>}
+            {run.avgHr ? <div><span className="k">Average heart rate</span><span className="v">{run.avgHr} bpm</span></div> : null}
+            {run.elevationM ? <div><span className="k">Climbed</span><span className="v">{run.elevationM} m</span></div> : null}
+            {run.kudos ? <div><span className="k">Kudos</span><span className="v">{run.kudos}</span></div> : null}
           </div>
+          {run.polyline && (
+            <div className="rl-routebox">
+              <RouteSketch polyline={run.polyline} size={220} />
+            </div>
+          )}
           <div className="rl-row" style={{ alignItems: "center" }}>
             {run.stravaActivityId && (
               <a className="rl-btn rl-btn-secondary rl-btn-sm" href={`https://www.strava.com/activities/${run.stravaActivityId}`} target="_blank" rel="noreferrer">View on Strava</a>
             )}
             {planned && <Link className="rl-btn rl-btn-ghost rl-btn-sm" href={`/app/run/${planned.day.id}`}>The planned run</Link>}
-            <span className="rl-help">{run.source === "strava" ? "From Strava" : "Marked by hand"}</span>
           </div>
           {planned?.day.note && <blockquote className="rl-note" style={{ margin: 0 }}><q>{planned.day.note}</q></blockquote>}
         </div>

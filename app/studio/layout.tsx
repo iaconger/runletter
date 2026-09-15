@@ -16,8 +16,9 @@ export default async function StudioLayout({ children }: { children: React.React
     <div className="rl-studio rl-theme-night">
       <SignedInAnalytics role="creator" />
       <aside className="rl-sidebar">
-        <Link href="/studio" className="rl-logo" style={{ color: "var(--rl-text)" }} aria-label="RunLetter Studio">
+        <Link href="/studio" className="rl-studio-brand" aria-label="RunLetter Studio">
           <Lockup height={24} />
+          <span>for creators</span>
         </Link>
         <StudioNav />
         <form action="/auth/signout" method="post" style={{ marginTop: "auto" }}>

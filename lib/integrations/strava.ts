@@ -110,15 +110,21 @@ export async function syncStravaAthlete(userId: string): Promise<void> {
 export async function recordStravaActivity(athleteId: string, activityId: number): Promise<"done" | "extra" | "not_a_run" | "no_user"> {
   const admin = createAdminClient();
   if (!admin) return "no_user";
-  const { data: c } = await admin.from("connections").select("user_id").eq("provider", "strava").eq("external_id", athleteId).maybeSingle();
-  if (!c) return "no_user";
-  const token = await stravaAccessToken(c.user_id);
-  if (!token) return "no_user";
-
-  const r = await fetch(`${API}/activities/${activityId}`, { headers: { authorization: `Bearer ${token}` } });
-  if (!r.ok) throw new Error(`Strava activity fetch failed (${r.status})`);
-  const a = (await r.json()) as Activity;
-  return recordActivity(c.user_id, a);
+  // One athlete can be connected to more than one RunLetter account (a creator account and a runner account,
+  // say): record the activity for every one of them.
+  const { data: rows } = await admin.from("connections").select("user_id").eq("provider", "strava").eq("external_id", athleteId);
+  if (!rows?.length) return "no_user";
+  let out: "done" | "extra" | "not_a_run" | "no_user" = "no_user";
+  for (const c of rows) {
+    const token = await stravaAccessToken(c.user_id);
+    if (!token) continue;
+    const r = await fetch(`${API}/activities/${activityId}`, { headers: { authorization: `Bearer ${token}` } });
+    if (!r.ok) throw new Error(`Strava activity fetch failed (${r.status})`);
+    const a = (await r.json()) as Activity;
+    const res = await recordActivity(c.user_id, a);
+    if (res === "done" || out === "no_user") out = res;
+  }
+  return out;
 }
 
 /** Pull the athlete's last N days from Strava and record each run. Used right after connecting and on demand. */

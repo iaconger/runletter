@@ -17,7 +17,7 @@ export async function Connections({ back, notice }: { back: string; notice?: { c
   const sent = pushes?.filter((p) => p.status === "sent").length ?? 0;
 
   return (
-    <section className="rl-card" aria-label="Connections" style={{ gap: "var(--rl-space-4)" }}>
+    <section id="connections" className="rl-card" aria-label="Connections" style={{ gap: "var(--rl-space-4)" }}>
       <div className="rl-stack" style={{ gap: 2 }}>
         <span className="t-label c-muted">Connections</span>
         <span className="t-heading">Watch and Strava</span>

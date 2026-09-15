@@ -35,17 +35,12 @@ function repeatRun(warm: number, reps: number, workMin: number, restMin: number,
   return [newBlock("warmup", 0, warm * 60), { ...newBlock("work", 1, workMin * 60, "hard"), repeatGroup: g, repeatCount: reps }, { ...newBlock("recovery", 2, restMin * 60, "easy"), repeatGroup: g, repeatCount: reps }, newBlock("cooldown", 3, cool * 60)];
 }
 
-/** One-tap shapes. A creator should never start from a blank day. */
+/** Pick the kind of run, get a sensible version of it, then change the numbers. Nine choices, no more. */
 type Shape = { key: string; label: string; sub: string; kind: ProgramDay["kind"]; runType: ProgramDay["runType"]; blocks: () => Block[] };
 const SHAPES: Shape[] = [
-  { key: "easy30", label: "Easy", sub: "30 min", kind: "run", runType: "easy", blocks: () => simpleRun(30) },
-  { key: "easy45", label: "Easy", sub: "45 min", kind: "run", runType: "easy", blocks: () => simpleRun(45) },
-  { key: "easy60", label: "Easy", sub: "60 min", kind: "run", runType: "easy", blocks: () => simpleRun(60) },
-  { key: "long75", label: "Long", sub: "75 min", kind: "run", runType: "long", blocks: () => simpleRun(75) },
-  { key: "long90", label: "Long", sub: "90 min", kind: "run", runType: "long", blocks: () => simpleRun(90) },
-  { key: "long120", label: "Long", sub: "2 hours", kind: "run", runType: "long", blocks: () => simpleRun(120) },
-  { key: "tempo", label: "Tempo", sub: "4 × 5 min", kind: "run", runType: "tempo", blocks: () => repeatRun(10, 4, 5, 2, 9) },
-  { key: "tempo20", label: "Tempo", sub: "20 min steady", kind: "run", runType: "tempo", blocks: () => [newBlock("warmup", 0, 600), newBlock("work", 1, 1200, "moderate"), newBlock("cooldown", 2, 600)] },
+  { key: "easy", label: "Easy", sub: "45 min", kind: "run", runType: "easy", blocks: () => simpleRun(45) },
+  { key: "long", label: "Long", sub: "90 min", kind: "run", runType: "long", blocks: () => simpleRun(90) },
+  { key: "tempo", label: "Tempo", sub: "20 min steady", kind: "run", runType: "tempo", blocks: () => [newBlock("warmup", 0, 600), newBlock("work", 1, 1200, "moderate"), newBlock("cooldown", 2, 600)] },
   { key: "intervals", label: "Intervals", sub: "6 × 3 min", kind: "run", runType: "intervals", blocks: () => repeatRun(10, 6, 3, 1.5, 10) },
   { key: "hills", label: "Hills", sub: "8 × 1 min", kind: "run", runType: "intervals", blocks: () => repeatRun(12, 8, 1, 2, 10) },
   { key: "recovery", label: "Recovery", sub: "25 min", kind: "run", runType: "recovery", blocks: () => simpleRun(25) },
@@ -494,7 +489,7 @@ export function Editor({
             {/* 1. Shape. One tap fills the day; after that it folds away behind "Change". */}
             {(!draft || shapesOpen) && (
               <div className="rl-stack" style={{ gap: 6 }}>
-                {draft && <span className="t-label c-muted">Change to</span>}
+                <span className="t-label c-muted">{draft ? "Change to" : "What kind of run?"}</span>
                 <div className="rl-shapes">
                   {SHAPES.map((s) => (
                     <button key={s.key} type="button" className="rl-shape" data-run={s.kind === "cross" ? "cross" : s.runType ?? undefined} disabled={readOnly} onClick={() => { applyShape(s); setShapesOpen(false); }}>
