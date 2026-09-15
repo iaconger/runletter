@@ -17,7 +17,7 @@ export default async function StudioLayout({ children }: { children: React.React
       <SignedInAnalytics role="creator" />
       <aside className="rl-sidebar">
         <Link href="/studio" className="rl-studio-brand" aria-label="RunLetter Studio">
-          <Lockup height={24} />
+          <Lockup height={18} />
           <span>for creators</span>
         </Link>
         <StudioNav />

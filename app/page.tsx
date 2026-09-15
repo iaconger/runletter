@@ -55,7 +55,7 @@ export default function Landing() {
       <header className="rl-header">
         <div className="rl-page rl-wide rl-between" style={{ paddingBlock: "var(--rl-space-3)", alignItems: "center" }}>
           <Link href="/" className="rl-logo" aria-label="RunLetter home">
-            <Lockup height={26} />
+            <Lockup height={22} />
           </Link>
           <nav className="rl-row">
             <Link href="/c/sarah" className="rl-btn rl-btn-ghost rl-btn-sm rl-nav-secondary">Example creator</Link>

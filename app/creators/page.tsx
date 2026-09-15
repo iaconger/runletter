@@ -22,7 +22,7 @@ export default function CreatorsLanding() {
       <RevealObserver />
       <header className="rl-page rl-wide rl-between" style={{ paddingBlock: "var(--rl-space-5)", alignItems: "center" }}>
         <Link href="/" className="rl-logo" style={{ color: "var(--rl-text)" }} aria-label="RunLetter home">
-          <Lockup height={26} />
+          <Lockup height={22} />
         </Link>
         <nav className="rl-row">
           <Link href="/" className="rl-btn rl-btn-ghost rl-btn-sm rl-nav-secondary">For runners</Link>
