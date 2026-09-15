@@ -21,5 +21,5 @@ export default async function ProgramEditor({ params, searchParams }: { params: 
   const [program, profile] = await Promise.all([getProgram(id), getMyProfile()]);
   if (!program || !profile || program.creatorId !== profile.id) notFound();
   const [issues, posts] = await Promise.all([program.isLetter ? listIssues(id) : Promise.resolve([]), listMyPosts(id)]);
-  return <Editor program={program} issues={issues} posts={posts} creatorName={profile.displayName || `@${profile.handle}`} handle={profile.handle} userId={profile.id} today={today} open={open} />;
+  return <Editor program={program} issues={issues} posts={posts} creatorName={profile.displayName || `@${profile.handle}`} handle={profile.handle} userId={profile.id} today={today} open={open} units={profile.units} />;
 }

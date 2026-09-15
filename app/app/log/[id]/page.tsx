@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getMyRun, getRunDay } from "@/lib/db/programs";
 import { dayTitle } from "@/components/run/RunPieces";
-import { fmtPaceShort } from "@/lib/paces";
+import { getMyProfile } from "@/lib/db/programs";
+import { climbLabel, distanceLabel, fmtClimb, fmtDistance, fmtPace, paceLabel } from "@/lib/units";
 import { isConfigured } from "@/lib/supabase/server";
 import { RUN_TYPE_LABEL } from "@/lib/types";
 import { RouteSketch } from "@/components/run/RouteSketch";
@@ -17,9 +18,11 @@ const hms = (s: number) => { const h = Math.floor(s / 3600), m = Math.floor((s %
 export default async function LoggedRun({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const run = isConfigured() ? await getMyRun(id) : null;
+  const me = isConfigured() ? await getMyProfile() : null;
+  const units = me?.units ?? "km";
   if (!run) notFound();
   const planned = run.programDayId ? await getRunDay(run.programDayId) : null;
-  const km = run.distanceM ? run.distanceM / 1000 : null;
+
   const isRun = ["Run", "TrailRun", "VirtualRun"].includes(run.sportType);
   const type = planned?.day.runType ? RUN_TYPE_LABEL[planned.day.runType] : isRun ? null : run.sportType.replace(/([a-z])([A-Z])/g, "$1 $2");
 
@@ -37,10 +40,10 @@ export default async function LoggedRun({ params }: { params: Promise<{ id: stri
           <span className="rl-help">{run.source === "strava" ? "Tracked with Strava" : "Marked by hand"}</span>
           <div className="rl-facts">
             {run.durationS != null && <div><span className="k">Duration</span><span className="v">{hms(run.durationS)}</span></div>}
-            {km != null && <div><span className="k">Distance</span><span className="v">{km.toFixed(km >= 10 ? 1 : 2)} km</span></div>}
-            {run.avgPaceS != null && <div><span className="k">Average pace</span><span className="v">{fmtPaceShort(run.avgPaceS)} /km</span></div>}
+            {run.distanceM != null && <div><span className="k">Distance</span><span className="v">{fmtDistance(run.distanceM, units)} {distanceLabel(units)}</span></div>}
+            {run.avgPaceS != null && <div><span className="k">Average pace</span><span className="v">{fmtPace(run.avgPaceS, units)} {paceLabel(units)}</span></div>}
             {run.avgHr ? <div><span className="k">Average heart rate</span><span className="v">{run.avgHr} bpm</span></div> : null}
-            {run.elevationM ? <div><span className="k">Climbed</span><span className="v">{run.elevationM} m</span></div> : null}
+            {run.elevationM ? <div><span className="k">Climbed</span><span className="v">{fmtClimb(run.elevationM, units)} {climbLabel(units)}</span></div> : null}
             {run.kudos ? <div><span className="k">Kudos</span><span className="v">{run.kudos}</span></div> : null}
           </div>
           {run.polyline && (

@@ -6,6 +6,7 @@ import { RunLog } from "@/components/run/RunLog";
 import { addDays, toISODate } from "@/lib/types";
 import { isConfigured } from "@/lib/supabase/server";
 import { RunningForm } from "@/components/run/RunningForm";
+import { UnitsCard } from "@/components/ui/UnitsCard";
 import type { StravaStats } from "@/lib/integrations/strava";
 
 export const metadata = { title: "You" };
@@ -43,6 +44,7 @@ export default async function You({ searchParams }: { searchParams: Promise<{ co
           </div>
         </section>
       )}
+      {me && <UnitsCard units={me.units} />}
       <Connections back="/app/you" notice={notice} />
       <Subscriptions />
       {me && (

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getMyProfile, listMyPrograms, listIssues, listExtras } from "@/lib/db/programs";
 import { shareRunAction } from "@/app/studio/actions";
 import { RouteSketch } from "@/components/run/RouteSketch";
-import { fmtPaceShort } from "@/lib/paces";
+import { climbLabel, distanceLabel, fmtClimb, fmtDistance, fmtPace, paceLabel } from "@/lib/units";
 import { createClient } from "@/lib/supabase/server";
 import { toISODate } from "@/lib/types";
 import { isConfigured } from "@/lib/supabase/server";
@@ -41,6 +41,7 @@ export default async function StudioHome({ searchParams }: { searchParams: Promi
   const { data: conns } = profile && supabase ? await supabase.from("connections").select("provider").eq("user_id", profile.id).eq("provider", "strava") : { data: [] };
   const hasStrava = (conns ?? []).length > 0;
   const sharedIds = new Set(letter ? letter.days.map((d) => d.note) : []);
+  const units = profile?.units ?? "km";
 
   return (
     <main className="rl-page rl-wide rl-stack" style={{ gap: "var(--rl-space-7, 40px)" }}>
@@ -156,7 +157,7 @@ export default async function StudioHome({ searchParams }: { searchParams: Promi
                   {x.polyline ? <RouteSketch polyline={x.polyline} size={56} /> : <span className="rl-avatar" style={{ width: 56, height: 56 }} />}
                   <div className="rl-stack" style={{ gap: 2, minWidth: 0 }}>
                     <span className="t-body-medium" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{x.name ?? "Run"}</span>
-                    <span className="rl-help">{fmtDate(addDays(x.date, 0))}{x.distanceM ? ` · ${(x.distanceM / 1000).toFixed(1)} km` : ""}{x.durationS ? ` · ${Math.round(x.durationS / 60)} min` : ""}{x.avgPaceS ? ` · ${fmtPaceShort(x.avgPaceS)} /km` : ""}{x.elevationM ? ` · ${x.elevationM} m` : ""}</span>
+                    <span className="rl-help">{fmtDate(addDays(x.date, 0))}{x.distanceM ? ` · ${fmtDistance(x.distanceM, units)} ${distanceLabel(units)}` : ""}{x.durationS ? ` · ${Math.round(x.durationS / 60)} min` : ""}{x.avgPaceS ? ` · ${fmtPace(x.avgPaceS, units)} ${paceLabel(units)}` : ""}{x.elevationM ? ` · ${fmtClimb(x.elevationM, units)} ${climbLabel(units)}` : ""}</span>
                   </div>
                   {letter ? (
                     sharedIds.has(x.name ?? "") ? <span className="rl-chip rl-chip-success">Shared</span> : (

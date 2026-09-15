@@ -48,7 +48,7 @@ export default async function RunDetail({ params }: { params: Promise<{ id: stri
   const work = day.blocks.filter((b) => b.kind === "work");
   const reps = work.reduce((n, b) => n + (b.repeatCount ?? 1), 0);
   const hard = work.filter((b) => b.targetEffort === "hard").reduce((s, b) => s + (b.durationS ?? 0) * (b.repeatCount ?? 1), 0);
-  const steps = watchPreview(day, me?.pace5kS);
+  const steps = watchPreview(day, me?.pace5kS, me?.units ?? "km");
   const photo = r.creator.avatarUrl ?? (r.creator.portrait ? `/brand/photo/${r.creator.portrait}.webp` : null);
   const cover = r.cover ?? photo;
 
@@ -97,7 +97,7 @@ export default async function RunDetail({ params }: { params: Promise<{ id: stri
 
       <section className="rl-stack" style={{ gap: "var(--rl-space-3)" }}>
         <h2 className="t-title" style={{ margin: 0 }}>The run</h2>
-        <StepCards day={day} pace5kS={me?.pace5kS} />
+        <StepCards day={day} pace5kS={me?.pace5kS} units={me?.units ?? "km"} />
         {me && !me.pace5kS && <span className="rl-help"><Link href="/app/you">Add your 5K time</Link> for your own paces.</span>}
       </section>
 

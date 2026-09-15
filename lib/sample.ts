@@ -19,6 +19,7 @@ export const sampleCreator: Profile = {
   goal: null,
   raceDate: null,
   daysPerWeek: null,
+  units: "km",
 };
 
 function block(p: Partial<Block> & Pick<Block, "kind" | "position">): Block {

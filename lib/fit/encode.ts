@@ -124,16 +124,17 @@ export function fitFilename(programTitle: string, day: ProgramDay): string {
 }
 
 /** Human preview of what the watch will show, one line per step. */
-export function watchPreview(day: ProgramDay, pace5kS?: number | null): { name: string; amount: string; target: string; kind: Block["kind"] }[] {
+export function watchPreview(day: ProgramDay, pace5kS?: number | null, units: "km" | "mi" = "km"): { name: string; amount: string; target: string; kind: Block["kind"] }[] {
   const steps = expandBlocks(day.blocks);
   const total = steps.filter((s) => s.kind === "work").length;
   let workIndex = 0;
   return steps.map((b) => {
     if (b.kind === "work") workIndex += 1;
-    const amount = b.measure === "time" ? `${Math.round((b.durationS ?? 0) / 60)} min` : `${((b.distanceM ?? 0) / 1000).toFixed(1)} km`;
+    const K = units === "mi" ? 1609.344 : 1000;
+    const amount = b.measure === "time" ? `${Math.round((b.durationS ?? 0) / 60)} min` : `${((b.distanceM ?? 0) / K).toFixed(1)} ${units}`;
     const band = b.kind === "work" || b.kind === "recovery" ? bandFor(b, pace5kS) : null;
-    const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-    const target = band ? `${fmt(band.min)} to ${fmt(band.max)} /km` : b.kind === "work" || b.kind === "recovery" ? EFFORT_ZONE_LABEL[b.targetEffort ?? "easy"] : "no target";
+    const fmt = (s: number) => { const v = Math.round(units === "mi" ? s * 1.609344 : s); return `${Math.floor(v / 60)}:${String(v % 60).padStart(2, "0")}`; };
+    const target = band ? `${fmt(band.min)} to ${fmt(band.max)} /${units}` : b.kind === "work" || b.kind === "recovery" ? EFFORT_ZONE_LABEL[b.targetEffort ?? "easy"] : "no target";
     return { name: stepName(b, workIndex, total).slice(0, 16), amount, target, kind: b.kind };
   });
 }

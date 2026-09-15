@@ -185,6 +185,7 @@ export type Database = {
           stripe_customer_id: string | null;
           stripe_charges_enabled: boolean;
           strava_stats: Json | null;
+          units: string;
           strava_synced_at: string | null;
           stripe_details_submitted: boolean;
           platform_fee_pct: number | null;
@@ -209,6 +210,7 @@ export type Database = {
           stripe_customer_id?: string | null;
           stripe_charges_enabled?: boolean;
           strava_stats?: Json | null;
+          units?: string;
           strava_synced_at?: string | null;
           stripe_details_submitted?: boolean;
           platform_fee_pct?: number | null;
@@ -233,6 +235,7 @@ export type Database = {
           stripe_customer_id?: string | null;
           stripe_charges_enabled?: boolean;
           strava_stats?: Json | null;
+          units?: string;
           strava_synced_at?: string | null;
           stripe_details_submitted?: boolean;
           platform_fee_pct?: number | null;

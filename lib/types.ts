@@ -123,6 +123,8 @@ export const Profile = z.object({
   daysPerWeek: z.number().int().min(1).max(7).nullable().default(null),
   /** Strava athlete totals, when connected. Shape mirrors lib/integrations/strava StravaStats. */
   stravaStats: z.unknown().nullable().default(null),
+  /** Miles or kilometres. Display only: everything is stored metric. */
+  units: z.enum(["km", "mi"]).default("km"),
 });
 export type Profile = z.infer<typeof Profile>;
 

@@ -35,7 +35,7 @@ export default async function StudioCalendar({ searchParams }: { searchParams: P
   const nWeeks = Math.ceil((addDays(end, 0).getTime() - addDays(from, 0).getTime()) / (7 * 86400000)) + 1;
   const extras = await listExtras(me.id, from, end);
   const weeks = buildWeeks({
-    from, weeks: nWeeks, program: { program, start }, doneIds: new Set((comps ?? []).map((c) => c.program_day_id)), extras,
+    from, weeks: nWeeks, units: me.units, program: { program, start }, doneIds: new Set((comps ?? []).map((c) => c.program_day_id)), extras,
     hrefFor: (_id, _date, week, day) => (week ? `/studio/programs/${program.id}?week=${week}&day=${day}` : undefined),
     stampFor: (w) => { const i = issues.find((x) => x.week === w); return program.isLetter ? (i?.sentAt ? "sent" : i?.scheduledFor ? "scheduled" : "draft") : undefined; },
   });
@@ -54,7 +54,7 @@ export default async function StudioCalendar({ searchParams }: { searchParams: P
         </div>
       </div>
       <Calendar weeks={weeks} today={today} currentWeek={currentWeek} />
-      <span className="rl-help">Tap a day to edit it. A tick is a run you did yourself. <em>+km</em> is from your own Strava.</span>
+      <span className="rl-help">Tap a day to edit it. A tick is a run you did yourself. the small numbers are from your own Strava.</span>
     </main>
   );
 }

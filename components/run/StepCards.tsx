@@ -5,12 +5,13 @@
 import type { Block, ProgramDay } from "@/lib/types";
 import { fmtMinutes } from "@/lib/types";
 import { paceLine } from "@/lib/paces";
+import { fmtDistanceUnit, type Units } from "@/lib/units";
 import { runKey } from "@/components/run/RunPieces";
 
 type Group = { title: string; kind: "warmup" | "session" | "cooldown"; reps: number | null; steps: Block[] };
 
-function amount(b: Block) {
-  return b.measure === "time" ? fmtMinutes(b.durationS ?? 0) : `${((b.distanceM ?? 0) / 1000).toFixed(1)} km`;
+function amount(b: Block, units: Units = "km") {
+  return b.measure === "time" ? fmtMinutes(b.durationS ?? 0) : fmtDistanceUnit(b.distanceM ?? 0, units);
 }
 
 /** Warm up steps, then one Session per repeat group (or a plain session of loose work/recovery), then cool down. */
@@ -42,7 +43,7 @@ export function groupSteps(blocks: Block[]): Group[] {
   return groups;
 }
 
-export function StepCards({ day, pace5kS }: { day: ProgramDay; pace5kS?: number | null }) {
+export function StepCards({ day, pace5kS, units = "km" }: { day: ProgramDay; pace5kS?: number | null; units?: Units }) {
   const groups = groupSteps(day.blocks);
   // Number steps across groups before rendering.
   const numbered = groups.map((g, gi) => ({ ...g, start: groups.slice(0, gi).reduce((a, x) => a + x.steps.length, 0) }));
@@ -62,7 +63,7 @@ export function StepCards({ day, pace5kS }: { day: ProgramDay; pace5kS?: number 
                 <li key={b.id}>
                   <span className="n">{n}</span>
                   <span className="body">
-                    <b>{amount(b)}</b> {b.kind === "recovery" ? "easy jog or walk" : paceLine(b, pace5kS)}
+                    <b>{amount(b, units)}</b> {b.kind === "recovery" ? "easy jog or walk" : paceLine(b, pace5kS, units)}
                   </span>
                   <span className="tag">{isRun ? "run" : "rest"}</span>
                 </li>

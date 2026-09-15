@@ -5,7 +5,7 @@ import { RouteSketch } from "@/components/run/RouteSketch";
 import { getMyProfile, listExtras, listMyRunners, listMyPrograms, listIssues } from "@/lib/db/programs";
 import { createClient, isConfigured } from "@/lib/supabase/server";
 import type { StravaStats } from "@/lib/integrations/strava";
-import { fmtPaceShort } from "@/lib/paces";
+import { climbLabel, distanceLabel, fmtClimb, fmtDistance, fmtPace, paceLabel, toDistance } from "@/lib/units";
 import { mondayOf } from "@/lib/calendar";
 import { addDays, toISODate } from "@/lib/types";
 
@@ -37,6 +37,8 @@ export default async function Overview() {
     );
   }
   const stats = (me.stravaStats ?? null) as StravaStats | null;
+  const units = me.units ?? "km";
+  const U = distanceLabel(units);
   const weekStart = mondayOf(today);
   const [acts, runners, programs] = configured
     ? await Promise.all([listExtras(me.id, toISODate(addDays(weekStart, -77)), today), listMyRunners(today).catch(() => []), listMyPrograms().catch(() => [])])
@@ -46,21 +48,21 @@ export default async function Overview() {
   const hasStrava = (conns ?? []).length > 0;
 
   const thisWeek = acts.filter((x) => x.date >= weekStart && RUNS.includes(x.sportType));
-  const weekKm = thisWeek.reduce((a, x) => a + (x.distanceM ?? 0), 0) / 1000;
+  const weekDist = toDistance(thisWeek.reduce((a, x) => a + (x.distanceM ?? 0), 0), units);
   const weekS = thisWeek.reduce((a, x) => a + (x.durationS ?? 0), 0);
   const paced = thisWeek.filter((x) => x.avgPaceS);
   const avgPace = paced.length ? Math.round(paced.reduce((a, x) => a + (x.avgPaceS ?? 0), 0) / paced.length) : null;
   const byDay = new Map<number, number>();
   for (const x of thisWeek) {
     const d = Math.floor((addDays(x.date, 0).getTime() - addDays(weekStart, 0).getTime()) / 86400000);
-    byDay.set(d, (byDay.get(d) ?? 0) + (x.distanceM ?? 0) / 1000);
+    byDay.set(d, (byDay.get(d) ?? 0) + toDistance(x.distanceM ?? 0, units));
   }
   const maxDay = Math.max(1, ...byDay.values());
   // Twelve weeks of volume, oldest first: the shape of the block, the way a training log reads.
   const trend = Array.from({ length: 12 }, (_, i) => {
     const ws = toISODate(addDays(weekStart, -(11 - i) * 7));
     const we = toISODate(addDays(ws, 6));
-    const v = acts.filter((x) => RUNS.includes(x.sportType) && x.date >= ws && x.date <= we).reduce((a, x) => a + (x.distanceM ?? 0), 0) / 1000;
+    const v = toDistance(acts.filter((x) => RUNS.includes(x.sportType) && x.date >= ws && x.date <= we).reduce((a, x) => a + (x.distanceM ?? 0), 0), units);
     return { start: ws, km: v };
   });
   const maxWeek = Math.max(1, ...trend.map((t) => t.km));
@@ -68,7 +70,7 @@ export default async function Overview() {
   const issues = letter ? await listIssues(letter.id) : [];
   const sent = issues.filter((i) => i.sentAt).length;
   const latest = [...acts].reverse().find((x) => RUNS.includes(x.sportType)) ?? null;
-  const km = (m: number) => (m / 1000).toFixed(m >= 100000 ? 0 : 1);
+  const km = (m: number) => fmtDistance(m, units, { decimals: toDistance(m, units) >= 100 ? 0 : 1 });
   const hrs = (s: number) => (s >= 3600 ? `${Math.floor(s / 3600)}h ${Math.round((s % 3600) / 60)}m` : `${Math.round(s / 60)}m`);
   const firstName = me.displayName?.split(" ")[0];
 
@@ -94,7 +96,7 @@ export default async function Overview() {
               <span className="t-label c-muted">This week</span>
               <span className="rl-help">{fmtDate(weekStart)} to {fmtDate(toISODate(addDays(weekStart, 6)))}</span>
             </div>
-            <div className="big"><span className="n">{weekKm.toFixed(1)}</span><span className="u">km</span></div>
+            <div className="big"><span className="n">{weekDist.toFixed(1)}</span><span className="u">{U}</span></div>
             <div className="bars" aria-hidden>
               {Array.from({ length: 7 }, (_, i) => (
                 <span key={i} data-on={byDay.has(i) ? "true" : undefined} style={{ ["--h" as string]: `${Math.round(((byDay.get(i) ?? 0) / maxDay) * 100)}%` }}>
@@ -106,10 +108,10 @@ export default async function Overview() {
           <ul className="rows">
             <li><span className="k">Runs</span><span className="v">{thisWeek.length}<small> / {stats?.ytd.runs ?? "–"} this year</small></span></li>
             <li><span className="k">Time</span><span className="v">{hrs(weekS)}<small> / {stats ? hrs(stats.ytd.timeS) : "–"}</small></span></li>
-            <li><span className="k">Average pace</span><span className="v">{avgPace ? fmtPaceShort(avgPace) : "–"}<small> /km</small></span></li>
-            <li><span className="k">Year to date</span><span className="v">{stats ? km(stats.ytd.distanceM) : "–"}<small> km</small></span></li>
-            <li><span className="k">All time</span><span className="v">{stats ? km(stats.all.distanceM) : "–"}<small> km</small></span></li>
-            <li><span className="k">Climbed, 4 weeks</span><span className="v">{stats ? stats.recent.elevationM : "–"}<small> m</small></span></li>
+            <li><span className="k">Average pace</span><span className="v">{avgPace ? fmtPace(avgPace, units) : "–"}<small> {paceLabel(units)}</small></span></li>
+            <li><span className="k">Year to date</span><span className="v">{stats ? km(stats.ytd.distanceM) : "–"}<small> {U}</small></span></li>
+            <li><span className="k">All time</span><span className="v">{stats ? km(stats.all.distanceM) : "–"}<small> {U}</small></span></li>
+            <li><span className="k">Climbed, 4 weeks</span><span className="v">{stats ? fmtClimb(stats.recent.elevationM, units) : "–"}<small> {climbLabel(units)}</small></span></li>
           </ul>
         </section>
       )}
@@ -118,11 +120,11 @@ export default async function Overview() {
         <section className="rl-card" style={{ gap: "var(--rl-space-3)" }}>
           <div className="rl-between" style={{ alignItems: "baseline" }}>
             <span className="t-label c-muted">Last 12 weeks</span>
-            <span className="rl-help">{trend.reduce((a, t) => a + t.km, 0).toFixed(0)} km</span>
+            <span className="rl-help">{trend.reduce((a, t) => a + t.km, 0).toFixed(0)} {U}</span>
           </div>
           <div className="rl-trend" aria-hidden>
             {trend.map((t, i) => (
-              <span key={t.start} data-now={i === trend.length - 1 ? "true" : undefined} style={{ ["--h" as string]: `${Math.round((t.km / maxWeek) * 100)}%` }} title={`${fmtDate(t.start)} · ${t.km.toFixed(1)} km`} />
+              <span key={t.start} data-now={i === trend.length - 1 ? "true" : undefined} style={{ ["--h" as string]: `${Math.round((t.km / maxWeek) * 100)}%` }} title={`${fmtDate(t.start)} · ${t.km.toFixed(1)} ${U}`} />
             ))}
           </div>
           <div className="rl-between">
@@ -140,7 +142,7 @@ export default async function Overview() {
               {latest.polyline && <RouteSketch polyline={latest.polyline} size={72} />}
               <div className="rl-stack" style={{ gap: 2, minWidth: 0 }}>
                 <span className="t-heading" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{latest.name ?? "Run"}</span>
-                <span className="rl-help">{fmtDate(latest.date)}{latest.distanceM ? ` · ${(latest.distanceM / 1000).toFixed(1)} km` : ""}{latest.avgPaceS ? ` · ${fmtPaceShort(latest.avgPaceS)} /km` : ""}</span>
+                <span className="rl-help">{fmtDate(latest.date)}{latest.distanceM ? ` · ${fmtDistance(latest.distanceM, units)} ${U}` : ""}{latest.avgPaceS ? ` · ${fmtPace(latest.avgPaceS, units)} ${paceLabel(units)}` : ""}</span>
               </div>
             </div>
             <Link href="/studio" className="rl-textlink" style={{ alignSelf: "flex-start" }}>Share a run into your week →</Link>

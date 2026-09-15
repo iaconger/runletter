@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { BlockBar } from "@/components/run/BlockBar";
 import { RecipeEditor, parseRecipe, recipeToBlocks } from "@/components/studio/Recipe";
+import { paceLabel, toPace, type Units } from "@/lib/units";
 import { watchPreview } from "@/lib/fit/encode";
 import { WeekStrip, dayTitle, runKey } from "@/components/run/RunPieces";
 import { createClient } from "@/lib/supabase/client";
@@ -59,6 +60,7 @@ export function Editor({
   userId,
   today,
   open,
+  units = "km",
   readOnly = false,
 }: {
   program: Program;
@@ -69,6 +71,7 @@ export function Editor({
   userId?: string;
   today: string;
   open?: { week: number; day: number };
+  units?: Units;
   readOnly?: boolean;
 }) {
   const [program, setProgram] = useState<Program>(initial);
@@ -522,7 +525,7 @@ export function Editor({
                   ) : (
                     <>
                       <BlockBar blocks={draft.blocks} legend={false} />
-                      <BlocksEditor blocks={draft.blocks} readOnly={readOnly} onChange={(blocks) => edit({ ...draft, blocks })} />
+                      <BlocksEditor blocks={draft.blocks} readOnly={readOnly} units={units} onChange={(blocks) => edit({ ...draft, blocks })} />
                     </>
                   )
                 )}
@@ -536,7 +539,7 @@ export function Editor({
                 {draft.kind === "run" && (
                   <div className="rl-row" style={{ gap: 6 }}>
                     {recipe && <button type="button" className="rl-btn rl-btn-ghost rl-btn-sm" onClick={() => setFineTune((v) => !v)} aria-expanded={fineTune}>{fineTune ? "Back to the recipe" : "Pieces"}</button>}
-                    <WatchPreview day={draft} programId={program.id} />
+                    <WatchPreview day={draft} programId={program.id} units={units} />
                   </div>
                 )}
                 <span className="rl-help">{readOnly ? "Example" : saveState === "saving" ? "Saving…" : saveState === "error" ? "Could not save" : saveState === "saved" ? "Saved" : ""}</span>
@@ -577,7 +580,7 @@ export function Editor({
 
 // ---------- blocks (fine tune) ----------
 
-function BlocksEditor({ blocks, onChange, readOnly }: { blocks: Block[]; onChange: (b: Block[]) => void; readOnly: boolean }) {
+function BlocksEditor({ blocks, onChange, readOnly, units = "km" }: { blocks: Block[]; onChange: (b: Block[]) => void; readOnly: boolean; units?: Units }) {
   const sorted = [...blocks].sort((a, b) => a.position - b.position);
   const renumber = (list: Block[]) => list.map((b, i) => ({ ...b, position: i }));
   const update = (id: string, patch: Partial<Block>) => onChange(renumber(sorted.map((b) => (b.id === id ? { ...b, ...patch } : b))));
@@ -608,7 +611,7 @@ function BlocksEditor({ blocks, onChange, readOnly }: { blocks: Block[]; onChang
     <div className="rl-stack" style={{ gap: 6 }}>
       {rows.map((row) => {
         const items = row.items.map((b, i) => (
-          <BlockRow key={b.id} b={b} readOnly={readOnly} first={sorted[0]!.id === b.id} last={sorted[sorted.length - 1]!.id === b.id} onChange={(patch) => update(b.id, patch)} onRemove={() => remove(b.id)} onUp={() => move(b.id, -1)} onDown={() => move(b.id, 1)} hint={row.group ? (i === 0 ? "on" : "off") : undefined} />
+          <BlockRow key={b.id} b={b} readOnly={readOnly} units={units} first={sorted[0]!.id === b.id} last={sorted[sorted.length - 1]!.id === b.id} onChange={(patch) => update(b.id, patch)} onRemove={() => remove(b.id)} onUp={() => move(b.id, -1)} onDown={() => move(b.id, 1)} hint={row.group ? (i === 0 ? "on" : "off") : undefined} />
         ));
         if (!row.group) return items;
         return (
@@ -637,7 +640,7 @@ function BlocksEditor({ blocks, onChange, readOnly }: { blocks: Block[]; onChang
   );
 }
 
-function BlockRow({ b, onChange, onRemove, onUp, onDown, readOnly, first, last, hint }: { b: Block; onChange: (p: Partial<Block>) => void; onRemove: () => void; onUp: () => void; onDown: () => void; readOnly: boolean; first: boolean; last: boolean; hint?: string }) {
+function BlockRow({ b, onChange, onRemove, onUp, onDown, readOnly, first, last, hint, units = "km" }: { b: Block; onChange: (p: Partial<Block>) => void; onRemove: () => void; onUp: () => void; onDown: () => void; readOnly: boolean; first: boolean; last: boolean; hint?: string; units?: Units }) {
   const isTime = b.measure === "time";
   const amount = isTime ? Math.round((b.durationS ?? 0) / 60) : Number(((b.distanceM ?? 0) / 1000).toFixed(1));
   const step = isTime ? 1 : 0.5;
@@ -673,7 +676,7 @@ function BlockRow({ b, onChange, onRemove, onUp, onDown, readOnly, first, last, 
           )}
         </div>
         {(b.kind === "work" || b.kind === "recovery") && (
-          <PaceRow b={b} readOnly={readOnly} onChange={onChange} />
+          <PaceRow b={b} readOnly={readOnly} onChange={onChange} units={units} />
         )}
       </div>
     </div>
@@ -681,14 +684,16 @@ function BlockRow({ b, onChange, onRemove, onUp, onDown, readOnly, first, last, 
 }
 
 /** Optional pace range. Left blank, the watch uses the effort as a heart-rate zone, which is personal to each runner. */
-function PaceRow({ b, onChange, readOnly }: { b: Block; onChange: (p: Partial<Block>) => void; readOnly: boolean }) {
+function PaceRow({ b, onChange, readOnly, units = "km" }: { b: Block; onChange: (p: Partial<Block>) => void; readOnly: boolean; units?: Units }) {
   const has = b.targetPaceMin != null && b.targetPaceMax != null;
   const [open, setOpen] = useState(has);
-  const fmt = (s: number | null | undefined) => (s == null ? "" : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`);
+  // Stored as seconds per kilometre; typed and shown in whatever the creator picked.
+  const K = units === "mi" ? 1609.344 / 1000 : 1;
+  const fmt = (s: number | null | undefined) => { if (s == null) return ""; const v = Math.round(s * K); return `${Math.floor(v / 60)}:${String(v % 60).padStart(2, "0")}`; };
   const parse = (v: string): number | null => {
     const m = v.trim().match(/^(\d{1,2})[:.](\d{1,2})$/);
     if (!m) return null;
-    return Number(m[1]) * 60 + Number(m[2]);
+    return Math.round((Number(m[1]) * 60 + Number(m[2])) / K);
   };
   if (!open) {
     return readOnly ? null : (
@@ -700,19 +705,19 @@ function PaceRow({ b, onChange, readOnly }: { b: Block; onChange: (p: Partial<Bl
   return (
     <div className="rl-row" style={{ gap: 6, alignItems: "center", flexWrap: "nowrap" }}>
       <span className="rl-help" style={{ whiteSpace: "nowrap" }}>Pace</span>
-      <input className="rl-input" placeholder="4:30" defaultValue={fmt(b.targetPaceMin)} disabled={readOnly} style={{ width: 62, height: 30, padding: "0 8px", textAlign: "center" }} onBlur={(e) => { const v = parse(e.target.value); onChange({ targetPaceMin: v, targetPaceMax: v != null ? (b.targetPaceMax ?? v + 15) : null }); }} aria-label="Fastest pace per km" />
+      <input className="rl-input" placeholder="4:30" defaultValue={fmt(b.targetPaceMin)} disabled={readOnly} style={{ width: 62, height: 30, padding: "0 8px", textAlign: "center" }} onBlur={(e) => { const v = parse(e.target.value); onChange({ targetPaceMin: v, targetPaceMax: v != null ? (b.targetPaceMax ?? v + 15) : null }); }} aria-label="Fastest pace" />
       <span className="rl-help">to</span>
-      <input className="rl-input" placeholder="4:45" defaultValue={fmt(b.targetPaceMax)} disabled={readOnly} style={{ width: 62, height: 30, padding: "0 8px", textAlign: "center" }} onBlur={(e) => { const v = parse(e.target.value); onChange({ targetPaceMax: v, targetPaceMin: v != null ? (b.targetPaceMin ?? Math.max(60, v - 15)) : null }); }} aria-label="Slowest pace per km" />
-      <span className="rl-help" style={{ whiteSpace: "nowrap" }}>/km</span>
+      <input className="rl-input" placeholder="4:45" defaultValue={fmt(b.targetPaceMax)} disabled={readOnly} style={{ width: 62, height: 30, padding: "0 8px", textAlign: "center" }} onBlur={(e) => { const v = parse(e.target.value); onChange({ targetPaceMax: v, targetPaceMin: v != null ? (b.targetPaceMin ?? Math.max(60, v - 15)) : null }); }} aria-label="Slowest pace" />
+      <span className="rl-help" style={{ whiteSpace: "nowrap" }}>{paceLabel(units)}</span>
       {!readOnly && <button type="button" className="rl-piece-tools" style={{ opacity: 1 }} aria-label="Remove pace target" onClick={() => { onChange({ targetPaceMin: null, targetPaceMax: null }); setOpen(false); }}><span style={{ fontSize: 14 }}>×</span></button>}
     </div>
   );
 }
 
 /** What the watch will show for this day, step by step, plus the .FIT the runner would get. */
-function WatchPreview({ day, programId }: { day: ProgramDay; programId: string }) {
+function WatchPreview({ day, programId, units = "km" }: { day: ProgramDay; programId: string; units?: Units }) {
   const [open, setOpen] = useState(false);
-  const steps = watchPreview(day);
+  const steps = watchPreview(day, null, units);
   const hasZones = steps.some((s) => s.target.startsWith("HR"));
   return (
     <>

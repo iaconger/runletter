@@ -37,6 +37,7 @@ export function Onboarding({ profile, userId, next, role, startStep = "you", str
   const [handle, setHandle] = useState(profile.handle.startsWith("u_") ? "" : profile.handle);
   const [name, setName] = useState(profile.displayName);
   const [bio, setBio] = useState(profile.bio);
+  const [units, setUnits] = useState<"km" | "mi">(profile.units ?? "km");
   // step 2
   const [socials, setSocials] = useState<Record<string, string>>(Object.fromEntries(SOCIALS.map((s) => [s.key, usernameFrom(profile.links[s.key])])));
   // step 3
@@ -96,7 +97,7 @@ export function Onboarding({ profile, userId, next, role, startStep = "you", str
       </ol>
 
       {step === "you" && (
-        <form className="rl-stack" style={{ gap: "var(--rl-space-5)" }} onSubmit={(e) => { e.preventDefault(); go(() => saveIdentityAction({ handle, displayName: name, bio, isCreator }), () => setStep("socials")); }}>
+        <form className="rl-stack" style={{ gap: "var(--rl-space-5)" }} onSubmit={(e) => { e.preventDefault(); go(() => saveIdentityAction({ handle, displayName: name, bio, isCreator, units }), () => setStep("socials")); }}>
           <div className="rl-stack" style={{ gap: 4 }}>
             <h1 className="t-display-lg" style={{ margin: 0 }}>{isCreator ? "Your page starts here." : "First, the basics."}</h1>
 
@@ -116,6 +117,14 @@ export function Onboarding({ profile, userId, next, role, startStep = "you", str
           <div className="rl-field">
             <label htmlFor="bio">Bio</label>
             <textarea id="bio" className="rl-input" value={bio} onChange={(e) => setBio(e.target.value)} maxLength={500} placeholder="Optional" />
+          </div>
+          <div className="rl-field">
+            <label>Distances in</label>
+            <div className="rl-seg" role="radiogroup" aria-label="Units" style={{ alignSelf: "flex-start" }}>
+              <button type="button" role="radio" aria-checked={units === "km"} onClick={() => setUnits("km")}>Kilometres</button>
+              <button type="button" role="radio" aria-checked={units === "mi"} onClick={() => setUnits("mi")}>Miles</button>
+            </div>
+            <span className="rl-help">Paces follow: {units === "mi" ? "8:35 /mi" : "5:20 /km"}.</span>
           </div>
           {error && <span className="rl-help" role="alert" style={{ color: "var(--rl-danger, #b3261e)" }}>{error}</span>}
           <button type="submit" className="rl-btn rl-btn-primary rl-btn-lg" disabled={pending} style={{ alignSelf: "flex-start" }}>{pending ? "Saving…" : "Continue"}</button>

@@ -16,13 +16,14 @@ const SOCIAL_BASE: Record<string, (u: string) => string> = {
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : (e as { message?: string })?.message ?? "Could not save");
 const clean = (v: unknown) => String(v ?? "").trim().replace(/^@/, "").replace(/^https?:\/\/(www\.)?[^/]+\/(@)?/, "").replace(/\/.*$/, "");
 
-export async function saveIdentityAction(input: { handle: string; displayName: string; bio: string; isCreator: boolean }): Promise<ActionResult> {
+export async function saveIdentityAction(input: { handle: string; displayName: string; bio: string; isCreator: boolean; units?: "km" | "mi" }): Promise<ActionResult> {
   const parsed = z
     .object({
       handle: z.string().trim().toLowerCase().regex(/^[a-z0-9_]{3,24}$/, "Handle: 3 to 24 lowercase letters, numbers or underscores"),
       displayName: z.string().trim().min(1, "Add your name").max(60),
       bio: z.string().trim().max(500),
       isCreator: z.boolean(),
+      units: z.enum(["km", "mi"]).optional(),
     })
     .safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Check the form" };
@@ -79,6 +80,19 @@ export async function saveRunningAction(input: { goal: string; raceDate: string;
     await db.updateMyProfile({ goal: goal.success ? goal.data : "other", raceDate, daysPerWeek: days, pace5kS });
     revalidatePath("/app");
     revalidatePath("/app/you");
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: errMsg(e) };
+  }
+}
+
+/** Miles or kilometres. Display only; nothing stored changes. */
+export async function saveUnitsAction(units: "km" | "mi"): Promise<ActionResult> {
+  if (units !== "km" && units !== "mi") return { ok: false, error: "Pick miles or kilometres" };
+  try {
+    await db.updateMyProfile({ units });
+    revalidatePath("/app");
+    revalidatePath("/studio");
     return { ok: true };
   } catch (e) {
     return { ok: false, error: errMsg(e) };

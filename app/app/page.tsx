@@ -12,6 +12,7 @@ import { getMyProfile, getMyWeek, listExtras, listMyRuns } from "@/lib/db/progra
 import { createClient, isConfigured } from "@/lib/supabase/server";
 import { SAMPLE_EXPLORE, rankRuns } from "@/lib/explore";
 import { DAY_NAMES_LONG, RUN_TYPE_LABEL, addDays, dayDurationS, toISODate } from "@/lib/types";
+import { distanceLabel, fmtDistance } from "@/lib/units";
 import { markDoneAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -39,7 +40,8 @@ export default async function Today({ searchParams }: { searchParams: Promise<{ 
   // Runs actually done, last 7 days, whether or not anything was planned.
   const weekAgo = toISODate(addDays(today, -6));
   const log = me ? await listMyRuns(weekAgo, today) : [];
-  const km = log.reduce((s, r) => s + (r.distanceM ?? 0), 0) / 1000;
+  const units = me?.units ?? "km";
+  const totalM = log.reduce((s, r) => s + (r.distanceM ?? 0), 0);
 
   const kindNote = kind === "runner" && (
     <div className="rl-sunken" style={{ borderRadius: "var(--rl-radius-md)", padding: "10px 14px" }}>
@@ -57,9 +59,9 @@ export default async function Today({ searchParams }: { searchParams: Promise<{ 
     <section className="rl-stack" style={{ gap: "var(--rl-space-2)" }}>
       <div className="rl-between" style={{ alignItems: "baseline" }}>
         <h2 className="t-title" style={{ margin: 0 }}>Your runs this week</h2>
-        {log.length > 0 && <span className="c-muted t-body-sm" style={{ fontVariantNumeric: "tabular-nums" }}>{log.length} run{log.length === 1 ? "" : "s"} · {km.toFixed(1)} km</span>}
+        {log.length > 0 && <span className="c-muted t-body-sm" style={{ fontVariantNumeric: "tabular-nums" }}>{log.length} run{log.length === 1 ? "" : "s"} · {fmtDistance(totalM, units)} {distanceLabel(units)}</span>}
       </div>
-      <RunLog runs={log} empty={hasWatch ? "Nothing from Strava in the last 7 days." : "Connect Strava and your runs show up here."} />
+      <RunLog runs={log} units={units} empty={hasWatch ? "Nothing from Strava in the last 7 days." : "Connect Strava and your runs show up here."} />
       <Link href="/app/you" className="rl-help" style={{ alignSelf: "flex-start" }}>Last 30 days →</Link>
     </section>
   );
@@ -115,7 +117,7 @@ export default async function Today({ searchParams }: { searchParams: Promise<{ 
   const extraByDay = new Map<number, string>();
   for (const x of extras) {
     const d = Math.floor((addDays(x.date, 0).getTime() - addDays(weekStart, 0).getTime()) / 86400000) + 1;
-    const xkm = x.distanceM ? `${(x.distanceM / 1000).toFixed(x.distanceM >= 10000 ? 0 : 1)} km` : "run";
+    const xkm = x.distanceM ? `${fmtDistance(x.distanceM, units)} ${distanceLabel(units)}` : "run";
     extraByDay.set(d, extraByDay.has(d) ? `${extraByDay.get(d)} +${xkm}` : `+${xkm}`);
   }
   const planned = days.filter((d) => d.kind === "run").length;
@@ -167,7 +169,7 @@ export default async function Today({ searchParams }: { searchParams: Promise<{ 
               )}
               <Link href={`/app/run/${day.id}`} className="rl-btn rl-btn-ghost rl-btn-lg">Details</Link>
             </div>
-            <StepCards day={day} pace5kS={me?.pace5kS} />
+            <StepCards day={day} pace5kS={me?.pace5kS} units={units} />
             {me && !me.pace5kS && <span className="rl-help"><Link href="/app/you">Add your 5K time</Link> for your own paces.</span>}
           </div>
         </article>

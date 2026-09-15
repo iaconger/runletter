@@ -1,5 +1,6 @@
 // "Your page": handle, name, bio, links. What /c/:handle shows.
 import { Connections } from "@/components/connections/Connections";
+import { UnitsCard } from "@/components/ui/UnitsCard";
 import Link from "next/link";
 import { updateProfileAction } from "@/app/studio/actions";
 import { getMyLetter, getMyProfile } from "@/lib/db/programs";
@@ -56,6 +57,7 @@ export default async function YourPage({ searchParams }: { searchParams: Promise
         <button type="submit" className="rl-btn rl-btn-primary rl-btn-lg" style={{ alignSelf: "flex-start" }}>Save page</button>
       </form>
       {profile && <GetPaid userId={profile.id} letterPriceCents={letter?.priceCents ?? null} notice={{ stripe, error: stripe ? undefined : error }} />}
+      {profile && <UnitsCard units={profile.units} />}
       <Connections back="/studio/page" notice={{ connected }} />
     </main>
   );

@@ -3,11 +3,12 @@
 import type { CalWeek } from "@/components/run/Calendar";
 import type { ExtraRun } from "@/lib/db/programs";
 import { addDays, toISODate, type Program } from "@/lib/types";
+import { distanceLabel, fmtDistance, type Units } from "@/lib/units";
 
 export const mondayOf = (iso: string) => { const d = addDays(iso, 0); return toISODate(addDays(iso, -((d.getDay() + 6) % 7))); };
 
-export function activityLabel(x: ExtraRun): string {
-  const km = x.distanceM ? `${(x.distanceM / 1000).toFixed(x.distanceM >= 10000 ? 0 : 1)} km` : x.durationS ? `${Math.round(x.durationS / 60)} min` : "";
+export function activityLabel(x: ExtraRun, units: Units = "km"): string {
+  const km = x.distanceM ? `${fmtDistance(x.distanceM, units)} ${distanceLabel(units)}` : x.durationS ? `${Math.round(x.durationS / 60)} min` : "";
   const t = x.sportType;
   const isRun = t === "Run" || t === "TrailRun" || t === "VirtualRun";
   return isRun ? `+${km || "run"}` : `${SPORT_SHORT[t] ?? t}${km ? ` ${km}` : ""}`;
@@ -23,10 +24,11 @@ export function buildWeeks(opts: {
   extras: ExtraRun[];
   sentWeeks?: Set<number>;
   hideUnsent?: boolean;
+  units?: Units;
   hrefFor: (dayId: string | null, date: string, week: number | null, day: number, extra: ExtraRun | null) => string | undefined;
   stampFor?: (week: number) => CalWeek["stamp"];
 }): CalWeek[] {
-  const { from, weeks, program, doneIds, extras, sentWeeks, hideUnsent, hrefFor, stampFor } = opts;
+  const { from, weeks, program, doneIds, extras, sentWeeks, hideUnsent, hrefFor, stampFor, units = "km" } = opts;
   const extraByDate = new Map<string, ExtraRun[]>();
   for (const x of extras) extraByDate.set(x.date, [...(extraByDate.get(x.date) ?? []), x]);
   const progWeek = (date: string): { week: number; day: number } | null => {
@@ -48,7 +50,7 @@ export function buildWeeks(opts: {
         const p = progWeek(date);
         const day = visible && p ? program!.program.days.find((x) => x.week === p.week && x.day === p.day) ?? null : null;
         const xs = extraByDate.get(date) ?? [];
-        const extra = xs.length ? xs.map(activityLabel).join(" ") : undefined;
+        const extra = xs.length ? xs.map((a) => activityLabel(a, units)).join(" ") : undefined;
         return { date, day, done: !!day && doneIds.has(day.id), extra, href: hrefFor(day?.id ?? null, date, p?.week ?? null, d + 1, xs[0] ?? null) };
       }),
     };

@@ -3,6 +3,7 @@
 // slower, tempo a little slower, intervals around race pace, all out a little faster.
 
 import type { Block } from "@/lib/types";
+import { fmtPace, paceLabel, type Units } from "@/lib/units";
 
 export type PaceBand = { min: number; max: number }; // seconds per km, min = faster bound
 
@@ -39,12 +40,12 @@ export function bandFor(b: Block, pace5kS: number | null | undefined): PaceBand 
 export const fmtPaceShort = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
 /** "at a conversational pace, 6:05 to 6:58 /km" or, with no time on file, "at a conversational pace". */
-export function paceLine(b: Block, pace5kS: number | null | undefined): string {
+export function paceLine(b: Block, pace5kS: number | null | undefined, units: Units = "km"): string {
   const band = bandFor(b, pace5kS);
   const word = EFFORT_WORDS[b.targetEffort ?? "easy"];
   if (!band) return `at a ${word} pace`;
-  if (b.targetEffort === "easy" || b.targetEffort == null) return `${word}, no faster than ${fmtPaceShort(band.min)} /km`;
-  return `${fmtPaceShort(band.min)} to ${fmtPaceShort(band.max)} /km`;
+  if (b.targetEffort === "easy" || b.targetEffort == null) return `${word}, no faster than ${fmtPace(band.min, units)} ${paceLabel(units)}`;
+  return `${fmtPace(band.min, units)} to ${fmtPace(band.max, units)} ${paceLabel(units)}`;
 }
 
 /** Parse "23:45" or "1:02:10" into seconds. */
