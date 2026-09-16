@@ -42,3 +42,6 @@ next-env.d.ts
 
 # keep the template
 !.env.example
+
+# A GitHub token kept only on the owner's machine so pushes can be automated. Never committed.
+.rl-token
