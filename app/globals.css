@@ -930,6 +930,23 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 .rl-weekbuild .note { font: var(--rl-text-body-sm); }
 @media (max-width: 560px) { .rl-weekbuild .pick { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); } }
 
+/* A run in three answers. One question at a time, big targets, no jargon. */
+.rl-dayflow { display: flex; flex-direction: column; gap: var(--rl-space-4); }
+.rl-dayflow .q { display: flex; flex-direction: column; gap: 8px; }
+.rl-dayflow .ask { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; color: var(--rl-text-muted); }
+.rl-dayflow .opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.rl-dayflow .opts > button { font: var(--rl-text-body-sm); padding: 7px 12px; border-radius: 999px; border: var(--rl-border-hairline) solid var(--rl-hairline); background: transparent; color: var(--rl-text-secondary); cursor: pointer; }
+.rl-dayflow .opts > button:hover { color: var(--rl-text); border-color: var(--rl-text-secondary); }
+.rl-dayflow .opts > button[data-on] { background: var(--rl-text); color: var(--rl-bg); border-color: var(--rl-text); }
+.rl-dayflow .stepper { display: flex; align-items: baseline; gap: 10px; }
+.rl-dayflow .stepper > button { width: 34px; height: 34px; border-radius: 50%; border: var(--rl-border-hairline) solid var(--rl-hairline); background: transparent; color: var(--rl-text); font-size: 17px; line-height: 1; cursor: pointer; align-self: center; }
+.rl-dayflow .stepper > button:hover { border-color: var(--rl-text-secondary); }
+.rl-dayflow .stepper > b { font: 500 30px/1 var(--rl-font-sans); font-variant-numeric: tabular-nums; min-width: 2.4ch; text-align: center; }
+.rl-dayflow .stepper > span { font: var(--rl-text-body-sm); color: var(--rl-text-muted); }
+.rl-dayflow .pace { display: flex; align-items: center; gap: 8px; font: var(--rl-text-body-sm); color: var(--rl-text-muted); }
+.rl-dayflow .pace > input { width: 84px; font-variant-numeric: tabular-nums; }
+.rl-dayflow .warm { display: flex; align-items: center; gap: 8px; font: var(--rl-text-body-sm); color: var(--rl-text-secondary); }
+
 /* Calendar days as drop targets: each cell is wrapped so it can take a dragged run and carry a remove button. */
 .rl-cal .cellwrap { position: relative; display: flex; flex-direction: column; min-width: 0; }
 .rl-cal .cellwrap > .cell { flex: 1; }

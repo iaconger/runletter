@@ -18,11 +18,11 @@ export function Mark({ size = 28, title = "RunLetter" }: { size?: number; title?
 const H = 100; // shared height: mark ink and cap height
 const MARK_S = 1.0001;
 const MARK_TY = -0.05;
-const WM_S = 1.40647; // scales the caps so their ink is exactly as tall as the mark (100 / 71.1)
-const WM_TX = 114.75; // mark width + 26 gap, less the R's left bearing
+const WM_S = 1.40845; // scales the caps so their ink is exactly as tall as the mark (100 / 71.0)
+const WM_TX = 111.58; // mark width (100) + 22 gap, less the R's left bearing (7.4 x WM_S)
 const VB_TOP = 0;
 const VB_H = 102.25; // includes the U's overshoot below the baseline
-const VB_W = 983;
+const VB_W = 946; // WM_TX + the caps' ink width (592.4 x WM_S)
 
 export function Lockup({ height = 28, title = "RunLetter" }: { height?: number; title?: string }) {
   return (

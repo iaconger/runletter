@@ -4,7 +4,7 @@ import { WeekBuilder, type MyRun } from "@/components/studio/WeekBuilder";
 import { getMyLetter, getMyProfile, getProgram, listExtras } from "@/lib/db/programs";
 import { isConfigured } from "@/lib/supabase/server";
 import { addDays, toISODate, weekOfDate } from "@/lib/types";
-import { clearDayAction, noteDayAction, repeatWeekAction, setShapeAction, stretchDayAction, useMyRunAction } from "@/app/studio/actions";
+import { clearDayAction, noteDayAction, repeatWeekAction, saveDaySpecAction, setShapeAction, stretchDayAction, useMyRunAction } from "@/app/studio/actions";
 
 export const metadata = { title: "Your week" };
 export const dynamic = "force-dynamic";
@@ -68,6 +68,7 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
           stretch: stretchDayAction,
           note: noteDayAction,
           useMyRun: useMyRunAction,
+          saveSpec: saveDaySpecAction,
           clearDay: clearDayAction,
           repeatWeek: repeatWeekAction,
         }}

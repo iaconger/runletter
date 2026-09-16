@@ -296,3 +296,36 @@ async function growToWeek(programId: string, week: number) {
   const p = await db.getProgram(programId);
   if (p && week > p.weeks) await db.updateProgram(programId, { weeks: week });
 }
+
+/** Save a day from the three answers (kind, how much, how fast) the studio asks for. */
+export async function saveDaySpecAction(programId: string, week: number, day: number, spec: unknown): Promise<ActionResult> {
+  const { buildBlocks } = await import("@/lib/shapes");
+  const Spec = z.object({
+    type: z.enum(["easy", "long", "tempo", "intervals", "recovery", "race", "cross", "rest"]),
+    measure: z.enum(["distance", "time"]),
+    amount: z.number().min(0).max(200000),
+    paceS: z.number().int().min(120).max(1200).nullable(),
+    effort: z.enum(["easy", "moderate", "hard", "all_out"]).nullable(),
+    reps: z.number().int().min(1).max(40).optional(),
+    recoveryS: z.number().int().min(0).max(1800).optional(),
+    warmS: z.number().int().min(0).max(3600).optional(),
+    coolS: z.number().int().min(0).max(3600).optional(),
+  });
+  const parsed = Spec.safeParse(spec);
+  if (!parsed.success) return { ok: false, error: "That day did not make sense" };
+  const s = parsed.data;
+  try {
+    await growToWeek(programId, week);
+    const program = await db.getProgram(programId);
+    const existing = program?.days.find((x) => x.week === week && x.day === day);
+    const kind = s.type === "rest" ? "rest" as const : s.type === "cross" ? "cross" as const : "run" as const;
+    await db.saveDay(programId, {
+      week, day, kind,
+      runType: kind === "run" ? (s.type as "easy" | "long" | "tempo" | "intervals" | "recovery" | "race") : null,
+      note: existing?.note ?? "",
+      blocks: buildBlocks(s),
+    });
+    revalidatePath("/studio", "layout");
+    return { ok: true };
+  } catch (e) { return fail(e); }
+}

@@ -4,8 +4,9 @@
 // Everything saves as you touch it; nothing is sent, nothing is a draft.
 import { useOptimistic, useState, useTransition } from "react";
 import Link from "next/link";
-import { SHAPES } from "@/lib/shapes";
-import { dayDurationS, type ProgramDay } from "@/lib/types";
+import { SHAPES, specForType, specFromDay, type DaySpec } from "@/lib/shapes";
+import { DayFlow, describe } from "@/components/studio/DayFlow";
+import type { ProgramDay } from "@/lib/types";
 import { distanceLabel, fmtDistance, type Units } from "@/lib/units";
 
 const DOW = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -19,6 +20,7 @@ type Actions = {
   stretch: (programId: string, week: number, day: number, deltaMin: number) => Promise<{ ok: boolean; error?: string }>;
   note: (programId: string, week: number, day: number, note: string) => Promise<{ ok: boolean; error?: string }>;
   useMyRun: (programId: string, week: number, day: number, extraId: string) => Promise<{ ok: boolean; error?: string }>;
+  saveSpec: (programId: string, week: number, day: number, spec: DaySpec) => Promise<{ ok: boolean; error?: string }>;
   clearDay: (programId: string, week: number, day: number) => Promise<{ ok: boolean; error?: string }>;
   repeatWeek: (programId: string, week: number) => Promise<{ ok: boolean; error?: string }>;
 };
@@ -37,6 +39,7 @@ export function WeekBuilder({ programId, week, days, myRuns, dates, units = "km"
 }) {
   const [pending, start] = useTransition();
   const [busy, setBusy] = useState<number | null>(null);
+  const [draft, setDraft] = useState<{ day: number; spec: DaySpec } | null>(null);
   const [optimistic, setOptimistic] = useOptimistic(days, (state: ProgramDay[], next: { day: number; value: ProgramDay | null }) =>
     next.value ? [...state.filter((d) => d.day !== next.day), next.value] : state.filter((d) => d.day !== next.day));
 
@@ -68,7 +71,6 @@ export function WeekBuilder({ programId, week, days, myRuns, dates, units = "km"
           const dayNo = i + 1;
           const d = optimistic.find((x) => x.day === dayNo) ?? null;
           const mine = myRuns.filter((r) => r.day === dayNo);
-          const mins = d ? Math.round(dayDurationS(d) / 60) : 0;
           const working = busy === dayNo;
           return (
             <li key={dayNo} data-run={d ? TYPE_OF(d) : undefined} data-busy={working ? "true" : undefined}>
@@ -82,11 +84,22 @@ export function WeekBuilder({ programId, week, days, myRuns, dates, units = "km"
                 )}
               </div>
 
-              {!d ? (
+              {draft?.day === dayNo ? (
+                <DayFlow
+                  spec={draft.spec}
+                  units={units}
+                  saving={pending}
+                  onCancel={() => setDraft(null)}
+                  onSave={(spec) => { setDraft(null); run(dayNo, () => actions.saveSpec(programId, week, dayNo, spec)); }}
+                />
+              ) : !d ? (
                 <div className="pick">
                   {SHAPES.map((s) => (
                     <button key={s.key} type="button" className="rl-shape" data-run={s.kind === "cross" ? "cross" : s.runType ?? undefined} disabled={pending}
-                      onClick={() => run(dayNo, () => actions.setShape(programId, week, dayNo, s.key))}>
+                      onClick={() => {
+                        if (s.key === "rest" || s.key === "cross") { run(dayNo, () => actions.setShape(programId, week, dayNo, s.key)); return; }
+                        setDraft({ day: dayNo, spec: specForType((s.runType ?? "easy") as DaySpec["type"]) });
+                      }}>
                       <b>{s.label}</b><span>{s.sub}</span>
                     </button>
                   ))}
@@ -104,15 +117,13 @@ export function WeekBuilder({ programId, week, days, myRuns, dates, units = "km"
                 <div className="said">
                   <span className="what">
                     {d.kind === "cross" ? "Cross training" : SHAPES.find((s) => s.runType === d.runType && s.kind === "run")?.label ?? "Run"}
-                    {mins ? <em>{mins} min</em> : null}
+                    {d.kind === "run" ? <em>{describe(specFromDay(d), units)}</em> : null}
                   </span>
                   {d.kind === "run" && (
                     <span className="rl-row" style={{ gap: 4 }}>
                       <button type="button" className="rl-btn rl-btn-secondary rl-btn-sm" disabled={pending}
-                        onClick={() => run(dayNo, () => actions.stretch(programId, week, dayNo, -10))}>− 10 min</button>
-                      <button type="button" className="rl-btn rl-btn-secondary rl-btn-sm" disabled={pending}
-                        onClick={() => run(dayNo, () => actions.stretch(programId, week, dayNo, 10))}>+ 10 min</button>
-                      <Link href={`/studio/programs/${programId}?week=${week}&day=${dayNo}`} className="rl-btn rl-btn-ghost rl-btn-sm">Fine tune</Link>
+                        onClick={() => setDraft({ day: dayNo, spec: specFromDay(d) })}>Change it</button>
+                      <Link href={`/studio/programs/${programId}?week=${week}&day=${dayNo}`} className="rl-btn rl-btn-ghost rl-btn-sm">Every detail</Link>
                     </span>
                   )}
                   <NoteBox value={d.note} disabled={pending} onSave={(v) => run(dayNo, () => actions.note(programId, week, dayNo, v))} />
