@@ -223,3 +223,76 @@ export async function shareRunAction(formData: FormData): Promise<void> {
   revalidatePath(`/studio/programs/${letter.id}`);
   redirect(`/studio/programs/${letter.id}?week=${week}&day=${day}`);
 }
+
+// ---------- the week builder: one tap per day ----------
+
+/** Put a shape on a day. Replaces whatever was there. */
+export async function setShapeAction(programId: string, week: number, day: number, shapeKey: string): Promise<ActionResult> {
+  const { shapeByKey } = await import("@/lib/shapes");
+  const s = shapeByKey(shapeKey);
+  if (!s) return { ok: false, error: "Unknown shape" };
+  try {
+    await growToWeek(programId, week);
+    await db.saveDay(programId, { week, day, kind: s.kind, runType: s.runType, note: "", blocks: s.blocks() });
+    revalidatePath("/studio", "layout");
+    return { ok: true };
+  } catch (e) { return fail(e); }
+}
+
+/** Longer or shorter, keeping the shape: every timed piece moves by the same proportion. */
+export async function stretchDayAction(programId: string, week: number, day: number, deltaMin: number): Promise<ActionResult> {
+  const { scaleBlocks } = await import("@/lib/shapes");
+  try {
+    const program = await db.getProgram(programId);
+    const d = program?.days.find((x) => x.week === week && x.day === day);
+    if (!d || d.kind !== "run") return { ok: false, error: "Nothing to stretch" };
+    const total = d.blocks.reduce((a, b) => a + (b.durationS ?? 0) * (b.repeatCount ?? 1), 0);
+    if (!total) return { ok: false, error: "Nothing to stretch" };
+    const next = Math.max(600, total + deltaMin * 60);
+    await db.saveDay(programId, { ...d, blocks: scaleBlocks(d.blocks, next / total) });
+    revalidatePath("/studio", "layout");
+    return { ok: true };
+  } catch (e) { return fail(e); }
+}
+
+/** The creator's line about that day. */
+export async function noteDayAction(programId: string, week: number, day: number, note: string): Promise<ActionResult> {
+  try {
+    const program = await db.getProgram(programId);
+    const d = program?.days.find((x) => x.week === week && x.day === day);
+    if (!d) return { ok: false, error: "Nothing there yet" };
+    await db.saveDay(programId, { ...d, note: note.slice(0, 400) });
+    revalidatePath("/studio", "layout");
+    return { ok: true };
+  } catch (e) { return fail(e); }
+}
+
+/** A run you actually did, dropped onto a day of the week you are writing. */
+export async function useMyRunAction(programId: string, week: number, day: number, extraId: string): Promise<ActionResult> {
+  const { shapeFromRun } = await import("@/lib/shapes");
+  try {
+    const x = await db.getMyExtra(extraId);
+    if (!x) return { ok: false, error: "That run is gone" };
+    await growToWeek(programId, week);
+    const s = shapeFromRun(x.durationS, x.avgPaceS);
+    await db.saveDay(programId, { week, day, kind: s.kind, runType: s.runType, note: x.name ?? "", blocks: s.blocks });
+    revalidatePath("/studio", "layout");
+    return { ok: true };
+  } catch (e) { return fail(e); }
+}
+
+/** Last week again, as a starting point. */
+export async function repeatWeekAction(programId: string, week: number): Promise<ActionResult> {
+  if (week < 2) return { ok: false, error: "No week before this one" };
+  try {
+    await db.duplicateWeek(programId, week - 1, week);
+    revalidatePath("/studio", "layout");
+    return { ok: true };
+  } catch (e) { return fail(e); }
+}
+
+/** A week keeps going as long as the creator keeps writing it: stretch the program to reach the week being written. */
+async function growToWeek(programId: string, week: number) {
+  const p = await db.getProgram(programId);
+  if (p && week > p.weeks) await db.updateProgram(programId, { weeks: week });
+}

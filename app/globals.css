@@ -905,6 +905,31 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 .rl-btn[aria-busy="true"] { opacity: .75; cursor: progress; }
 @media (prefers-reduced-motion: reduce) { .rl-spinner { animation-duration: 2s; } }
 
+/* Writing a week: seven days down the page, each one tap from empty to written. */
+.rl-weekbuild { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--rl-space-3); }
+.rl-weekbuild > li { --run-ink: var(--rl-hairline); --run-soft: var(--rl-surface); position: relative; display: flex; flex-direction: column; gap: 10px; padding: 14px 16px 14px 20px; border-radius: var(--rl-radius-lg); border: var(--rl-border-hairline) solid var(--rl-hairline); background: var(--rl-surface); }
+.rl-weekbuild > li::before { content: ""; position: absolute; left: 8px; top: 14px; bottom: 14px; width: 4px; border-radius: 4px; background: var(--run-ink); }
+.rl-weekbuild > li[data-busy] { opacity: .6; }
+.rl-weekbuild > li[data-run="easy"] { --run-ink: var(--rl-run-easy); }
+.rl-weekbuild > li[data-run="long"] { --run-ink: var(--rl-run-long); }
+.rl-weekbuild > li[data-run="tempo"] { --run-ink: var(--rl-run-tempo); }
+.rl-weekbuild > li[data-run="intervals"] { --run-ink: var(--rl-run-intervals); }
+.rl-weekbuild > li[data-run="recovery"] { --run-ink: var(--rl-run-recovery); }
+.rl-weekbuild > li[data-run="race"] { --run-ink: var(--rl-run-race); }
+.rl-weekbuild > li[data-run="cross"] { --run-ink: var(--rl-run-cross); }
+.rl-weekbuild .head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.rl-weekbuild .nm { display: flex; align-items: baseline; gap: 8px; font: var(--rl-text-heading); }
+.rl-weekbuild .nm > i { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); color: var(--rl-text-muted); font-style: normal; font-variant-numeric: tabular-nums; }
+.rl-weekbuild .pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(116px, 1fr)); gap: 6px; }
+.rl-weekbuild .pick > .rl-shape { padding: 9px 10px; }
+.rl-weekbuild .pick > .rl-shape > span { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); opacity: .75; }
+.rl-weekbuild .pick > .rl-shape.mine { background: var(--rl-surface-sunken); color: var(--rl-accent); border-color: var(--rl-accent); }
+.rl-weekbuild .said { display: flex; flex-direction: column; gap: 8px; }
+.rl-weekbuild .what { font: var(--rl-text-body-medium); color: var(--run-ink); display: flex; align-items: baseline; gap: 8px; }
+.rl-weekbuild .what > em { font-style: normal; color: var(--rl-text-muted); font-variant-numeric: tabular-nums; }
+.rl-weekbuild .note { font: var(--rl-text-body-sm); }
+@media (max-width: 560px) { .rl-weekbuild .pick { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); } }
+
 /* Calendar days as drop targets: each cell is wrapped so it can take a dragged run and carry a remove button. */
 .rl-cal .cellwrap { position: relative; display: flex; flex-direction: column; min-width: 0; }
 .rl-cal .cellwrap > .cell { flex: 1; }

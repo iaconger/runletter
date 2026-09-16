@@ -78,11 +78,11 @@ export default async function StudioHome({ searchParams }: { searchParams: Promi
             <span className="t-label c-muted">Your week</span>
             <h2 className="t-title" style={{ margin: 0 }}>{letter ? letter.title : "Open your week"}</h2>
           </div>
-          {letter && <Link href={`/studio/programs/${letter.id}`} className="rl-btn rl-btn-primary rl-btn-sm">Open this week</Link>}
+          {letter && <Link href="/studio/week" className="rl-btn rl-btn-primary rl-btn-sm">Write this week</Link>}
         </div>
 
         {letter ? (
-          <Link href={`/studio/programs/${letter.id}`} className="rl-lettercard" style={{ color: "inherit", textDecoration: "none" }}>
+          <Link href="/studio/week" className="rl-lettercard" style={{ color: "inherit", textDecoration: "none" }}>
             <div className="img">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               {letter.coverUrl ? <img src={letter.coverUrl} alt="" /> : <Cover name={coverFor(letter)} ratio={5 / 4} />}
