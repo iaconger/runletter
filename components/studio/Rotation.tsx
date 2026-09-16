@@ -17,7 +17,8 @@ export function Shoe({ tint = "currentColor", size = 26 }: { tint?: string; size
   );
 }
 
-export function Rotation({ shoes, units = "km", title = "What they run in" }: { shoes: StravaShoe[]; units?: Units; title?: string }) {
+export function Rotation({ shoes: all, units = "km", title = "What they run in" }: { shoes: StravaShoe[]; units?: Units; title?: string }) {
+  const shoes = all.filter((s) => !s.hidden);
   if (!shoes.length) return null;
   const U = distanceLabel(units);
   return (

@@ -2,7 +2,8 @@
 // you follow laid over it. Under the grid: runs from the people you follow, dragged onto any day.
 import Link from "next/link";
 import { Calendar } from "@/components/run/Calendar";
-import { RunTray, trayRun } from "@/components/run/RunTray";
+import { RunTray } from "@/components/run/RunTray";
+import { trayRun } from "@/lib/explore";
 import { RouteSketch } from "@/components/run/RouteSketch";
 import { getMyCalendar, getMyProfile, listExtras, listScheduled } from "@/lib/db/programs";
 import { followedRuns } from "@/lib/db/explore";

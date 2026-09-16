@@ -6,6 +6,9 @@ import { updateProfileAction } from "@/app/studio/actions";
 import { getMyLetter, getMyProfile } from "@/lib/db/programs";
 import { GetPaid } from "@/components/studio/GetPaid";
 import { ProfilePhotos } from "@/components/studio/ProfilePhotos";
+import { Shoe, shoesOf } from "@/components/studio/Rotation";
+import { toggleShoeAction } from "@/app/studio/actions";
+import { distanceLabel, fmtDistance } from "@/lib/units";
 import { isConfigured } from "@/lib/supabase/server";
 
 export const metadata = { title: "Your page" };
@@ -25,6 +28,37 @@ export default async function YourPage({ searchParams }: { searchParams: Promise
         {handle && <Link href={`/c/${handle}`} className="rl-btn rl-btn-secondary">View page →</Link>}
       </div>
       {profile && <ProfilePhotos userId={profile.id} avatarUrl={profile.avatarUrl} coverUrl={profile.coverUrl} />}
+
+      {profile && (
+        <section className="rl-card" style={{ gap: "var(--rl-space-3)" }} aria-label="Shoes">
+          <div className="rl-stack" style={{ gap: 2 }}>
+            <span className="t-label c-muted">What you run in</span>
+            <span className="t-heading">Your shoes</span>
+          </div>
+          {shoesOf(profile.stravaGear).length === 0 ? (
+            <span className="rl-help">Strava keeps your shoes and their mileage. Connect it below, add a pair in Strava, and they show up here for your page.</span>
+          ) : (
+            <>
+              <span className="rl-help">Tap a pair to show or hide it on your page. The mileage comes from Strava and keeps itself current.</span>
+              <ul className="rl-shoepick">
+                {shoesOf(profile.stravaGear).map((sh) => (
+                  <li key={sh.id} data-off={sh.hidden ? "true" : undefined}>
+                    <form action={toggleShoeAction}>
+                      <input type="hidden" name="id" value={sh.id} />
+                      <button type="submit">
+                        <Shoe size={18} tint={sh.hidden ? "var(--rl-text-muted)" : "var(--rl-accent)"} />
+                        <span className="nm">{[sh.brand, sh.model].filter(Boolean).join(" ") || sh.name}</span>
+                        <span className="km">{fmtDistance(sh.distanceM, profile.units, { decimals: 0 })} {distanceLabel(profile.units)}</span>
+                        <span className="st">{sh.hidden ? "Hidden" : "On your page"}</span>
+                      </button>
+                    </form>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </section>
+      )}
       <form action={updateProfileAction} className="rl-stack" style={{ gap: "var(--rl-space-5)" }}>
         <div className="rl-field">
           <label htmlFor="handle">Handle</label>

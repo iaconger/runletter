@@ -329,3 +329,11 @@ export async function saveDaySpecAction(programId: string, week: number, day: nu
     return { ok: true };
   } catch (e) { return fail(e); }
 }
+
+/** Show or hide a pair from the rotation on your page. The list itself still comes from Strava. */
+export async function toggleShoeAction(formData: FormData): Promise<void> {
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+  await db.toggleShoe(id);
+  revalidatePath("/studio", "layout");
+}

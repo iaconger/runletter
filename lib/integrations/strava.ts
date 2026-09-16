@@ -90,7 +90,7 @@ type Activity = {
 const RUN_TYPES = new Set(["Run", "TrailRun", "VirtualRun"]);
 const isRunActivity = (a: Activity) => a.type === "Run" || RUN_TYPES.has(a.sport_type ?? "");
 
-export type StravaShoe = { id: string; name: string; brand: string | null; model: string | null; distanceM: number; primary: boolean; retired: boolean };
+export type StravaShoe = { id: string; name: string; brand: string | null; model: string | null; distanceM: number; primary: boolean; retired: boolean; hidden?: boolean };
 
 export type StravaStats = {
   recent: { runs: number; distanceM: number; timeS: number; elevationM: number };
@@ -135,7 +135,12 @@ export async function syncStravaAthlete(userId: string): Promise<void> {
         retired: !!full?.retired,
       });
     }
-    gear = gear.filter((x) => !x.retired).sort((x, y) => Number(y.primary) - Number(x.primary) || y.distanceM - x.distanceM);
+    // Keep the creator's choice of what to show: a sync must not un-hide a pair they put away.
+    const { data: had } = await admin.from("profiles").select("strava_gear").eq("id", userId).maybeSingle();
+    const hidden = new Set((Array.isArray(had?.strava_gear) ? (had!.strava_gear as StravaShoe[]) : []).filter((x) => x?.hidden).map((x) => x.id));
+    gear = gear.filter((x) => !x.retired)
+      .map((x) => (hidden.has(x.id) ? { ...x, hidden: true } : x))
+      .sort((x, y) => Number(y.primary) - Number(x.primary) || y.distanceM - x.distanceM);
   }
 
   // Prefill what the runner has not set: name, photo, bio. Never overwrite something they wrote.

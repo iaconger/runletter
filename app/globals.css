@@ -956,6 +956,52 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 .rl-rotation .bar > i { display: block; height: 100%; background: var(--tint, var(--rl-accent)); border-radius: 4px; }
 .rl-rotation .km { font: var(--rl-text-body-sm); color: var(--rl-text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
+/* Runners as a board: the crew's week, then a ranked line each. */
+.rl-crew { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--rl-space-3); padding: var(--rl-space-4); border-radius: var(--rl-radius-lg); border: var(--rl-border-hairline) solid var(--rl-hairline); background: var(--rl-surface); }
+.rl-crew > div { display: flex; flex-direction: column; gap: 2px; }
+.rl-crew .n { font: 500 30px/1 var(--rl-font-sans); font-variant-numeric: tabular-nums; }
+.rl-crew .l { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; color: var(--rl-text-muted); }
+
+.rl-board { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; counter-reset: rank; }
+.rl-board > li { display: grid; grid-template-columns: 44px 40px 1fr auto; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--rl-radius-lg); border: var(--rl-border-hairline) solid var(--rl-hairline); background: var(--rl-surface); }
+.rl-board > li[data-rank="1"] { border-color: var(--rl-accent); }
+.rl-board .rank { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; color: var(--rl-text-muted); font-variant-numeric: tabular-nums; }
+.rl-board > li[data-rank] .rank { color: var(--rl-accent); }
+.rl-board .who { width: 40px; height: 40px; }
+.rl-board .who .ini { display: grid; place-items: center; height: 100%; color: var(--rl-text-muted); }
+.rl-board .body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.rl-board .top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.rl-board .top > b { font: var(--rl-text-body-medium); }
+.rl-board .streak, .rl-board .badge { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; padding: 2px 7px; border-radius: 999px; border: var(--rl-border-hairline) solid var(--rl-hairline); color: var(--rl-text-secondary); }
+.rl-board .streak { color: var(--rl-accent); border-color: var(--rl-accent); }
+.rl-board .bar { display: block; height: 6px; border-radius: 6px; background: var(--rl-surface-sunken); overflow: hidden; }
+.rl-board .bar > i { display: block; height: 100%; border-radius: 6px; background: var(--rl-accent); }
+.rl-board .days { display: flex; gap: 4px; }
+.rl-board .days > i { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font: var(--rl-text-label); font-style: normal; color: var(--rl-text-muted); border: var(--rl-border-hairline) solid var(--rl-hairline); }
+.rl-board .days > i[data-on] { background: var(--rl-text); color: var(--rl-bg); border-color: var(--rl-text); }
+.rl-board .score { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; text-align: right; }
+.rl-board .score > b { font: 500 26px/1 var(--rl-font-sans); font-variant-numeric: tabular-nums; }
+.rl-board .score .u { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; color: var(--rl-text-muted); }
+.rl-board .move { font: var(--rl-text-body-sm); color: var(--rl-text-muted); font-variant-numeric: tabular-nums; }
+.rl-board .move[data-dir="up"] { color: var(--rl-success, #2f7d4f); }
+.rl-board .move[data-dir="down"] { color: var(--rl-text-muted); }
+.rl-board .plan { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; color: var(--rl-text-muted); }
+@media (max-width: 620px) {
+  .rl-board > li { grid-template-columns: 32px 34px 1fr; grid-template-areas: "rank who body" ". . score"; }
+  .rl-board .score { grid-area: score; flex-direction: row; align-items: baseline; gap: 8px; }
+  .rl-board .rank { grid-area: rank; } .rl-board .who { grid-area: who; width: 34px; height: 34px; } .rl-board .body { grid-area: body; }
+}
+
+/* Picking which shoes show on your page. */
+.rl-shoepick { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.rl-shoepick button { width: 100%; display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--rl-radius-md); border: var(--rl-border-hairline) solid var(--rl-hairline); background: var(--rl-surface); color: var(--rl-text); font: inherit; text-align: left; cursor: pointer; }
+.rl-shoepick button:hover { border-color: var(--rl-text-secondary); }
+.rl-shoepick .nm { font: var(--rl-text-body-medium); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rl-shoepick .km { font: var(--rl-text-body-sm); color: var(--rl-text-muted); font-variant-numeric: tabular-nums; }
+.rl-shoepick .st { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; color: var(--rl-accent); }
+.rl-shoepick > li[data-off] button { opacity: .55; }
+.rl-shoepick > li[data-off] .st { color: var(--rl-text-muted); }
+
 /* Calendar days as drop targets: each cell is wrapped so it can take a dragged run and carry a remove button. */
 .rl-cal .cellwrap { position: relative; display: flex; flex-direction: column; min-width: 0; }
 .rl-cal .cellwrap > .cell { flex: 1; }

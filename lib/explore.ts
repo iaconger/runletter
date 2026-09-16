@@ -65,3 +65,9 @@ export function rankRuns<T extends Pick<ExploreRun, "goal" | "runsPerWeek">>(run
   const fits = (n?: number) => (me.daysPerWeek && n ? (n <= me.daysPerWeek ? 1 : -1) : 0);
   return runs.map((r, i) => ({ r, i, s: near(r.goal) * 2 + fits(r.runsPerWeek) })).sort((a, b) => b.s - a.s || a.i - b.i).map((x) => x.r);
 }
+
+/** One run as the calendar's drag tray needs it. Plain data, so a server component can build the list. */
+export function trayRun(r: ExploreRun, creator: string) {
+  const secs = r.day.blocks.reduce((a, b) => a + (b.durationS ?? 0) * (b.repeatCount ?? 1), 0);
+  return { key: r.key, title: r.title, runType: r.day.runType ?? "easy", mins: Math.round(secs / 60), creator };
+}

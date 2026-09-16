@@ -394,9 +394,21 @@ export async function listExtras(userId: string, from: string, to: string): Prom
   return (data ?? []).map(mapExtra);
 }
 
-export type RunnerRow = { profile: Profile; programTitle: string; week: number; planned: number; done: number; extras: ExtraRun[]; lastRun: string | null };
+export type RunnerRow = {
+  profile: Profile; programTitle: string; week: number; planned: number; done: number; extras: ExtraRun[]; lastRun: string | null;
+  /** This calendar week and the one before, in metres, for the board and the arrows. */
+  weekM: number; lastWeekM: number;
+  /** Days of this week they ran, 1 = Monday. */
+  ranDays: number[];
+  /** Weeks in a row, up to and including this one or last, with at least one run. */
+  streak: number;
+  /** Their longest single run in the last eight weeks. */
+  longestM: number;
+};
 
-/** Everyone enrolled in the creator's programs, with this week's score. */
+const RUN_SPORTS = new Set(["Run", "TrailRun", "VirtualRun"]);
+
+/** Everyone enrolled in the creator's programs, with this week's score and how they are going. */
 export async function listMyRunners(today: string): Promise<RunnerRow[]> {
   const supabase = await createClient();
   const user = await currentUser();
@@ -421,7 +433,30 @@ export async function listMyRunners(today: string): Promise<RunnerRow[]> {
     const { data: comps } = dayIds.length ? await supabase.from("completions").select("program_day_id, completed_at").eq("enrollment_id", e.id).in("program_day_id", dayIds) : { data: [] };
     const { data: last } = await supabase.from("completions").select("completed_at").eq("enrollment_id", e.id).order("completed_at", { ascending: false }).limit(1).maybeSingle();
     const extras = week > 0 ? await listExtras(e.follower_id, weekStart, weekEnd) : [];
-    rows.push({ profile: mapProfile(prof), programTitle: prog.title, week, planned: (days ?? []).filter((d) => d.kind === "run").length, done: (comps ?? []).length, extras, lastRun: last?.completed_at ?? null });
+
+    // Eight weeks of their own running, for the board: this week against last, the streak, the longest.
+    const monday = toISODate(addDays(today, -((addDays(today, 0).getDay() + 6) % 7)));
+    const since = toISODate(addDays(monday, -49));
+    const recent = (await listExtras(e.follower_id, since, today)).filter((x) => RUN_SPORTS.has(x.sportType));
+    const weekOf = (d: string) => Math.floor((addDays(d, 0).getTime() - addDays(since, 0).getTime()) / (7 * 86400000));
+    const byWeek = new Map<number, number>();
+    for (const x of recent) byWeek.set(weekOf(x.date), (byWeek.get(weekOf(x.date)) ?? 0) + (x.distanceM ?? 0));
+    const thisIdx = weekOf(monday);
+    let streak = 0;
+    for (let i = thisIdx; i >= 0; i--) {
+      if ((byWeek.get(i) ?? 0) > 0) streak++;
+      else if (i !== thisIdx) break; // a quiet current week does not end a streak until it is over
+    }
+    const ranDays = [...new Set(recent.filter((x) => x.date >= monday).map((x) => ((addDays(x.date, 0).getDay() + 6) % 7) + 1))].sort((a, b) => a - b);
+    rows.push({
+      profile: mapProfile(prof), programTitle: prog.title, week,
+      planned: (days ?? []).filter((d) => d.kind === "run").length, done: (comps ?? []).length,
+      extras, lastRun: last?.completed_at ?? null,
+      weekM: byWeek.get(thisIdx) ?? 0,
+      lastWeekM: byWeek.get(thisIdx - 1) ?? 0,
+      ranDays, streak,
+      longestM: recent.reduce((m, x) => Math.max(m, x.distanceM ?? 0), 0),
+    });
   }
   return rows;
 }
@@ -591,4 +626,15 @@ export async function unscheduleRun(id: string) {
   const user = await currentUser();
   if (!user) throw new Error("Not signed in");
   await supabase.from("scheduled_runs").delete().eq("id", id).eq("user_id", user.id);
+}
+
+/** Show or hide one pair of shoes on your page. The rotation itself still comes from Strava. */
+export async function toggleShoe(id: string) {
+  const supabase = await createClient();
+  const user = await currentUser();
+  if (!user) return;
+  const { data } = await supabase.from("profiles").select("strava_gear").eq("id", user.id).maybeSingle();
+  const gear = Array.isArray(data?.strava_gear) ? (data!.strava_gear as { id: string; hidden?: boolean }[]) : [];
+  const next = gear.map((g) => (g.id === id ? { ...g, hidden: !g.hidden } : g));
+  await supabase.from("profiles").update({ strava_gear: next as never }).eq("id", user.id);
 }

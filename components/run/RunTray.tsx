@@ -2,8 +2,7 @@
 // Runs from the creators you follow. Drag one onto a day, or tap a day chip on phones where drag is awkward.
 import { useTransition } from "react";
 import { DRAG_TYPE } from "@/components/run/Calendar";
-import type { ExploreRun } from "@/lib/explore";
-import { addDays, dayDurationS, toISODate } from "@/lib/types";
+import { addDays, toISODate } from "@/lib/types";
 
 const DOW = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -33,10 +32,3 @@ export function RunTray({ runs, weekStart, schedule }: {
   );
 }
 
-export const trayRun = (r: ExploreRun, creator: string) => ({
-  key: r.key,
-  title: r.title,
-  runType: r.day.runType ?? "easy",
-  mins: Math.round(dayDurationS(r.day) / 60),
-  creator,
-});
