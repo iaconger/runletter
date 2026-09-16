@@ -59,15 +59,15 @@ export function mapProgram(r: ProgramRow, days: DayRow[] = [], blocks: BlockRow[
   };
 }
 
-export function mapProfile(r: Pick<ProfileRow, "id" | "handle" | "display_name" | "avatar_url" | "cover_url" | "bio" | "is_creator" | "links"> & { pace_5k_s?: number | null; stripe_charges_enabled?: boolean | null; goal?: Program["goal"] | null; race_date?: string | null; days_per_week?: number | null; strava_stats?: unknown; units?: string | null }): Profile {
+export function mapProfile(r: Pick<ProfileRow, "id" | "handle" | "display_name" | "avatar_url" | "cover_url" | "bio" | "is_creator" | "links"> & { pace_5k_s?: number | null; stripe_charges_enabled?: boolean | null; goal?: Program["goal"] | null; race_date?: string | null; days_per_week?: number | null; strava_stats?: unknown; strava_gear?: unknown; units?: string | null }): Profile {
   const links = (r.links && typeof r.links === "object" && !Array.isArray(r.links) ? r.links : {}) as Record<string, string>;
   return { id: r.id, handle: r.handle, displayName: r.display_name, avatarUrl: r.avatar_url, coverUrl: r.cover_url, bio: r.bio, isCreator: r.is_creator,
-    pace5kS: r.pace_5k_s ?? null, stripeChargesEnabled: r.stripe_charges_enabled ?? false, goal: r.goal ?? null, raceDate: r.race_date ?? null, daysPerWeek: r.days_per_week ?? null, stravaStats: r.strava_stats ?? null, units: r.units === "mi" ? "mi" : "km", links };
+    pace5kS: r.pace_5k_s ?? null, stripeChargesEnabled: r.stripe_charges_enabled ?? false, goal: r.goal ?? null, raceDate: r.race_date ?? null, daysPerWeek: r.days_per_week ?? null, stravaStats: r.strava_stats ?? null, stravaGear: r.strava_gear ?? null, units: r.units === "mi" ? "mi" : "km", links };
 }
 
-const PROFILE_COLS = "id, handle, display_name, avatar_url, cover_url, bio, is_creator, links, pace_5k_s, stripe_charges_enabled, units";
+const PROFILE_COLS = "id, handle, display_name, avatar_url, cover_url, bio, is_creator, links, pace_5k_s, stripe_charges_enabled, units, strava_gear";
 /** The signed-in user's own row also carries the questionnaire (not granted to anon). */
-const MY_PROFILE_COLS = "id, handle, display_name, avatar_url, cover_url, bio, is_creator, links, pace_5k_s, stripe_charges_enabled, goal, race_date, days_per_week, strava_stats, strava_synced_at, units";
+const MY_PROFILE_COLS = "id, handle, display_name, avatar_url, cover_url, bio, is_creator, links, pace_5k_s, stripe_charges_enabled, goal, race_date, days_per_week, strava_stats, strava_synced_at, units, strava_gear";
 
 // ---------- reads ----------
 

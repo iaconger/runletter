@@ -90,6 +90,8 @@ type Activity = {
 const RUN_TYPES = new Set(["Run", "TrailRun", "VirtualRun"]);
 const isRunActivity = (a: Activity) => a.type === "Run" || RUN_TYPES.has(a.sport_type ?? "");
 
+export type StravaShoe = { id: string; name: string; brand: string | null; model: string | null; distanceM: number; primary: boolean; retired: boolean };
+
 export type StravaStats = {
   recent: { runs: number; distanceM: number; timeS: number; elevationM: number };
   ytd: { runs: number; distanceM: number; timeS: number; elevationM: number };
@@ -115,14 +117,36 @@ export async function syncStravaAthlete(userId: string): Promise<void> {
     const x = (await st.json()) as { recent_run_totals?: Tot; ytd_run_totals?: Tot; all_run_totals?: Tot; ytd_ride_totals?: Tot };
     stats = { recent: tot(x.recent_run_totals), ytd: tot(x.ytd_run_totals), all: tot(x.all_run_totals), rides: x.ytd_ride_totals ? { ytdDistanceM: Math.round(x.ytd_ride_totals.distance), ytdCount: x.ytd_ride_totals.count } : undefined, syncedAt: new Date().toISOString() };
   }
+  // The shoe rotation, as Strava already knows it. Brand and model need one call per pair, so cap it.
+  let gear: StravaShoe[] | null = null;
+  const shoes = (a as { shoes?: { id: string; name?: string; distance?: number; primary?: boolean }[] }).shoes;
+  if (shoes?.length) {
+    gear = [];
+    for (const g of shoes.slice(0, 8)) {
+      const d = await fetch(`${API}/gear/${g.id}`, { headers: { authorization: `Bearer ${token}` } });
+      const full = d.ok ? ((await d.json()) as { brand_name?: string; model_name?: string; retired?: boolean; distance?: number; name?: string }) : null;
+      gear.push({
+        id: g.id,
+        name: full?.name ?? g.name ?? "Shoes",
+        brand: full?.brand_name ?? null,
+        model: full?.model_name ?? null,
+        distanceM: Math.round(full?.distance ?? g.distance ?? 0),
+        primary: !!g.primary,
+        retired: !!full?.retired,
+      });
+    }
+    gear = gear.filter((x) => !x.retired).sort((x, y) => Number(y.primary) - Number(x.primary) || y.distanceM - x.distanceM);
+  }
+
   // Prefill what the runner has not set: name, photo, bio. Never overwrite something they wrote.
   const { data: prof } = await admin.from("profiles").select("display_name, avatar_url, bio").eq("id", userId).maybeSingle();
-  const patch: { strava_synced_at: string; strava_stats?: StravaStats; display_name?: string; avatar_url?: string; bio?: string } = { strava_synced_at: new Date().toISOString() };
+  const patch: { strava_synced_at: string; strava_stats?: StravaStats; strava_gear?: StravaShoe[]; display_name?: string; avatar_url?: string; bio?: string } = { strava_synced_at: new Date().toISOString() };
   if (stats) patch.strava_stats = stats;
+  if (gear) patch.strava_gear = gear;
   if (prof && !prof.display_name?.trim() && (a.firstname || a.lastname)) patch.display_name = [a.firstname, a.lastname].filter(Boolean).join(" ");
   if (prof && !prof.avatar_url && a.profile && !/avatar\/athlete\/large/.test(a.profile)) patch.avatar_url = a.profile;
   if (prof && !prof.bio?.trim() && a.bio) patch.bio = a.bio.slice(0, 200);
-  await admin.from("profiles").update({ ...patch, strava_stats: patch.strava_stats as unknown as Json }).eq("id", userId);
+  await admin.from("profiles").update({ ...patch, strava_stats: patch.strava_stats as unknown as Json, strava_gear: patch.strava_gear as unknown as Json }).eq("id", userId);
 }
 
 /**

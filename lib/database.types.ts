@@ -193,7 +193,7 @@ export type Database = {
           stripe_account_id: string | null;
           stripe_customer_id: string | null;
           stripe_charges_enabled: boolean;
-          strava_stats: Json | null;
+          strava_stats: Json | null; strava_gear: Json | null;
           units: string;
           strava_synced_at: string | null;
           stripe_details_submitted: boolean;
@@ -218,7 +218,7 @@ export type Database = {
           stripe_account_id?: string | null;
           stripe_customer_id?: string | null;
           stripe_charges_enabled?: boolean;
-          strava_stats?: Json | null;
+          strava_stats?: Json | null; strava_gear?: Json | null;
           units?: string;
           strava_synced_at?: string | null;
           stripe_details_submitted?: boolean;
@@ -243,7 +243,7 @@ export type Database = {
           stripe_account_id?: string | null;
           stripe_customer_id?: string | null;
           stripe_charges_enabled?: boolean;
-          strava_stats?: Json | null;
+          strava_stats?: Json | null; strava_gear?: Json | null;
           units?: string;
           strava_synced_at?: string | null;
           stripe_details_submitted?: boolean;
