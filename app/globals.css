@@ -1016,6 +1016,9 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 .rl-shoeadd .swatches > button[data-on] { outline: 2px solid var(--rl-text); outline-offset: 2px; }
 .rl-shoeadd .preview { display: flex; align-items: center; gap: 10px; font: var(--rl-text-body-medium); }
 
+/* A pair as a mark: the colour they chose, the brand's initial. Legible at 18px, which a drawing is not. */
+.rl-shoechip { display: inline-grid; place-items: center; border-radius: 50%; color: var(--rl-bg); font-family: var(--rl-font-sans); font-weight: 600; line-height: 1; flex: none; letter-spacing: 0; }
+
 /* Calendar days as drop targets: each cell is wrapped so it can take a dragged run and carry a remove button. */
 .rl-cal .cellwrap { position: relative; display: flex; flex-direction: column; min-width: 0; }
 .rl-cal .cellwrap > .cell { flex: 1; }

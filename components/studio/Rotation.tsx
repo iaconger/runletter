@@ -10,12 +10,16 @@ import { distanceLabel, fmtDistance, toDistance, type Units } from "@/lib/units"
 const LIFE_KM = 800;
 const TINTS = ["var(--rl-accent)", "var(--rl-run-long)", "var(--rl-run-tempo)", "var(--rl-run-recovery)", "var(--rl-run-intervals)", "var(--rl-run-race)"];
 
-export function Shoe({ tint = "currentColor", size = 26 }: { tint?: string; size?: number }) {
+/**
+ * A pair, as a mark. A drawn shoe needs detail to read as a shoe, and that detail dies below about 40px,
+ * where these actually live. So: the colour the runner picked, with the brand's initial. Crisp at any size,
+ * honest about being a label rather than a picture.
+ */
+export function Shoe({ tint = "var(--rl-accent)", size = 26, letter = "" }: { tint?: string; size?: number; letter?: string }) {
   return (
-    <svg viewBox="0 0 104 40" width={size * 2.6} height={size} aria-hidden style={{ flex: "none" }}>
-      <path fill={tint} d="M6 29.5 C4.5 33 6.5 36.5 13 36.5 L84 36.5 C94 36.5 100.5 33.5 100.5 30 C100.5 27.5 97 26.5 91 27 L13 27.5 C9 27.5 7 28.2 6 29.5 Z" />
-      <path fill="currentColor" d="M8.5 27.5 C7.5 20 8.5 13.5 13 10.5 C17 8 21.5 8.5 23.5 11.5 C25 14 25.5 16.5 27.5 17.5 C34 20.5 46 22 60 22.8 C74 23.6 84 23.2 90 22.6 C95 22.2 97.5 24 97 26.8 L8.5 27.5 Z" />
-    </svg>
+    <span className="rl-shoechip" aria-hidden style={{ width: size, height: size, background: tint, fontSize: Math.round(size * 0.46) }}>
+      {letter.slice(0, 1).toUpperCase()}
+    </span>
   );
 }
 
@@ -36,7 +40,7 @@ export function Rotation({ shoes: all, units = "km", title = "What they run in" 
           const name = [s.brand, s.model].filter(Boolean).join(" ") || s.name;
           return (
             <li key={s.id} style={{ ["--tint" as string]: TINTS[i % TINTS.length] }}>
-              <Shoe tint="var(--tint)" size={20} />
+              <Shoe tint="var(--tint)" size={22} letter={(s.brand ?? s.name ?? "").trim()} />
               <span className="rl-stack" style={{ gap: 2, minWidth: 0 }}>
                 <span className="nm">{name}{s.primary ? <em> · main pair</em> : null}</span>
                 <span className="bar" aria-hidden><i style={{ width: `${worn}%` }} /></span>
@@ -72,7 +76,7 @@ export function PickedRotation({ shoes, units = "km", title = "What they run in"
               {s.imageUrl
                 // eslint-disable-next-line @next/next/no-img-element
                 ? <img className="pic" src={s.imageUrl} alt="" width={52} height={34} loading="lazy" />
-                : <Shoe tint="var(--tint)" size={20} />}
+                : <Shoe tint="var(--tint)" size={22} letter={brandName(s.brand)} />}
               <span className="rl-stack" style={{ gap: 2, minWidth: 0 }}>
                 <span className="nm">{brandName(s.brand)} {s.model}{s.nickname ? <em> · {s.nickname}</em> : null}</span>
                 {s.distanceM > 0 && <span className="bar" aria-hidden><i style={{ width: `${worn}%` }} /></span>}

@@ -47,7 +47,7 @@ export default async function YourPage({ searchParams }: { searchParams: Promise
                   <form action={removeShoeAction}>
                     <input type="hidden" name="id" value={sh.id} />
                     <button type="submit" title="Take this pair off your page">
-                      <Shoe size={18} tint={colourValue(sh.colour)} />
+                      <Shoe size={22} tint={colourValue(sh.colour)} letter={brandName(sh.brand)} />
                       <span className="nm">{brandName(sh.brand)} {sh.model}</span>
                       <span className="km">{sh.distanceM > 0 ? `${fmtDistance(sh.distanceM, profile.units, { decimals: 0 })} ${distanceLabel(profile.units)}` : "new"}</span>
                       <span className="st">Remove</span>

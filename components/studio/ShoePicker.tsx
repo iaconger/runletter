@@ -93,7 +93,7 @@ export function ShoePicker({ add, stravaPairs = [] }: {
           )}
 
           <div className="preview">
-            <ShoeMark size={22} tint={colourValue(colour)} />
+            <ShoeMark size={24} tint={colourValue(colour)} letter={b.name} />
             <span>{b.name} {model.trim()}</span>
           </div>
         </>
