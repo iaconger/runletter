@@ -10,7 +10,10 @@ export function SyncButton({ label = "Sync last 90 days" }: { label?: string }) 
   const { pending } = useFormStatus();
   const [stage, setStage] = useState(0);
   useEffect(() => {
-    if (!pending) { setStage(0); return; }
+    if (!pending) {
+      const id = setTimeout(() => setStage(0), 0);
+      return () => clearTimeout(id);
+    }
     const t = setInterval(() => setStage((s) => Math.min(s + 1, STAGES.length - 1)), 2200);
     return () => clearInterval(t);
   }, [pending]);
