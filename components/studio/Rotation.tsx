@@ -2,6 +2,8 @@
 // it and nobody keeps it current; it is simply true. Drawn, not photographed, so no retailer image can rot
 // and no brand mark is borrowed.
 import type { StravaShoe } from "@/lib/integrations/strava";
+import type { Shoe as PickedShoe } from "@/lib/db/programs";
+import { brandName, colourValue } from "@/lib/shoes/catalog";
 import { distanceLabel, fmtDistance, toDistance, type Units } from "@/lib/units";
 
 /** Roughly where a pair is in its life. Not a rule, a hint: most shoes are done somewhere near here. */
@@ -52,4 +54,31 @@ export function Rotation({ shoes: all, units = "km", title = "What they run in" 
 export function shoesOf(profileGear: unknown): StravaShoe[] {
   if (!Array.isArray(profileGear)) return [];
   return profileGear.filter((s): s is StravaShoe => !!s && typeof s === "object" && typeof (s as StravaShoe).id === "string");
+}
+
+/** The rotation a runner picked in the app. Takes precedence over whatever Strava guessed. */
+export function PickedRotation({ shoes, units = "km", title = "What they run in" }: { shoes: PickedShoe[]; units?: Units; title?: string }) {
+  if (!shoes.length) return null;
+  const U = distanceLabel(units);
+  return (
+    <section className="rl-card" style={{ gap: "var(--rl-space-3)" }}>
+      <span className="t-label c-muted">{title}</span>
+      <ul className="rl-rotation">
+        {shoes.map((s) => {
+          const km = toDistance(s.distanceM, units);
+          const worn = Math.min(100, Math.round((km / (units === "mi" ? LIFE_KM * 0.62 : LIFE_KM)) * 100));
+          return (
+            <li key={s.id} style={{ ["--tint" as string]: colourValue(s.colour) }}>
+              <Shoe tint="var(--tint)" size={20} />
+              <span className="rl-stack" style={{ gap: 2, minWidth: 0 }}>
+                <span className="nm">{brandName(s.brand)} {s.model}{s.nickname ? <em> · {s.nickname}</em> : null}</span>
+                {s.distanceM > 0 && <span className="bar" aria-hidden><i style={{ width: `${worn}%` }} /></span>}
+              </span>
+              <span className="km">{s.distanceM > 0 ? `${fmtDistance(s.distanceM, units, { decimals: 0 })} ${U}` : "new"}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
 }

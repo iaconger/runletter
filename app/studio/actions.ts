@@ -337,3 +337,27 @@ export async function toggleShoeAction(formData: FormData): Promise<void> {
   await db.toggleShoe(id);
   revalidatePath("/studio", "layout");
 }
+
+/** Add a pair the runner picked in the app. */
+export async function addShoeAction(input: { brand: string; model: string; colour: string; nickname: string | null; stravaGearId: string | null; distanceM: number }): Promise<ActionResult> {
+  const parsed = z.object({
+    brand: z.string().min(1).max(40),
+    model: z.string().min(1).max(60),
+    colour: z.string().min(1).max(20),
+    nickname: z.string().max(40).nullable(),
+    stravaGearId: z.string().max(60).nullable(),
+    distanceM: z.number().int().min(0).max(100_000_000),
+  }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: "That pair did not make sense" };
+  try {
+    await db.addShoe(parsed.data);
+    revalidatePath("/studio", "layout");
+    return { ok: true };
+  } catch (e) { return fail(e); }
+}
+
+export async function removeShoeAction(formData: FormData): Promise<void> {
+  const id = String(formData.get("id") ?? "");
+  if (id) await db.retireShoe(id);
+  revalidatePath("/studio", "layout");
+}

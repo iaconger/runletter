@@ -4,9 +4,9 @@ import { notFound } from "next/navigation";
 import { Mark } from "@/components/ui/Logo";
 import { Ink, Portrait } from "@/components/ui/Ink";
 import { ProgramCover } from "@/components/run/ProgramCover";
-import { getProfileByHandle, listPublishedPrograms, getMyAccess } from "@/lib/db/programs";
+import { getProfileByHandle, listPublishedPrograms, getMyAccess, listShoes } from "@/lib/db/programs";
 import { JoinButton, priceLabel } from "@/components/run/JoinButton";
-import { Rotation, shoesOf } from "@/components/studio/Rotation";
+import { PickedRotation, Rotation, shoesOf } from "@/components/studio/Rotation";
 import { isConfigured } from "@/lib/supabase/server";
 import { sampleCreator, sampleProgram } from "@/lib/sample";
 import type { Profile, Program } from "@/lib/types";
@@ -36,6 +36,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
   const { c, programs, example } = r;
   const letter = programs.find((p) => p.isLetter) ?? null;
   const access = letter && !example ? await getMyAccess(letter) : { signedIn: false, subscribed: false, purchased: false };
+  const picked = example ? [] : await listShoes(c.id);
 
   return (
     <main>
@@ -66,9 +67,11 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
           )}
         </div>
       </div>
-      {shoesOf(c.stravaGear).length > 0 && (
+      {(picked.length > 0 || shoesOf(c.stravaGear).length > 0) && (
         <section className="rl-page rl-stack" style={{ gap: "var(--rl-space-4)" }}>
-          <Rotation shoes={shoesOf(c.stravaGear)} units={c.units} />
+          {picked.length > 0
+            ? <PickedRotation shoes={picked} units={c.units} />
+            : <Rotation shoes={shoesOf(c.stravaGear)} units={c.units} />}
         </section>
       )}
       <section className="rl-page rl-stack" style={{ gap: "var(--rl-space-4)" }}>

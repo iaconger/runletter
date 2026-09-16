@@ -1002,6 +1002,19 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 .rl-shoepick > li[data-off] button { opacity: .55; }
 .rl-shoepick > li[data-off] .st { color: var(--rl-text-muted); }
 
+/* Adding a pair: the same three-question shape as a run. */
+.rl-shoeadd { display: flex; flex-direction: column; gap: var(--rl-space-4); padding: var(--rl-space-4); border-radius: var(--rl-radius-md); border: var(--rl-border-hairline) solid var(--rl-hairline); background: var(--rl-surface-sunken); }
+.rl-shoeadd .q { display: flex; flex-direction: column; gap: 8px; }
+.rl-shoeadd .ask { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; color: var(--rl-text-muted); }
+.rl-shoeadd .opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.rl-shoeadd .opts > button { font: var(--rl-text-body-sm); padding: 6px 11px; border-radius: 999px; border: var(--rl-border-hairline) solid var(--rl-hairline); background: transparent; color: var(--rl-text-secondary); cursor: pointer; }
+.rl-shoeadd .opts > button:hover { color: var(--rl-text); border-color: var(--rl-text-secondary); }
+.rl-shoeadd .opts > button[data-on] { background: var(--rl-text); color: var(--rl-bg); border-color: var(--rl-text); }
+.rl-shoeadd .swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+.rl-shoeadd .swatches > button { width: 26px; height: 26px; border-radius: 50%; background: var(--sw); border: 2px solid transparent; cursor: pointer; }
+.rl-shoeadd .swatches > button[data-on] { outline: 2px solid var(--rl-text); outline-offset: 2px; }
+.rl-shoeadd .preview { display: flex; align-items: center; gap: 10px; font: var(--rl-text-body-medium); }
+
 /* Calendar days as drop targets: each cell is wrapped so it can take a dragged run and carry a remove button. */
 .rl-cal .cellwrap { position: relative; display: flex; flex-direction: column; min-width: 0; }
 .rl-cal .cellwrap > .cell { flex: 1; }

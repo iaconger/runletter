@@ -2,8 +2,8 @@
 // against the rest. Plus who's following and what's gone out. The studio's front page once a Letter exists.
 import Link from "next/link";
 import { RouteSketch } from "@/components/run/RouteSketch";
-import { Rotation, shoesOf } from "@/components/studio/Rotation";
-import { getMyProfile, listExtras, listMyRunners, listMyPrograms, listIssues } from "@/lib/db/programs";
+import { PickedRotation, Rotation, shoesOf } from "@/components/studio/Rotation";
+import { getMyProfile, listExtras, listMyRunners, listMyPrograms, listIssues, listShoes } from "@/lib/db/programs";
 import { createClient, isConfigured } from "@/lib/supabase/server";
 import { ago, refreshStravaInBackground } from "@/lib/integrations/autosync";
 import type { StravaStats } from "@/lib/integrations/strava";
@@ -39,6 +39,7 @@ export default async function Overview() {
     );
   }
   const stats = (me.stravaStats ?? null) as StravaStats | null;
+  const picked = configured ? await listShoes(me.id) : [];
   const units = me.units ?? "km";
   const U = distanceLabel(units);
   const weekStart = mondayOf(today);
@@ -146,7 +147,7 @@ export default async function Overview() {
         </section>
       )}
 
-      {hasStrava && <Rotation shoes={shoesOf(me.stravaGear)} units={units} title="Your rotation" />}
+      {picked.length > 0 ? <PickedRotation shoes={picked} units={units} title="Your rotation" /> : hasStrava ? <Rotation shoes={shoesOf(me.stravaGear)} units={units} title="Your rotation" /> : null}
 
       <div className="rl-grid2">
         {latest && (

@@ -3,11 +3,13 @@ import { Connections } from "@/components/connections/Connections";
 import { UnitsCard } from "@/components/ui/UnitsCard";
 import Link from "next/link";
 import { updateProfileAction } from "@/app/studio/actions";
-import { getMyLetter, getMyProfile } from "@/lib/db/programs";
+import { getMyLetter, getMyProfile, listShoes } from "@/lib/db/programs";
 import { GetPaid } from "@/components/studio/GetPaid";
 import { ProfilePhotos } from "@/components/studio/ProfilePhotos";
 import { Shoe, shoesOf } from "@/components/studio/Rotation";
-import { toggleShoeAction } from "@/app/studio/actions";
+import { ShoePicker } from "@/components/studio/ShoePicker";
+import { addShoeAction, removeShoeAction } from "@/app/studio/actions";
+import { brandName, colourValue } from "@/lib/shoes/catalog";
 import { distanceLabel, fmtDistance } from "@/lib/units";
 import { isConfigured } from "@/lib/supabase/server";
 
@@ -17,6 +19,8 @@ export const dynamic = "force-dynamic";
 export default async function YourPage({ searchParams }: { searchParams: Promise<{ error?: string; saved?: string; connected?: string; stripe?: string }> }) {
   const { error, saved, connected, stripe } = await searchParams;
   const [profile, letter] = isConfigured() ? await Promise.all([getMyProfile(), getMyLetter()]) : [null, null];
+  const myShoes = profile ? await listShoes(profile.id) : [];
+  const stravaPairs = shoesOf(profile?.stravaGear).map((g) => ({ id: g.id, label: [g.brand, g.model].filter(Boolean).join(" ") || g.name, distanceM: g.distanceM }));
   const handle = profile && !profile.handle.startsWith("u_") ? profile.handle : "";
   return (
     <main className="rl-page rl-stack" style={{ maxWidth: 640, gap: "var(--rl-space-6)" }}>
@@ -35,30 +39,34 @@ export default async function YourPage({ searchParams }: { searchParams: Promise
             <span className="t-label c-muted">What you run in</span>
             <span className="t-heading">Your shoes</span>
           </div>
-          {shoesOf(profile.stravaGear).length === 0 ? (
-            <span className="rl-help">Strava keeps your shoes and their mileage. Connect it below, add a pair in Strava, and they show up here for your page.</span>
-          ) : (
-            <>
-              <span className="rl-help">Tap a pair to show or hide it on your page. The mileage comes from Strava and keeps itself current.</span>
-              <ul className="rl-shoepick">
-                {shoesOf(profile.stravaGear).map((sh) => (
-                  <li key={sh.id} data-off={sh.hidden ? "true" : undefined}>
-                    <form action={toggleShoeAction}>
-                      <input type="hidden" name="id" value={sh.id} />
-                      <button type="submit">
-                        <Shoe size={18} tint={sh.hidden ? "var(--rl-text-muted)" : "var(--rl-accent)"} />
-                        <span className="nm">{[sh.brand, sh.model].filter(Boolean).join(" ") || sh.name}</span>
-                        <span className="km">{fmtDistance(sh.distanceM, profile.units, { decimals: 0 })} {distanceLabel(profile.units)}</span>
-                        <span className="st">{sh.hidden ? "Hidden" : "On your page"}</span>
-                      </button>
-                    </form>
-                  </li>
-                ))}
-              </ul>
-            </>
+
+          {myShoes.length > 0 && (
+            <ul className="rl-shoepick">
+              {myShoes.map((sh) => (
+                <li key={sh.id}>
+                  <form action={removeShoeAction}>
+                    <input type="hidden" name="id" value={sh.id} />
+                    <button type="submit" title="Take this pair off your page">
+                      <Shoe size={18} tint={colourValue(sh.colour)} />
+                      <span className="nm">{brandName(sh.brand)} {sh.model}</span>
+                      <span className="km">{sh.distanceM > 0 ? `${fmtDistance(sh.distanceM, profile.units, { decimals: 0 })} ${distanceLabel(profile.units)}` : "new"}</span>
+                      <span className="st">Remove</span>
+                    </button>
+                  </form>
+                </li>
+              ))}
+            </ul>
           )}
+
+          <ShoePicker add={addShoeAction} stravaPairs={stravaPairs} />
+          <span className="rl-help">
+            {stravaPairs.length > 0
+              ? "Pick a pair and it shows on your page. Link it to a Strava pair and the mileage comes too."
+              : "Pick what you run in. Connect Strava below and a pair can carry its mileage with it."}
+          </span>
         </section>
       )}
+
       <form action={updateProfileAction} className="rl-stack" style={{ gap: "var(--rl-space-5)" }}>
         <div className="rl-field">
           <label htmlFor="handle">Handle</label>

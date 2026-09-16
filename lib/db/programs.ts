@@ -638,3 +638,34 @@ export async function toggleShoe(id: string) {
   const next = gear.map((g) => (g.id === id ? { ...g, hidden: !g.hidden } : g));
   await supabase.from("profiles").update({ strava_gear: next as never }).eq("id", user.id);
 }
+
+// ---------- shoes ----------
+
+export type Shoe = { id: string; brand: string; model: string; nickname: string | null; colour: string; stravaGearId: string | null; distanceM: number; retired: boolean };
+const mapShoe = (r: Tables<"shoes">): Shoe => ({ id: r.id, brand: r.brand, model: r.model, nickname: r.nickname, colour: r.colour, stravaGearId: r.strava_gear_id, distanceM: r.distance_m, retired: r.retired });
+
+/** Someone's rotation, newest first. Public: a creator's shoes are part of their page. */
+export async function listShoes(userId: string): Promise<Shoe[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("shoes").select("*").eq("user_id", userId).eq("retired", false).order("created_at", { ascending: false });
+  return (data ?? []).map(mapShoe);
+}
+
+export async function addShoe(input: { brand: string; model: string; nickname?: string | null; colour?: string; stravaGearId?: string | null; distanceM?: number }) {
+  const supabase = await createClient();
+  const user = await currentUser();
+  if (!user) throw new Error("Not signed in");
+  const { error } = await supabase.from("shoes").insert({
+    user_id: user.id, brand: input.brand, model: input.model,
+    nickname: input.nickname ?? null, colour: input.colour ?? "cobalt",
+    strava_gear_id: input.stravaGearId ?? null, distance_m: input.distanceM ?? 0,
+  });
+  if (error) throw error;
+}
+
+export async function retireShoe(id: string) {
+  const supabase = await createClient();
+  const user = await currentUser();
+  if (!user) return;
+  await supabase.from("shoes").delete().eq("id", id).eq("user_id", user.id);
+}

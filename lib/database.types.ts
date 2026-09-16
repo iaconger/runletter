@@ -119,6 +119,14 @@ export type Database = {
           { foreignKeyName: "extra_runs_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
         ];
       };
+      shoes: {
+        Row: { id: string; user_id: string; brand: string; model: string; nickname: string | null; colour: string; strava_gear_id: string | null; distance_m: number; retired: boolean; created_at: string };
+        Insert: { id?: string; user_id: string; brand: string; model: string; nickname?: string | null; colour?: string; strava_gear_id?: string | null; distance_m?: number; retired?: boolean; created_at?: string };
+        Update: { id?: string; user_id?: string; brand?: string; model?: string; nickname?: string | null; colour?: string; strava_gear_id?: string | null; distance_m?: number; retired?: boolean; created_at?: string };
+        Relationships: [
+          { foreignKeyName: "shoes_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        ];
+      };
       scheduled_runs: {
         Row: { id: string; user_id: string; program_day_id: string; run_date: string; created_at: string };
         Insert: { id?: string; user_id: string; program_day_id: string; run_date: string; created_at?: string };
