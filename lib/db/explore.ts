@@ -1,7 +1,7 @@
 import "server-only";
 // Explore data: runs and creators from real published programs. Shared by Explore and Today's empty state.
 import { getProfileById, getProgram, getMyAccess, type MyAccess } from "@/lib/db/programs";
-import { createClient, isConfigured } from "@/lib/supabase/server";
+import { createClient, currentUser, isConfigured } from "@/lib/supabase/server";
 import { dayTitle } from "@/components/run/RunPieces";
 import type { ExploreRun } from "@/lib/explore";
 import type { Profile, Program } from "@/lib/types";
@@ -55,7 +55,7 @@ export async function realRuns(): Promise<ExploreData> {
 export async function followedRuns(limit = 12): Promise<ExploreRun[]> {
   if (!isConfigured()) return [];
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) return [];
   const [{ data: subs }, { data: buys }] = await Promise.all([
     supabase.from("subscriptions").select("creator_id").eq("follower_id", user.id).eq("status", "active"),

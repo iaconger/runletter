@@ -2,7 +2,7 @@
 // Rows are snake_case (lib/database.types.ts); the app speaks camelCase (lib/types.ts). Map at this boundary only.
 
 import "server-only";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, currentUser } from "@/lib/supabase/server";
 import type { Tables, TablesInsert } from "@/lib/database.types";
 import { addDays, toISODate, type Block, type Program, type ProgramDay, type Profile, type LetterIssue } from "@/lib/types";
 
@@ -73,7 +73,7 @@ const MY_PROFILE_COLS = "id, handle, display_name, avatar_url, cover_url, bio, i
 
 export async function getMyProfile(): Promise<Profile | null> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) return null;
   const { data } = await supabase.from("profiles").select(MY_PROFILE_COLS).eq("id", user.id).single();
   return data ? mapProfile(data) : null;
@@ -87,7 +87,7 @@ export async function getProfileByHandle(handle: string): Promise<Profile | null
 
 export async function listMyPrograms(): Promise<Program[]> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) return [];
   const { data } = await supabase.from("programs").select("*").eq("creator_id", user.id).order("updated_at", { ascending: false });
   return (data ?? []).map((r) => mapProgram(r));
@@ -114,7 +114,7 @@ export async function getProgram(id: string): Promise<Program | null> {
 
 export async function createProgram(input: { title: string; weeks: number; goal: Program["goal"]; level: Program["level"]; isLetter?: boolean; fixedStartDate?: string | null; access?: Program["access"]; priceCents?: number | null }): Promise<string> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) throw new Error("Not signed in");
   const row: TablesInsert<"programs"> = {
     creator_id: user.id,
@@ -231,7 +231,7 @@ export async function duplicateWeek(programId: string, from: number, to: number)
 
 export async function updateMyProfile(patch: Partial<Pick<Profile, "handle" | "displayName" | "bio" | "links" | "avatarUrl" | "coverUrl" | "isCreator" | "pace5kS" | "goal" | "raceDate" | "daysPerWeek" | "units">>) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) throw new Error("Not signed in");
   const row: Partial<TablesInsert<"profiles">> = {};
   if (patch.handle !== undefined) row.handle = patch.handle;
@@ -256,7 +256,7 @@ export type Post = { id: string; body: string; createdAt: string; programId: str
 
 export async function listMyPosts(programId?: string): Promise<Post[]> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) return [];
   let q = supabase.from("creator_posts").select("id, body, created_at, program_id, program_day_id").eq("creator_id", user.id).order("created_at", { ascending: false }).limit(50);
   if (programId) q = q.eq("program_id", programId);
@@ -267,7 +267,7 @@ export async function listMyPosts(programId?: string): Promise<Post[]> {
 
 export async function createPost(input: { body: string; programId?: string | null; programDayId?: string | null }): Promise<Post> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) throw new Error("Not signed in");
   const { data, error } = await supabase
     .from("creator_posts")
@@ -287,7 +287,7 @@ export async function deletePost(id: string) {
 /** The creator's Letter, if they have started one. */
 export async function getMyLetter(): Promise<Program | null> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) return null;
   const { data } = await supabase.from("programs").select("*").eq("creator_id", user.id).eq("is_letter", true).maybeSingle();
   return data ? mapProgram(data) : null;
@@ -316,7 +316,7 @@ export async function upsertIssue(input: { programId: string; week: number; intr
 /** Enrol the signed-in user in a program from a given Monday. Creators use it for their own Letter. */
 export async function enrolSelf(programId: string, startDate: string) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) throw new Error("Not signed in");
   const { error } = await supabase.from("enrollments").insert({ follower_id: user.id, program_id: programId, start_date: startDate });
   if (error && !/duplicate|unique/i.test(error.message)) throw error;
@@ -340,7 +340,7 @@ export type RunnerWeek = {
 /** What the signed-in runner is on this week: their most recent active enrolment, today's position in it, completions. */
 export async function getMyWeek(today: string): Promise<RunnerWeek | null> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) return null;
   const { data: enrol } = await supabase.from("enrollments").select("id, program_id, start_date").eq("follower_id", user.id).eq("status", "active").order("created_at", { ascending: false }).limit(1).maybeSingle();
   if (!enrol) return null;
@@ -399,7 +399,7 @@ export type RunnerRow = { profile: Profile; programTitle: string; week: number; 
 /** Everyone enrolled in the creator's programs, with this week's score. */
 export async function listMyRunners(today: string): Promise<RunnerRow[]> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) return [];
   const { data: programs } = await supabase.from("programs").select("id, title, weeks").eq("creator_id", user.id);
   if (!programs?.length) return [];
@@ -439,7 +439,7 @@ export type RunLogItem = {
 /** Everything the signed-in runner ran in a date range: planned days done, plus off-plan runs. Newest first. */
 export async function listMyRuns(from: string, to: string): Promise<RunLogItem[]> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) return [];
   const [{ data: comps }, { data: extras }] = await Promise.all([
     supabase.from("completions").select("id, completed_at, distance_m, duration_s, avg_pace_s, source, program_day_id, strava_activity_id, enrollments!inner(follower_id, program_id)").eq("enrollments.follower_id", user.id).gte("completed_at", `${from}T00:00:00`).lte("completed_at", `${to}T23:59:59`),
@@ -463,7 +463,7 @@ export async function listMyRuns(from: string, to: string): Promise<RunLogItem[]
 /** One logged run by id: a completion (planned) or an extra (off plan). Only the signed-in runner's own. */
 export async function getMyRun(id: string): Promise<RunLogItem | null> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) return null;
   const { data: c } = await supabase.from("completions").select("id, completed_at, distance_m, duration_s, avg_pace_s, source, program_day_id, strava_activity_id, enrollments!inner(follower_id, program_id)").eq("id", id).eq("enrollments.follower_id", user.id).maybeSingle();
   if (c) {
@@ -497,7 +497,7 @@ export type MyAccess = { signedIn: boolean; subscribed: boolean; purchased: bool
 /** Does the signed-in runner already have this program: subscribed to its creator (Letter) or bought it (plan). */
 export async function getMyAccess(program: Pick<Program, "id" | "creatorId">): Promise<MyAccess> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) return { signedIn: false, subscribed: false, purchased: false };
   if (user.id === program.creatorId) return { signedIn: true, subscribed: true, purchased: true, own: true };
   const [{ data: sub }, { data: buy }] = await Promise.all([
@@ -512,7 +512,7 @@ export type RunnerCalendar = { program: Program; creator: Profile; enrollmentId:
 /** Everything for the runner's calendar: the whole program from their start date, what's done, and off-plan runs. */
 export async function getMyCalendar(today: string): Promise<RunnerCalendar | null> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) return null;
   const { data: enrol } = await supabase.from("enrollments").select("id, program_id, start_date").eq("follower_id", user.id).eq("status", "active").order("created_at", { ascending: false }).limit(1).maybeSingle();
   if (!enrol) return null;
@@ -534,7 +534,7 @@ export async function getMyCalendar(today: string): Promise<RunnerCalendar | nul
 /** One of the signed-in user's own Strava activities. */
 export async function getMyExtra(id: string): Promise<ExtraRun | null> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) return null;
   const { data } = await supabase.from("extra_runs").select(EXTRA_COLS).eq("id", id).eq("user_id", user.id).maybeSingle();
   return data ? mapExtra(data) : null;
@@ -547,7 +547,7 @@ export type ScheduledRun = { id: string; date: string; day: ProgramDay; programI
 /** Runs the signed-in runner has put on their calendar, in a date range (inclusive). */
 export async function listScheduled(from: string, to: string): Promise<ScheduledRun[]> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) return [];
   const { data: rows } = await supabase.from("scheduled_runs").select("id, run_date, program_day_id").eq("user_id", user.id).gte("run_date", from).lte("run_date", to).order("run_date");
   if (!rows?.length) return [];
@@ -573,7 +573,7 @@ export async function listScheduled(from: string, to: string): Promise<Scheduled
 /** Put a run on a day. Idempotent: dropping the same run on the same day twice changes nothing. */
 export async function scheduleRun(programDayId: string, date: string) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) throw new Error("Not signed in");
   const { error } = await supabase.from("scheduled_runs").upsert({ user_id: user.id, program_day_id: programDayId, run_date: date }, { onConflict: "user_id,run_date,program_day_id" });
   if (error) throw error;
@@ -581,14 +581,14 @@ export async function scheduleRun(programDayId: string, date: string) {
 
 export async function moveScheduled(id: string, date: string) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) throw new Error("Not signed in");
   await supabase.from("scheduled_runs").update({ run_date: date }).eq("id", id).eq("user_id", user.id);
 }
 
 export async function unscheduleRun(id: string) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) throw new Error("Not signed in");
   await supabase.from("scheduled_runs").delete().eq("id", id).eq("user_id", user.id);
 }

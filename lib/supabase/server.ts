@@ -4,6 +4,7 @@
 import { createServerClient } from "@supabase/ssr";
 import type { Database } from "@/lib/database.types";
 import { cookies } from "next/headers";
+import { cache } from "react";
 
 export async function createClient() {
   const cookieStore = await cookies();
@@ -28,13 +29,21 @@ export async function createClient() {
   );
 }
 
-/** Current user or null. Cheap to call; cached per request by Next. */
-export async function getUser() {
+/**
+ * The signed-in user, once per request. Every auth.getUser() is a round trip to Supabase, and a page that
+ * asked four times could have one of them fail and render as if nobody was signed in. React's cache() makes
+ * it one call, and a failure is logged rather than quietly becoming "please sign in".
+ */
+export const currentUser = cache(async () => {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
+  const { data, error } = await supabase.auth.getUser();
+  if (error && error.name !== "AuthSessionMissingError") console.error("auth.getUser", error.name, error.message);
+  return data.user ?? null;
+});
+
+/** Current user or null. */
+export async function getUser() {
+  return currentUser();
 }
 
 /** True when Supabase env vars are present. Lets the static screens run before accounts exist. */
