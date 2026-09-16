@@ -350,7 +350,11 @@ export async function addShoeAction(input: { brand: string; model: string; colou
   }).safeParse(input);
   if (!parsed.success) return { ok: false, error: "That pair did not make sense" };
   try {
-    await db.addShoe(parsed.data);
+    // A licensed picture if a feed is connected; otherwise the app draws the shoe, which is fine.
+    const { findShoeImage } = await import("@/lib/shoes/images");
+    const { brandName } = await import("@/lib/shoes/catalog");
+    const img = await findShoeImage(brandName(parsed.data.brand), parsed.data.model);
+    await db.addShoe({ ...parsed.data, imageUrl: img?.imageUrl ?? null, buyUrl: img?.buyUrl ?? null });
     revalidatePath("/studio", "layout");
     return { ok: true };
   } catch (e) { return fail(e); }

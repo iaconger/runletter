@@ -120,9 +120,9 @@ export type Database = {
         ];
       };
       shoes: {
-        Row: { id: string; user_id: string; brand: string; model: string; nickname: string | null; colour: string; strava_gear_id: string | null; distance_m: number; retired: boolean; created_at: string };
-        Insert: { id?: string; user_id: string; brand: string; model: string; nickname?: string | null; colour?: string; strava_gear_id?: string | null; distance_m?: number; retired?: boolean; created_at?: string };
-        Update: { id?: string; user_id?: string; brand?: string; model?: string; nickname?: string | null; colour?: string; strava_gear_id?: string | null; distance_m?: number; retired?: boolean; created_at?: string };
+        Row: { id: string; user_id: string; brand: string; model: string; nickname: string | null; colour: string; strava_gear_id: string | null; distance_m: number; retired: boolean; created_at: string; image_url: string | null; buy_url: string | null };
+        Insert: { id?: string; user_id: string; brand: string; model: string; nickname?: string | null; colour?: string; strava_gear_id?: string | null; distance_m?: number; retired?: boolean; created_at?: string; image_url?: string | null; buy_url?: string | null };
+        Update: { id?: string; user_id?: string; brand?: string; model?: string; nickname?: string | null; colour?: string; strava_gear_id?: string | null; distance_m?: number; retired?: boolean; created_at?: string; image_url?: string | null; buy_url?: string | null };
         Relationships: [
           { foreignKeyName: "shoes_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
         ];

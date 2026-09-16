@@ -641,8 +641,8 @@ export async function toggleShoe(id: string) {
 
 // ---------- shoes ----------
 
-export type Shoe = { id: string; brand: string; model: string; nickname: string | null; colour: string; stravaGearId: string | null; distanceM: number; retired: boolean };
-const mapShoe = (r: Tables<"shoes">): Shoe => ({ id: r.id, brand: r.brand, model: r.model, nickname: r.nickname, colour: r.colour, stravaGearId: r.strava_gear_id, distanceM: r.distance_m, retired: r.retired });
+export type Shoe = { id: string; brand: string; model: string; nickname: string | null; colour: string; stravaGearId: string | null; distanceM: number; retired: boolean; imageUrl: string | null; buyUrl: string | null };
+const mapShoe = (r: Tables<"shoes">): Shoe => ({ id: r.id, brand: r.brand, model: r.model, nickname: r.nickname, colour: r.colour, stravaGearId: r.strava_gear_id, distanceM: r.distance_m, retired: r.retired, imageUrl: r.image_url, buyUrl: r.buy_url });
 
 /** Someone's rotation, newest first. Public: a creator's shoes are part of their page. */
 export async function listShoes(userId: string): Promise<Shoe[]> {
@@ -651,7 +651,7 @@ export async function listShoes(userId: string): Promise<Shoe[]> {
   return (data ?? []).map(mapShoe);
 }
 
-export async function addShoe(input: { brand: string; model: string; nickname?: string | null; colour?: string; stravaGearId?: string | null; distanceM?: number }) {
+export async function addShoe(input: { brand: string; model: string; nickname?: string | null; colour?: string; stravaGearId?: string | null; distanceM?: number; imageUrl?: string | null; buyUrl?: string | null }) {
   const supabase = await createClient();
   const user = await currentUser();
   if (!user) throw new Error("Not signed in");
@@ -659,6 +659,7 @@ export async function addShoe(input: { brand: string; model: string; nickname?: 
     user_id: user.id, brand: input.brand, model: input.model,
     nickname: input.nickname ?? null, colour: input.colour ?? "cobalt",
     strava_gear_id: input.stravaGearId ?? null, distance_m: input.distanceM ?? 0,
+    image_url: input.imageUrl ?? null, buy_url: input.buyUrl ?? null,
   });
   if (error) throw error;
 }

@@ -69,7 +69,10 @@ export function PickedRotation({ shoes, units = "km", title = "What they run in"
           const worn = Math.min(100, Math.round((km / (units === "mi" ? LIFE_KM * 0.62 : LIFE_KM)) * 100));
           return (
             <li key={s.id} style={{ ["--tint" as string]: colourValue(s.colour) }}>
-              <Shoe tint="var(--tint)" size={20} />
+              {s.imageUrl
+                // eslint-disable-next-line @next/next/no-img-element
+                ? <img className="pic" src={s.imageUrl} alt="" width={52} height={34} loading="lazy" />
+                : <Shoe tint="var(--tint)" size={20} />}
               <span className="rl-stack" style={{ gap: 2, minWidth: 0 }}>
                 <span className="nm">{brandName(s.brand)} {s.model}{s.nickname ? <em> · {s.nickname}</em> : null}</span>
                 {s.distanceM > 0 && <span className="bar" aria-hidden><i style={{ width: `${worn}%` }} /></span>}
