@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Mark } from "@/components/ui/Logo";
 import { Ink, Portrait } from "@/components/ui/Ink";
 import { ProgramCover } from "@/components/run/ProgramCover";
-import { getProfileByHandle, listPublishedPrograms, getMyAccess, listShoes } from "@/lib/db/programs";
+import { getProfileByHandle, listPublishedPrograms, getMyAccess, listShoes, listCreatorFollowers } from "@/lib/db/programs";
 import { JoinButton, priceLabel } from "@/components/run/JoinButton";
 import { PickedRotation, Rotation, shoesOf } from "@/components/studio/Rotation";
 import { isConfigured } from "@/lib/supabase/server";
@@ -37,6 +37,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
   const letter = programs.find((p) => p.isLetter) ?? null;
   const access = letter && !example ? await getMyAccess(letter) : { signedIn: false, subscribed: false, purchased: false };
   const picked = example ? [] : await listShoes(c.id);
+  const crew = example ? [] : await listCreatorFollowers(c.id);
 
   return (
     <main>
@@ -67,6 +68,24 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
           )}
         </div>
       </div>
+      {crew.length > 0 && (
+        <section className="rl-page rl-stack" style={{ gap: "var(--rl-space-3)" }}>
+          <div className="rl-between" style={{ alignItems: "baseline" }}>
+            <span className="t-label c-muted">Running with {c.displayName.split(" ")[0]}</span>
+            <span className="rl-help">{crew.length}{crew.length === 24 ? "+" : ""} {crew.length === 1 ? "runner" : "runners"}</span>
+          </div>
+          <ul className="rl-crewfaces">
+            {crew.map((f) => (
+              <li key={f.id}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {f.avatarUrl ? <img src={f.avatarUrl} alt="" loading="lazy" /> : <span className="ini">{(f.name || f.handle)[0]?.toUpperCase()}</span>}
+                <span className="nm">{(f.name || f.handle).split(" ")[0]}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {(picked.length > 0 || shoesOf(c.stravaGear).length > 0) && (
         <section className="rl-page rl-stack" style={{ gap: "var(--rl-space-4)" }}>
           {picked.length > 0

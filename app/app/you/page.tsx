@@ -1,5 +1,6 @@
 import { Ink } from "@/components/ui/Ink";
 import { Connections } from "@/components/connections/Connections";
+import { setListedAction } from "@/app/app/actions";
 import { Subscriptions } from "@/components/run/Subscriptions";
 import { getMyProfile, listMyRuns } from "@/lib/db/programs";
 import { RunLog } from "@/components/run/RunLog";
@@ -45,6 +46,16 @@ export default async function You({ searchParams }: { searchParams: Promise<{ co
         </section>
       )}
       {me && <UnitsCard units={me.units} />}
+      {me && (
+        <form action={setListedAction} className="rl-card" style={{ gap: "var(--rl-space-2)" }}>
+          <span className="t-label c-muted">Being seen</span>
+          <label className="rl-row" style={{ gap: 10, alignItems: "center" }}>
+            <input type="checkbox" name="listed" defaultChecked={me.listPublicly} onChange={(e) => e.currentTarget.form?.requestSubmit()} />
+            <span className="t-body-sm">Show me among the runners on the pages of people I follow</span>
+          </label>
+          <span className="rl-help">Your name and photo only. Turn it off and you still get the runs, you just are not on the wall.</span>
+        </form>
+      )}
       <Connections back="/app/you" notice={notice} />
       <Subscriptions />
       {me && (

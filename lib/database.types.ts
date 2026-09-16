@@ -201,7 +201,7 @@ export type Database = {
           stripe_account_id: string | null;
           stripe_customer_id: string | null;
           stripe_charges_enabled: boolean;
-          strava_stats: Json | null; strava_gear: Json | null;
+          strava_stats: Json | null; strava_gear: Json | null; list_publicly: boolean;
           units: string;
           strava_synced_at: string | null;
           stripe_details_submitted: boolean;
@@ -226,7 +226,7 @@ export type Database = {
           stripe_account_id?: string | null;
           stripe_customer_id?: string | null;
           stripe_charges_enabled?: boolean;
-          strava_stats?: Json | null; strava_gear?: Json | null;
+          strava_stats?: Json | null; strava_gear?: Json | null; list_publicly?: boolean;
           units?: string;
           strava_synced_at?: string | null;
           stripe_details_submitted?: boolean;
@@ -251,7 +251,7 @@ export type Database = {
           stripe_account_id?: string | null;
           stripe_customer_id?: string | null;
           stripe_charges_enabled?: boolean;
-          strava_stats?: Json | null; strava_gear?: Json | null;
+          strava_stats?: Json | null; strava_gear?: Json | null; list_publicly?: boolean;
           units?: string;
           strava_synced_at?: string | null;
           stripe_details_submitted?: boolean;
@@ -413,6 +413,7 @@ export type Database = {
     };
     Views: { [_ in never]: never };
     Functions: {
+      creator_followers: { Args: { p_creator: string; p_limit?: number }; Returns: { id: string; handle: string; display_name: string; avatar_url: string | null; since: string }[] };
       can_read_program: { Args: { p_program_id: string }; Returns: boolean };
       popular_runs: { Args: { p_limit?: number }; Returns: { program_day_id: string; program_id: string; completions: number }[] };
       today_for_follower: {

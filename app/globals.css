@@ -1019,6 +1019,34 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 /* A pair as a mark: the colour they chose, the brand's initial. Legible at 18px, which a drawing is not. */
 .rl-shoechip { display: inline-grid; place-items: center; border-radius: 50%; color: var(--rl-bg); font-family: var(--rl-font-sans); font-weight: 600; line-height: 1; flex: none; letter-spacing: 0; }
 
+/* The weeks around this one: a rail you write from, so planning ahead is the same screen as writing. */
+.rl-weekrail { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; }
+.rl-weekrail > a { flex: 0 0 132px; display: flex; flex-direction: column; gap: 5px; padding: 10px 12px; border-radius: var(--rl-radius-md); border: var(--rl-border-hairline) solid var(--rl-hairline); background: var(--rl-surface); color: inherit; text-decoration: none; }
+.rl-weekrail > a:hover { border-color: var(--rl-text-secondary); }
+.rl-weekrail > a[data-on] { border-color: var(--rl-accent); background: var(--rl-surface-sunken); }
+.rl-weekrail > a[data-empty] .sum { color: var(--rl-text-muted); }
+.rl-weekrail .wk { font: var(--rl-text-body-medium); white-space: nowrap; }
+.rl-weekrail > a[data-now] .wk { color: var(--rl-accent); }
+.rl-weekrail .dt { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; color: var(--rl-text-muted); }
+.rl-weekrail .fill { display: flex; gap: 3px; }
+.rl-weekrail .fill > i { flex: 1; height: 5px; border-radius: 3px; background: var(--rl-surface-sunken); border: var(--rl-border-hairline) solid var(--rl-hairline); }
+.rl-weekrail .fill > i[data-run] { border-color: transparent; }
+.rl-weekrail .fill > i[data-run="easy"] { background: var(--rl-run-easy); }
+.rl-weekrail .fill > i[data-run="long"] { background: var(--rl-run-long); }
+.rl-weekrail .fill > i[data-run="tempo"] { background: var(--rl-run-tempo); }
+.rl-weekrail .fill > i[data-run="intervals"] { background: var(--rl-run-intervals); }
+.rl-weekrail .fill > i[data-run="recovery"] { background: var(--rl-run-recovery); }
+.rl-weekrail .fill > i[data-run="race"] { background: var(--rl-run-race); }
+.rl-weekrail .fill > i[data-run="cross"] { background: var(--rl-run-cross); }
+.rl-weekrail .fill > i[data-run="rest"] { background: var(--rl-hairline); }
+.rl-weekrail .sum { font: var(--rl-text-body-sm); color: var(--rl-text-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* The people running with a creator, on their public page. Faces, because a crowd is the proof. */
+.rl-crewfaces { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--rl-space-3); }
+.rl-crewfaces > li { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 64px; }
+.rl-crewfaces img, .rl-crewfaces .ini { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: var(--rl-surface-sunken); display: grid; place-items: center; color: var(--rl-text-muted); font: var(--rl-text-body-medium); }
+.rl-crewfaces .nm { font: var(--rl-text-body-sm); color: var(--rl-text-secondary); max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 /* Calendar days as drop targets: each cell is wrapped so it can take a dragged run and carry a remove button. */
 .rl-cal .cellwrap { position: relative; display: flex; flex-direction: column; min-width: 0; }
 .rl-cal .cellwrap > .cell { flex: 1; }

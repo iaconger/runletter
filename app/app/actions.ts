@@ -102,3 +102,13 @@ export async function unscheduleRunAction(id: string) {
   await db.unscheduleRun(id);
   revalidatePath("/app", "layout");
 }
+
+/** Be listed on a creator's page, or not. On by default; this is the way out. */
+export async function setListedAction(formData: FormData) {
+  const listed = String(formData.get("listed") ?? "") === "on";
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  await supabase.from("profiles").update({ list_publicly: listed }).eq("id", user.id);
+  revalidatePath("/app", "layout");
+}

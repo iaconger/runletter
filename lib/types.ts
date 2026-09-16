@@ -124,6 +124,7 @@ export const Profile = z.object({
   /** Strava athlete totals, when connected. Shape mirrors lib/integrations/strava StravaStats. */
   stravaStats: z.unknown().nullable().default(null),
   stravaGear: z.unknown().nullable().default(null),
+  listPublicly: z.boolean().default(true),
   /** Miles or kilometres. Display only: everything is stored metric. */
   units: z.enum(["km", "mi"]).default("km"),
 });
