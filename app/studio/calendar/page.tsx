@@ -16,12 +16,31 @@ export default async function StudioCalendar({ searchParams }: { searchParams: P
   const [me, programs] = isConfigured() ? await Promise.all([getMyProfile(), listMyPrograms()]) : [null, []];
   const letter = programs.find((x) => x.isLetter) ?? null;
   const program = (p ? programs.find((x) => x.id === p) : null) ?? letter ?? programs[0] ?? null;
-  if (!me || !program) {
+  if (!me) {
     return (
       <main className="rl-page rl-stack" style={{ gap: "var(--rl-space-5)" }}>
         <h1 className="t-display-lg" style={{ margin: 0 }}>Calendar</h1>
-        <p className="c-secondary" style={{ margin: 0 }}>Start your Letter and the weeks show up here with dates.</p>
-        <Link href="/studio" className="rl-btn rl-btn-primary" style={{ alignSelf: "flex-start" }}>Start your Letter</Link>
+        <p className="c-secondary" style={{ margin: 0 }}>Sign in to see your weeks.</p>
+      </main>
+    );
+  }
+  // No Letter yet: still show your own running, so the calendar is never an empty promise.
+  if (!program) {
+    const from0 = mondayOf(toISODate(addDays(today, -35)));
+    const to0 = toISODate(addDays(today, 13));
+    const mine = await listExtras(me.id, from0, to0);
+    const rows = buildWeeks({ from: from0, weeks: 8, doneIds: new Set(), extras: mine, units: me.units, hrefFor: () => undefined });
+    return (
+      <main className="rl-page rl-wide rl-stack" style={{ maxWidth: "calc(1100px + 2 * var(--rl-gutter))", gap: "var(--rl-space-5)" }}>
+        <div className="rl-stack" style={{ gap: 2 }}>
+          <span className="t-label c-muted">Your running</span>
+          <h1 className="t-display-lg" style={{ margin: 0 }}>Calendar</h1>
+        </div>
+        <Calendar weeks={rows} today={today} />
+        <div className="rl-connect-prompt">
+          <span className="t-body-sm">Start your Letter and your weeks lay over this.</span>
+          <Link href="/studio" className="rl-btn rl-btn-primary rl-btn-sm">Start your Letter</Link>
+        </div>
       </main>
     );
   }
@@ -30,10 +49,10 @@ export default async function StudioCalendar({ searchParams }: { searchParams: P
   const issues = program.isLetter ? await listIssues(program.id) : [];
   const supabase = await createClient();
   const { data: comps } = await supabase.from("completions").select("program_day_id, enrollments!inner(follower_id)").eq("enrollments.follower_id", me.id);
-  const from = mondayOf(start < toISODate(addDays(today, -28)) ? start : toISODate(addDays(today, -28)));
+  const from = mondayOf(start < toISODate(addDays(today, -35)) ? start : toISODate(addDays(today, -35)));
   const end = toISODate(addDays(start, program.weeks * 7 - 1));
   const nWeeks = Math.ceil((addDays(end, 0).getTime() - addDays(from, 0).getTime()) / (7 * 86400000)) + 1;
-  const extras = await listExtras(me.id, from, end);
+  const extras = await listExtras(me.id, from, end > today ? end : today);
   const weeks = buildWeeks({
     from, weeks: nWeeks, units: me.units, program: { program, start }, doneIds: new Set((comps ?? []).map((c) => c.program_day_id)), extras,
     hrefFor: (_id, _date, week, day) => (week ? `/studio/programs/${program.id}?week=${week}&day=${day}` : undefined),

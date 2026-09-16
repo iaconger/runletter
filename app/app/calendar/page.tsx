@@ -21,13 +21,16 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 const fmtDate = (iso: string) => `${MONTHS[Number(iso.slice(5, 7)) - 1]} ${Number(iso.slice(8, 10))}`;
 const hms = (s: number) => (s >= 3600 ? `${Math.floor(s / 3600)}h ${String(Math.round((s % 3600) / 60)).padStart(2, "0")}m` : `${Math.round(s / 60)}m`);
 
-export default async function CalendarPage() {
+export default async function CalendarPage({ searchParams }: { searchParams: Promise<{ from?: string }> }) {
+  const { from: fromParam } = await searchParams;
   const today = toISODate(new Date());
   const configured = isConfigured();
   const me = configured ? await getMyProfile() : null;
   const units = me?.units ?? "km";
   let cal = configured ? await getMyCalendar(today) : null;
-  const from = mondayOf(toISODate(addDays(today, -35)));
+  // Five weeks back by default; ?from= pages further into your history, as far back as Strava gave us.
+  const defaultFrom = mondayOf(toISODate(addDays(today, -35)));
+  const from = fromParam && /^\d{4}-\d{2}-\d{2}$/.test(fromParam) ? mondayOf(fromParam) : defaultFrom;
   let sample = false;
   if (!configured) {
     sample = true;
@@ -35,7 +38,8 @@ export default async function CalendarPage() {
     cal = { program: sampleProgram, creator: sampleCreator, enrollmentId: "x", start, currentWeek: 3, doneIds: new Set(sampleProgram.days.filter((x) => x.week === 3 && sampleCompletedDays.has(x.day)).map((x) => x.id)), extras: [], sentWeeks: new Set([1, 2, 3]) };
   }
   const progEnd = cal ? toISODate(addDays(cal.start, cal.program.weeks * 7 - 1)) : null;
-  const to = progEnd && progEnd > today ? progEnd : toISODate(addDays(today, 13));
+  const paging = from < defaultFrom;
+  const to = paging ? toISODate(addDays(from, 55)) : progEnd && progEnd > today ? progEnd : toISODate(addDays(today, 13));
   const weeks = Math.ceil((addDays(to, 0).getTime() - addDays(from, 0).getTime()) / (7 * 86400000)) + 1;
   const extras = sample
     ? [{ id: "e1", date: toISODate(addDays(today, -2)), name: "Lunch loop", distanceM: 5200, durationS: 1700, sportType: "Run", avgPaceS: 327, elevationM: 40, avgHr: 148, kudos: 3, polyline: null, stravaActivityId: null }, { id: "e2", date: toISODate(addDays(today, -9)), name: "Sunday spin", distanceM: 32000, durationS: 4100, sportType: "Ride", avgPaceS: null, elevationM: 210, avgHr: 132, kudos: 5, polyline: null, stravaActivityId: null }]
@@ -96,7 +100,11 @@ export default async function CalendarPage() {
       <section className="rl-stack" style={{ gap: "var(--rl-space-3)" }}>
         <h2 className="t-title" style={{ margin: 0 }}>Your calendar</h2>
         <Calendar weeks={shown} today={today} currentWeek={cal?.currentWeek} schedule={me ? scheduleRunAction : undefined} unschedule={me ? unscheduleRunAction : undefined} />
-        <span className="rl-help">Colour is the run type. A tick is done. The small numbers are your Strava.</span>
+        <div className="rl-between">
+          <Link href={`/app/calendar?from=${toISODate(addDays(from, -28))}`} className="rl-btn rl-btn-ghost rl-btn-sm">← Earlier</Link>
+          <span className="rl-help">Colour is the run type. A tick is done. The small numbers are your Strava.</span>
+          {paging ? <Link href="/app/calendar" className="rl-btn rl-btn-ghost rl-btn-sm">Back to now →</Link> : <span />}
+        </div>
       </section>
 
       {follows.length > 0 ? (
