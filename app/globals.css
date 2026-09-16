@@ -899,6 +899,12 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
   .rl-cal a.cell:hover { background: var(--run-soft, var(--rl-surface-sunken)); border-color: var(--rl-text-secondary); }
 }
 
+/* The wait, made visible: a small ring that turns while a server action runs. */
+.rl-spinner { display: inline-block; width: 12px; height: 12px; margin-right: 7px; vertical-align: -1px; border-radius: 50%; border: 2px solid currentColor; border-top-color: transparent; animation: rl-spin 700ms linear infinite; }
+@keyframes rl-spin { to { transform: rotate(360deg); } }
+.rl-btn[aria-busy="true"] { opacity: .75; cursor: progress; }
+@media (prefers-reduced-motion: reduce) { .rl-spinner { animation-duration: 2s; } }
+
 /* Calendar days as drop targets: each cell is wrapped so it can take a dragged run and carry a remove button. */
 .rl-cal .cellwrap { position: relative; display: flex; flex-direction: column; min-width: 0; }
 .rl-cal .cellwrap > .cell { flex: 1; }

@@ -7,7 +7,10 @@ import { syncAndNote } from "@/lib/integrations/strava";
 export function refreshStravaInBackground(userId: string, lastSyncAt: string | null | undefined, maxAgeMin = 30) {
   const age = lastSyncAt ? Date.now() - new Date(lastSyncAt).getTime() : Number.POSITIVE_INFINITY;
   if (age < maxAgeMin * 60_000) return false;
-  after(async () => { await syncAndNote(userId, 30); });
+  // Everything already synced stays in the database; this only asks Strava for the days since the last pull
+  // (with two days of overlap, so an activity edited after the fact is picked up).
+  const days = Number.isFinite(age) ? Math.min(90, Math.max(3, Math.ceil(age / 86_400_000) + 2)) : 90;
+  after(async () => { await syncAndNote(userId, days); });
   return true;
 }
 

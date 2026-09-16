@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { garminEnabled } from "@/lib/integrations/garmin";
 import { stravaEnabled } from "@/lib/integrations/strava";
 import { syncStravaAction } from "@/app/app/actions";
+import { SyncButton } from "./SyncButton";
 
 type Provider = "strava" | "garmin" | "coros";
 
@@ -94,7 +95,7 @@ function Row({ name, role, detail, connected, action, back, provider, problem }:
         <span className="rl-row" style={{ gap: 4 }}>
           {provider === "strava" && (
             <form action={syncStravaAction}>
-              <button type="submit" className="rl-btn rl-btn-secondary rl-btn-sm">Sync last 90 days</button>
+              <SyncButton />
             </form>
           )}
           <form action="/api/connect/disconnect" method="post">
