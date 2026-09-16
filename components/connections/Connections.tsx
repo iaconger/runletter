@@ -10,7 +10,7 @@ type Provider = "strava" | "garmin" | "coros";
 export async function Connections({ back, notice }: { back: string; notice?: { connected?: string; error?: string } }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: rows } = user ? await supabase.from("connections").select("provider, external_id, created_at").eq("user_id", user.id) : { data: [] };
+  const { data: rows } = user ? await supabase.from("connections").select("provider, external_id, created_at, last_sync_at, last_sync_count, last_sync_error").eq("user_id", user.id) : { data: [] };
   const has = (p: Provider) => rows?.find((r) => r.provider === p);
   const { data: pushes } = user ? await supabase.from("workout_pushes").select("status").eq("user_id", user.id) : { data: [] };
   const queued = pushes?.filter((p) => p.status === "queued").length ?? 0;
@@ -28,7 +28,8 @@ export async function Connections({ back, notice }: { back: string; notice?: { c
       <Row
         name="Strava"
         role=""
-        detail={has("strava") ? "Finished runs mark the day done. Off-plan runs show on your week." : "Marks finished runs done."}
+        detail={stravaDetail(has("strava"))}
+        problem={has("strava")?.last_sync_error ?? undefined}
         connected={!!has("strava")}
         action={stravaEnabled() ? { href: `/api/connect/strava?back=${encodeURIComponent(back)}`, label: "Connect Strava" } : { disabled: "Needs Strava API keys on the server" }}
         back={back}
@@ -62,9 +63,19 @@ export async function Connections({ back, notice }: { back: string; notice?: { c
   );
 }
 
+/** What the Strava row says under the name: when it last ran, how much it found, or why it did not. */
+function stravaDetail(row: { last_sync_at?: string | null; last_sync_count?: number | null; last_sync_error?: string | null } | undefined) {
+  if (!row) return "Marks finished runs done and brings your history in.";
+  if (row.last_sync_error) return "Last sync did not finish.";
+  if (!row.last_sync_at) return "Connected. Sync to pull your last 90 days.";
+  const mins = Math.round((Date.now() - new Date(row.last_sync_at).getTime()) / 60000);
+  const when = mins < 2 ? "just now" : mins < 60 ? `${mins} minutes ago` : mins < 2880 ? `${Math.round(mins / 60)} hours ago` : `${Math.round(mins / 1440)} days ago`;
+  return `Synced ${when}${row.last_sync_count != null ? ` · ${row.last_sync_count} activities` : ""}.`;
+}
+
 const ICON: Partial<Record<Provider, string>> = { strava: "/brand/partners/strava-96.png" };
 
-function Row({ name, role, detail, connected, action, back, provider }: { name: string; role: string; detail: string; connected: boolean; action: { href: string; label: string } | { disabled: string }; back: string; provider: Provider }) {
+function Row({ name, role, detail, connected, action, back, provider, problem }: { name: string; role: string; detail: string; connected: boolean; action: { href: string; label: string } | { disabled: string }; back: string; provider: Provider; problem?: string }) {
   const icon = ICON[provider];
   return (
     <div className="rl-between" style={{ gap: "var(--rl-space-4)", alignItems: "flex-start", borderTop: "var(--rl-border-hairline) solid var(--rl-hairline)", paddingTop: "var(--rl-space-3)" }}>
@@ -77,6 +88,7 @@ function Row({ name, role, detail, connected, action, back, provider }: { name: 
           {connected && <span className="rl-chip rl-chip-success" style={{ fontSize: 11 }}>Connected</span>}
         </span>
         <span className="rl-help">{detail}</span>
+        {problem && <span className="rl-help" role="alert" style={{ color: "var(--rl-danger, #b3261e)" }}>{problem}</span>}
       </div>
       {connected ? (
         <span className="rl-row" style={{ gap: 4 }}>

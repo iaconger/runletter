@@ -40,6 +40,21 @@ export async function stravaExchange(code: string): Promise<TokenResponse> {
   return r.json();
 }
 
+/** Record how the last sync went on the connection row, so both sides can show it instead of failing quietly. */
+export async function noteSync(userId: string, patch: { count?: number; error?: string | null }) {
+  const admin = createAdminClient();
+  if (!admin) return;
+  await admin.from("connections").update({
+    last_sync_at: new Date().toISOString(),
+    ...(patch.count != null ? { last_sync_count: patch.count } : {}),
+    last_sync_error: patch.error ?? null,
+  }).eq("user_id", userId).eq("provider", "strava");
+}
+
+/** Strava keeps one grant per athlete per app, so connecting the same Strava to a second RunLetter account
+ *  signs the first one out. Say that, rather than leaving an empty screen. */
+const SIGNED_OUT = "Strava signed this connection out. If you connected the same Strava to another RunLetter account, only the newest one stays live. Reconnect here.";
+
 /** Returns a valid access token for the user, refreshing and persisting if it is about to expire. */
 export async function stravaAccessToken(userId: string): Promise<string | null> {
   const admin = createAdminClient();
@@ -53,7 +68,10 @@ export async function stravaAccessToken(userId: string): Promise<string | null> 
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ client_id: process.env.STRAVA_CLIENT_ID, client_secret: process.env.STRAVA_CLIENT_SECRET, grant_type: "refresh_token", refresh_token: c.refresh_token }),
   });
-  if (!r.ok) return null;
+  if (!r.ok) {
+    await noteSync(userId, { error: SIGNED_OUT });
+    return null;
+  }
   const t = (await r.json()) as TokenResponse;
   await admin.from("connections").update({ access_token: t.access_token, refresh_token: t.refresh_token, expires_at: new Date(t.expires_at * 1000).toISOString() }).eq("user_id", userId).eq("provider", "strava");
   return t.access_token;
@@ -131,7 +149,7 @@ export async function recordStravaActivity(athleteId: string, activityId: number
 export async function syncRecentStrava(userId: string, days = 90): Promise<{ done: number; extra: number; skipped: number }> {
   const out = { done: 0, extra: 0, skipped: 0 };
   const token = await stravaAccessToken(userId);
-  if (!token) return out;
+  if (!token) throw new Error(SIGNED_OUT);
   const after = Math.floor((Date.now() - days * 86400000) / 1000);
   const list: Activity[] = [];
   for (let page = 1; page <= 3; page++) {
@@ -199,4 +217,18 @@ async function recordActivity(userId: string, a: Activity): Promise<"done" | "ex
   );
   track("run_marked_done", { source: "strava", program_day_id: hit.program_day_id }, c.user_id);
   return "done";
+}
+
+/** syncRecentStrava, with the outcome written to the connection so the app can show it. Never throws. */
+export async function syncAndNote(userId: string, days = 90): Promise<{ ok: boolean; count: number; error?: string }> {
+  try {
+    const r = await syncRecentStrava(userId, days);
+    const count = r.done + r.extra;
+    await noteSync(userId, { count, error: null });
+    return { ok: true, count };
+  } catch (e) {
+    const error = e instanceof Error ? e.message : typeof e === "object" && e && "message" in e ? String((e as { message: unknown }).message) : String(e);
+    await noteSync(userId, { error });
+    return { ok: false, count: 0, error };
+  }
 }

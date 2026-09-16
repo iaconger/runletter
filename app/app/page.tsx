@@ -10,6 +10,7 @@ import { realRuns } from "@/lib/db/explore";
 import { getMyProfile, getMyWeek, listExtras, listScheduled } from "@/lib/db/programs";
 import type { StravaStats } from "@/lib/integrations/strava";
 import { createClient, isConfigured } from "@/lib/supabase/server";
+import { ago, refreshStravaInBackground } from "@/lib/integrations/autosync";
 import { SAMPLE_EXPLORE, rankRuns } from "@/lib/explore";
 import { mondayOf } from "@/lib/calendar";
 import { RUN_TYPE_LABEL, addDays, dayDurationS, toISODate } from "@/lib/types";
@@ -34,8 +35,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ k
   const units = me?.units ?? "km";
   const U = distanceLabel(units);
   const supabase = configured ? await createClient() : null;
-  const { data: conns } = me && supabase ? await supabase.from("connections").select("provider").eq("user_id", me.id) : { data: [] };
-  const hasStrava = (conns ?? []).some((c) => c.provider === "strava");
+  const { data: conns } = me && supabase ? await supabase.from("connections").select("provider, last_sync_at, last_sync_error").eq("user_id", me.id) : { data: [] };
+  const strava = (conns ?? []).find((c) => c.provider === "strava") ?? null;
+  const hasStrava = !!strava;
+  // Nothing polls Strava for us, so a stale page pulls again once it has been sent.
+  if (me && strava) refreshStravaInBackground(me.id, strava.last_sync_at);
   const firstName = me?.displayName?.split(" ")[0];
   const stats = (me?.stravaStats ?? null) as StravaStats | null;
 
@@ -120,6 +124,14 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ k
             <li><span className="k">Climbed, 4 weeks</span><span className="v">{stats ? fmtClimb(stats.recent.elevationM, units) : "–"}<small> {climbLabel(units)}</small></span></li>
           </ul>
         </section>
+      )}
+
+      {hasStrava && (
+        <span className="rl-help" style={{ marginTop: "calc(-1 * var(--rl-space-4))" }}>
+          {strava!.last_sync_error
+            ? <>Strava: {strava!.last_sync_error} <Link href="/app/you#connections">Fix it</Link></>
+            : <>From Strava, updated {ago(strava!.last_sync_at) ?? "on connect"}. <Link href="/app/you#connections">Sync now</Link></>}
+        </span>
       )}
 
       {day && day.kind === "run" && (

@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { publicOrigin } from "@/lib/origin";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { stravaExchange, syncRecentStrava } from "@/lib/integrations/strava";
+import { stravaExchange, syncAndNote } from "@/lib/integrations/strava";
 import { track } from "@/lib/analytics";
 
 export async function GET(request: NextRequest) {
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     if (error) throw error;
     track("connect_strava_completed", { athlete_id: t.athlete ? String(t.athlete.id) : null }, user.id);
     // Bring in the last three months and the athlete totals so the app is theirs on day one. Best effort.
-    try { await syncRecentStrava(user.id, 90); } catch (e) { console.error("strava sync", e); }
+    await syncAndNote(user.id, 90);
   } catch (e) {
     return fail(e instanceof Error ? e.message : "Could not connect Strava");
   }

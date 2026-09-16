@@ -30,11 +30,11 @@ export async function savePaceAction(formData: FormData) {
 }
 
 export async function syncStravaAction() {
-  const { syncRecentStrava } = await import("@/lib/integrations/strava");
+  const { syncAndNote } = await import("@/lib/integrations/strava");
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
-  try { await syncRecentStrava(user.id, 90); } catch (e) { console.error("strava sync", e); }
+  await syncAndNote(user.id, 90);
   revalidatePath("/app", "layout");
   revalidatePath("/studio", "layout");
 }

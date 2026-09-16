@@ -4,6 +4,7 @@ import Link from "next/link";
 import { RouteSketch } from "@/components/run/RouteSketch";
 import { getMyProfile, listExtras, listMyRunners, listMyPrograms, listIssues } from "@/lib/db/programs";
 import { createClient, isConfigured } from "@/lib/supabase/server";
+import { ago, refreshStravaInBackground } from "@/lib/integrations/autosync";
 import type { StravaStats } from "@/lib/integrations/strava";
 import { climbLabel, distanceLabel, fmtClimb, fmtDistance, fmtPace, paceLabel, toDistance } from "@/lib/units";
 import { mondayOf } from "@/lib/calendar";
@@ -44,8 +45,10 @@ export default async function Overview() {
     ? await Promise.all([listExtras(me.id, toISODate(addDays(weekStart, -77)), today), listMyRunners(today).catch(() => []), listMyPrograms().catch(() => [])])
     : [sampleActs(today), [], []];
   const supabase = configured ? await createClient() : null;
-  const { data: conns } = supabase ? await supabase.from("connections").select("provider").eq("user_id", me.id).eq("provider", "strava") : { data: [{ provider: "strava" }] };
-  const hasStrava = (conns ?? []).length > 0;
+  const { data: conns } = supabase ? await supabase.from("connections").select("provider, last_sync_at, last_sync_error").eq("user_id", me.id).eq("provider", "strava") : { data: [{ provider: "strava", last_sync_at: null, last_sync_error: null }] };
+  const strava = (conns ?? [])[0] ?? null;
+  const hasStrava = !!strava;
+  if (configured && strava) refreshStravaInBackground(me.id, strava.last_sync_at);
 
   const thisWeek = acts.filter((x) => x.date >= weekStart && RUNS.includes(x.sportType));
   const weekDist = toDistance(thisWeek.reduce((a, x) => a + (x.distanceM ?? 0), 0), units);
@@ -114,6 +117,14 @@ export default async function Overview() {
             <li><span className="k">Climbed, 4 weeks</span><span className="v">{stats ? fmtClimb(stats.recent.elevationM, units) : "–"}<small> {climbLabel(units)}</small></span></li>
           </ul>
         </section>
+      )}
+
+      {hasStrava && (
+        <span className="rl-help" style={{ marginTop: "calc(-1 * var(--rl-space-4))" }}>
+          {strava!.last_sync_error
+            ? <>Strava: {strava!.last_sync_error} <Link href="/studio/page#connections">Fix it</Link></>
+            : <>From Strava, updated {ago(strava!.last_sync_at) ?? "on connect"}. <Link href="/studio/page#connections">Sync now</Link></>}
+        </span>
       )}
 
       {hasStrava && (

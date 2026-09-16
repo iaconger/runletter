@@ -95,9 +95,9 @@ export type Database = {
         ];
       };
       connections: {
-        Row: { access_token: string | null; created_at: string; expires_at: string | null; external_id: string | null; provider: Database["public"]["Enums"]["connection_provider"]; refresh_token: string | null; scope: string | null; updated_at: string; user_id: string };
-        Insert: { access_token?: string | null; created_at?: string; expires_at?: string | null; external_id?: string | null; provider: Database["public"]["Enums"]["connection_provider"]; refresh_token?: string | null; scope?: string | null; updated_at?: string; user_id: string };
-        Update: { access_token?: string | null; created_at?: string; expires_at?: string | null; external_id?: string | null; provider?: Database["public"]["Enums"]["connection_provider"]; refresh_token?: string | null; scope?: string | null; updated_at?: string; user_id?: string };
+        Row: { access_token: string | null; created_at: string; expires_at: string | null; external_id: string | null; provider: Database["public"]["Enums"]["connection_provider"]; refresh_token: string | null; scope: string | null; updated_at: string; user_id: string; last_sync_at: string | null; last_sync_count: number | null; last_sync_error: string | null };
+        Insert: { access_token?: string | null; created_at?: string; expires_at?: string | null; external_id?: string | null; provider: Database["public"]["Enums"]["connection_provider"]; refresh_token?: string | null; scope?: string | null; updated_at?: string; user_id: string; last_sync_at?: string | null; last_sync_count?: number | null; last_sync_error?: string | null };
+        Update: { access_token?: string | null; created_at?: string; expires_at?: string | null; external_id?: string | null; provider?: Database["public"]["Enums"]["connection_provider"]; refresh_token?: string | null; scope?: string | null; updated_at?: string; user_id?: string; last_sync_at?: string | null; last_sync_count?: number | null; last_sync_error?: string | null };
         Relationships: [
           { foreignKeyName: "connections_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
         ];
