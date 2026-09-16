@@ -1,4 +1,4 @@
-// Subscribe (Letter, monthly) or Buy (plan, once). Server component: decides free / paid / coming soon and
+// Subscribe (a creator's week, monthly) or Buy (plan, once). Server component: decides free / paid / coming soon and
 // renders one button. Free stays free: no Stripe account on the creator, or a price of 0, joins at once.
 import Link from "next/link";
 import { joinAction } from "@/app/app/actions";
@@ -22,7 +22,7 @@ export function priceLabel(program: Props["program"], creator: Props["creator"])
 }
 
 export function JoinButton({ program, creator, access, back, className = "rl-btn rl-btn-primary rl-btn-lg", example }: Props) {
-  const verb = program.isLetter ? "Subscribe" : program.access === "creator_sub" ? "Subscribe" : "Buy";
+  const verb = program.isLetter ? "Follow" : program.access === "creator_sub" ? "Subscribe" : "Buy";
   const paid = (program.priceCents ?? 0) > 0 && creator.stripeChargesEnabled;
   const label = paid ? `${verb} · ${priceLabel(program, creator)}` : `${verb} · free`;
   if (example) return <Link href="/signup" className={className}>{label}</Link>;

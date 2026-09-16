@@ -49,11 +49,10 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
   const rows = buildWeeks({
     from, weeks,
     program: cal ? { program: cal.program, start: cal.start } : null,
-    doneIds: cal?.doneIds ?? new Set(), extras, scheduled, sentWeeks: cal?.sentWeeks, hideUnsent: true, units,
+    doneIds: cal?.doneIds ?? new Set(), extras, scheduled, units,
     hrefFor: (dayId, _date, _w, _d, x) => (dayId ? `/app/run/${dayId}` : x && x.id.length > 4 ? `/app/log/${x.id}` : undefined),
-    stampFor: (w) => (cal?.program.isLetter ? (cal.sentWeeks.has(w) ? "sent" : "draft") : undefined),
   });
-  const shown = rows.filter((w) => !(cal?.program.isLetter && w.week > 0 && !cal.sentWeeks.has(w.week) && w.week !== (cal.currentWeek ?? 0) + 1));
+  const shown = rows;
 
   // This week from Strava, top of the page: what you actually did, before anything anyone planned for you.
   const weekStart = mondayOf(today);

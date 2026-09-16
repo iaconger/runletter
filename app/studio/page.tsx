@@ -1,6 +1,6 @@
-// Studio home. Two things a creator makes: the Letter (one, ongoing, subscription) and Plans (many, fixed, bought once).
+// Studio home. Your week, live as you write it, plus plans (fixed length, bought once).
 import Link from "next/link";
-import { getMyProfile, listMyPrograms, listIssues, listExtras } from "@/lib/db/programs";
+import { getMyProfile, listMyPrograms, listExtras } from "@/lib/db/programs";
 import { shareRunAction } from "@/app/studio/actions";
 import { RouteSketch } from "@/components/run/RouteSketch";
 import { climbLabel, distanceLabel, fmtClimb, fmtDistance, fmtPace, paceLabel } from "@/lib/units";
@@ -27,12 +27,9 @@ export default async function StudioHome({ searchParams }: { searchParams: Promi
   const needsHandle = profile && profile.handle.startsWith("u_");
   const letter = programs.find((p) => p.isLetter) ?? null;
   const plans = programs.filter((p) => !p.isLetter);
-  const issues = letter ? await listIssues(letter.id) : [];
   const today = new Date();
   const thisWeek = letter?.fixedStartDate ? weekOfDate(letter.fixedStartDate, today, letter.weeks) : null;
-  const thisIssue = thisWeek ? issues.find((i) => i.week === thisWeek) : undefined;
   const thisWeekDays = letter && thisWeek ? letter.days.filter((d) => d.week === thisWeek).length : 0;
-  const sent = issues.filter((i) => i.sentAt).length;
   const firstName = profile?.displayName?.split(" ")[0];
   // The creator's own running, from Strava: the raw material for the week.
   const todayIso = toISODate(today);
@@ -74,8 +71,8 @@ export default async function StudioHome({ searchParams }: { searchParams: Promi
         </div>
       )}
 
-      {/* ---------- the Letter ---------- */}
-      <section className="rl-stack" style={{ gap: "var(--rl-space-3)" }} aria-label="Your Letter">
+      {/* ---------- your week ---------- */}
+      <section className="rl-stack" style={{ gap: "var(--rl-space-3)" }} aria-label="Your week">
         <div className="rl-between" style={{ alignItems: "baseline" }}>
           <div className="rl-stack" style={{ gap: 2 }}>
             <span className="t-label c-muted">Your week</span>
@@ -96,23 +93,20 @@ export default async function StudioHome({ searchParams }: { searchParams: Promi
                 <span className={STATUS_CHIP[letter.status]}>{letter.status === "published" ? "Open" : letter.status}</span>
               </div>
               <span className="c-secondary">
-                {thisIssue?.sentAt ? "Sent." : thisWeekDays === 0 ? "Empty." : thisWeekDays < 7 ? `${thisWeekDays} of 7 days.` : "Ready to send."}
+                {thisWeekDays === 0 ? "Nothing in it yet." : thisWeekDays < 7 ? `${thisWeekDays} of 7 days written.` : "All seven days written."}
               </span>
-              <div className="rl-row">
-                <span className="rl-stamp" data-state={thisIssue?.sentAt ? "sent" : thisIssue?.scheduledFor ? "scheduled" : "draft"}>{thisIssue?.sentAt ? "sent" : thisIssue?.scheduledFor ? "scheduled" : "draft"}</span>
-                <span className="rl-chip">{sent} week{sent === 1 ? "" : "s"} sent</span>
-              </div>
+              <span className="rl-help">Your followers see it as you write it. Nothing to send.</span>
             </div>
           </Link>
         ) : (
           <form action={startLetterAction} className="rl-lettercard">
             <div className="img"><Cover name="dawn-road" ratio={5 / 4} /></div>
             <div className="rl-stack" style={{ padding: "var(--rl-space-4)", gap: "var(--rl-space-3)" }}>
-              <span className="c-secondary">The runs you do, shared as a week. Subscribers get them on their watch. No race required.</span>
+              <span className="c-secondary">The runs you are doing, posted as a week. Followers see the shape of it; subscribers get it on their watch.</span>
               <div className="rl-row" style={{ alignItems: "stretch" }}>
                 <div className="rl-field" style={{ flex: 2, minWidth: 200 }}>
                   <label htmlFor="ltitle">Call it</label>
-                  <input id="ltitle" name="title" className="rl-input" placeholder={firstName ? `${firstName}'s Letter` : "My Letter"} maxLength={80} />
+                  <input id="ltitle" name="title" className="rl-input" placeholder={firstName ? `${firstName}'s week` : "My week"} maxLength={80} />
                 </div>
                 <div className="rl-field" style={{ flex: 1, minWidth: 140 }}>
                   <label htmlFor="lgoal">Mostly for</label>

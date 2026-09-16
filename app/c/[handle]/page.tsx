@@ -54,7 +54,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
             ) : example ? (
               <Link href="/signup" className={`rl-btn rl-btn-lg ${c.coverUrl ? "rl-btn-paper" : "rl-btn-ink"}`}>Subscribe · $7/mo</Link>
             ) : null}
-            {letter && <span className="rl-help" style={{ color: "inherit", opacity: 0.7 }}>{priceLabel(letter, c) === "Free" ? "The Letter, every week." : "Monthly. Cancel any time."}</span>}
+            {letter && <span className="rl-help" style={{ color: "inherit", opacity: 0.7 }}>{priceLabel(letter, c) === "Free" ? "A new week, every week." : "Monthly. Cancel any time."}</span>}
           </div>
           {Object.keys(c.links).length > 0 && (
             <div className="rl-row" style={{ gap: "var(--rl-space-2)" }}>

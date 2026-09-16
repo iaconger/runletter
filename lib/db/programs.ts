@@ -332,7 +332,7 @@ export type RunnerWeek = {
   todayDay: number;
   weekStart: string;
   done: Set<number>;
-  /** Weeks of a Letter are visible only once sent; plans are visible in full. */
+  /** Kept for callers; every week is live now, so this is always true. */
   sent: boolean;
   intro: string;
 };
@@ -355,11 +355,12 @@ export async function getMyWeek(today: string): Promise<RunnerWeek | null> {
   const dayIds = program.days.filter((d) => d.week === week).map((d) => d.id);
   const { data: comps } = dayIds.length ? await supabase.from("completions").select("program_day_id").eq("enrollment_id", enrol.id).in("program_day_id", dayIds) : { data: [] };
   const done = new Set((comps ?? []).map((c) => program.days.find((d) => d.id === c.program_day_id)?.day).filter((d): d is number => !!d));
-  let sent = true;
+  // Weeks are live the moment the creator writes them: no sending, no drafts. The intro line, if there is one,
+  // is the creator's word about the week.
+  const sent = true;
   let intro = "";
   if (program.isLetter) {
-    const { data: issue } = await supabase.from("letter_issues").select("sent_at, intro").eq("program_id", program.id).eq("week", week).maybeSingle();
-    sent = !!issue?.sent_at || program.creatorId === user.id;
+    const { data: issue } = await supabase.from("letter_issues").select("intro").eq("program_id", program.id).eq("week", week).maybeSingle();
     intro = issue?.intro ?? "";
   }
   return { program, creator, enrollmentId: enrol.id, week, todayDay, weekStart: toISODate(addDays(enrol.start_date, (week - 1) * 7)), done, sent, intro };
@@ -525,12 +526,8 @@ export async function getMyCalendar(today: string): Promise<RunnerCalendar | nul
     supabase.from("completions").select("program_day_id").eq("enrollment_id", enrol.id),
     listExtras(user.id, enrol.start_date, toISODate(addDays(enrol.start_date, program.weeks * 7 - 1))),
   ]);
-  let sentWeeks = new Set<number>();
-  if (program.isLetter) {
-    const { data: issues } = await supabase.from("letter_issues").select("week, sent_at").eq("program_id", program.id).not("sent_at", "is", null);
-    sentWeeks = new Set((issues ?? []).map((i) => i.week));
-    if (program.creatorId === user.id) sentWeeks = new Set(Array.from({ length: program.weeks }, (_, i) => i + 1));
-  }
+  // Every week of the program is visible; nothing waits to be sent.
+  const sentWeeks = new Set(Array.from({ length: program.weeks }, (_, i) => i + 1));
   return { program, creator, enrollmentId: enrol.id, start: enrol.start_date, currentWeek, doneIds: new Set((comps ?? []).map((c) => c.program_day_id)), extras, sentWeeks };
 }
 
