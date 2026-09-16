@@ -73,7 +73,11 @@ export async function stravaAccessToken(userId: string): Promise<string | null> 
     return null;
   }
   const t = (await r.json()) as TokenResponse;
-  await admin.from("connections").update({ access_token: t.access_token, refresh_token: t.refresh_token, expires_at: new Date(t.expires_at * 1000).toISOString() }).eq("user_id", userId).eq("provider", "strava");
+  // Strava keeps one grant per athlete per app, and every refresh rotates the token. If the same Strava is
+  // connected to more than one RunLetter account, they all have to carry the new pair or the others go dead.
+  const fresh = { access_token: t.access_token, refresh_token: t.refresh_token, expires_at: new Date(t.expires_at * 1000).toISOString(), last_sync_error: null };
+  if (c.external_id) await admin.from("connections").update(fresh).eq("provider", "strava").eq("external_id", c.external_id);
+  else await admin.from("connections").update(fresh).eq("user_id", userId).eq("provider", "strava");
   return t.access_token;
 }
 
@@ -159,14 +163,29 @@ export async function syncRecentStrava(userId: string, days = 90): Promise<{ don
     list.push(...chunk);
     if (chunk.length < 100) break;
   }
-  try { await syncStravaAthlete(userId); } catch (e) { console.error("strava athlete", e); }
-  for (const a of list) {
-    const res = await recordActivity(userId, a);
-    if (res === "done") out.done++;
-    else if (res === "extra") out.extra++;
-    else out.skipped++;
+  for (const u of await accountsOnSameAthlete(userId)) {
+    try { await syncStravaAthlete(u); } catch (e) { console.error("strava athlete", e); }
+    for (const a of list) {
+      const res = await recordActivity(u, a);
+      if (u !== userId) continue; // the count we report is this account's
+      if (res === "done") out.done++;
+      else if (res === "extra") out.extra++;
+      else out.skipped++;
+    }
+    if (u !== userId) await noteSync(u, { count: list.length, error: null });
   }
   return out;
+}
+
+/** Every RunLetter account connected to the same Strava athlete, this one first. */
+async function accountsOnSameAthlete(userId: string): Promise<string[]> {
+  const admin = createAdminClient();
+  if (!admin) return [userId];
+  const { data: mine } = await admin.from("connections").select("external_id").eq("user_id", userId).eq("provider", "strava").maybeSingle();
+  if (!mine?.external_id) return [userId];
+  const { data: rows } = await admin.from("connections").select("user_id").eq("provider", "strava").eq("external_id", mine.external_id);
+  const others = (rows ?? []).map((r) => r.user_id).filter((id) => id !== userId);
+  return [userId, ...others];
 }
 
 async function recordActivity(userId: string, a: Activity): Promise<"done" | "extra" | "not_a_run" | "no_user"> {

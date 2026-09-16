@@ -24,6 +24,11 @@ export async function GET(request: NextRequest) {
       { onConflict: "user_id,provider" },
     );
     if (error) throw error;
+    // Same Strava on another RunLetter account of yours: give it these tokens, the old pair is dead now.
+    if (t.athlete) {
+      await admin.from("connections").update({ access_token: t.access_token, refresh_token: t.refresh_token, expires_at: new Date(t.expires_at * 1000).toISOString(), last_sync_error: null })
+        .eq("provider", "strava").eq("external_id", String(t.athlete.id)).neq("user_id", user.id);
+    }
     track("connect_strava_completed", { athlete_id: t.athlete ? String(t.athlete.id) : null }, user.id);
     // Bring in the last three months and the athlete totals so the app is theirs on day one. Best effort.
     await syncAndNote(user.id, 90);
