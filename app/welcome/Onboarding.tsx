@@ -23,8 +23,8 @@ function usernameFrom(url: string | undefined): string {
   return url.replace(/^https?:\/\/(www\.)?[^/]+\//, "").replace(/^(athletes\/|@)/, "").replace(/\/.*$/, "");
 }
 
-type StepKey = "you" | "socials" | "running" | "photo" | "connect";
-const STEP_LABEL: Record<StepKey, string> = { you: "You", socials: "Socials", running: "Running", photo: "Photo", connect: "Connect" };
+type StepKey = "you" | "socials" | "running" | "photo" | "how" | "connect";
+const STEP_LABEL: Record<StepKey, string> = { you: "You", socials: "Socials", running: "Running", photo: "Photo", how: "How it works", connect: "Connect" };
 
 export function Onboarding({ profile, userId, next, role, startStep = "you", stravaConnected = false }: { profile: Profile; userId: string; next: string; role: "creator" | "runner"; startStep?: StepKey; stravaConnected?: boolean }) {
   const router = useRouter();
@@ -48,7 +48,7 @@ export function Onboarding({ profile, userId, next, role, startStep = "you", str
   const coverInput = useRef<HTMLInputElement>(null);
 
   // Runners get one extra screen: what they run for, days a week, 5K time. Skippable.
-  const steps: StepKey[] = isCreator ? ["you", "socials", "photo", "connect"] : ["you", "socials", "running", "photo", "connect"];
+  const steps: StepKey[] = isCreator ? ["you", "socials", "photo", "how", "connect"] : ["you", "socials", "running", "photo", "connect"];
   const after = (k: StepKey): StepKey => steps[Math.min(steps.indexOf(k) + 1, steps.length - 1)]!;
   const stepIndex = steps.indexOf(step);
 
@@ -197,8 +197,71 @@ export function Onboarding({ profile, userId, next, role, startStep = "you", str
 
           {error && <span className="rl-help" role="alert" style={{ color: "var(--rl-danger, #b3261e)" }}>{error}</span>}
           <div className="rl-row">
-            <button type="button" className="rl-btn rl-btn-primary rl-btn-lg" onClick={() => setStep("connect")} disabled={uploading !== null}>Continue</button>
-            <button type="button" className="rl-btn rl-btn-ghost rl-btn-lg" onClick={() => setStep("connect")}>Skip</button>
+            <button type="button" className="rl-btn rl-btn-primary rl-btn-lg" onClick={() => setStep(after("photo"))} disabled={uploading !== null}>Continue</button>
+            <button type="button" className="rl-btn rl-btn-ghost rl-btn-lg" onClick={() => setStep(after("photo"))}>Skip</button>
+          </div>
+        </div>
+      )}
+
+      {step === "how" && (
+        <div className="rl-stack" style={{ gap: "var(--rl-space-5)" }}>
+          <div className="rl-stack" style={{ gap: 4 }}>
+            <span className="t-label c-muted rl-kicker">How this works</span>
+            <h1 className="t-display-lg" style={{ margin: 0 }}>You post a week. People run it.</h1>
+          </div>
+
+          {/* What their page will look like, drawn from what they have entered so far. */}
+          <figure className="rl-preview" aria-label="What your page will look like">
+            <div className="shot">
+              <div className="hero">
+                <span className="rl-avatar" style={{ width: 40, height: 40 }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  {avatarUrl ? <img src={avatarUrl} alt="" /> : <span className="ini">{(name || handle || "R")[0]?.toUpperCase()}</span>}
+                </span>
+                <span className="rl-stack" style={{ gap: 1 }}>
+                  <b>{name || "Your name"}</b>
+                  <i>runletter.com/c/{handle || "yourhandle"}</i>
+                </span>
+                <span className="pill">Follow · $7/mo</span>
+              </div>
+              <span className="lbl">This week</span>
+              <ul className="wk">
+                {[["Mon", "Easy", "easy"], ["Tue", "Tempo", "tempo"], ["Wed", "Rest", "rest"], ["Thu", "Intervals", "intervals"], ["Fri", "Easy", "easy"], ["Sat", "Rest", "rest"], ["Sun", "Long", "long"]].map(([d, w, k]) => (
+                  <li key={d} data-run={k}><span>{d}</span><b>{w}</b></li>
+                ))}
+              </ul>
+              <span className="lbl">Running with you</span>
+              <span className="faces" aria-hidden>{Array.from({ length: 6 }, (_, i) => <i key={i} />)}</span>
+            </div>
+            <figcaption className="rl-help">Your page, once you have written a week. Everyone sees the shape; subscribers get the runs.</figcaption>
+          </figure>
+
+          <ol className="rl-how">
+            <li>
+              <span className="n">1</span>
+              <span className="rl-stack" style={{ gap: 2 }}>
+                <b>Write your week</b>
+                <span className="c-secondary">Seven days, a tap each. It is live as you write it, and your own Strava runs are one tap to reuse.</span>
+              </span>
+            </li>
+            <li>
+              <span className="n">2</span>
+              <span className="rl-stack" style={{ gap: 2 }}>
+                <b>Set your price</b>
+                <span className="c-secondary">Your subscription is monthly and you choose what it costs, or make it free. You set it on Your page once Stripe is connected, and you can change it whenever you like.</span>
+              </span>
+            </li>
+            <li>
+              <span className="n">3</span>
+              <span className="rl-stack" style={{ gap: 2 }}>
+                <b>Plans are a separate thing</b>
+                <span className="c-secondary">A plan is a fixed block, say eight weeks to a 10K, bought once at its own price. Different from the subscription, sold on its own, and entirely optional. Ignore it until you want it.</span>
+              </span>
+            </li>
+          </ol>
+
+          <div className="rl-row">
+            <button type="button" className="rl-btn rl-btn-primary rl-btn-lg" onClick={() => setStep("connect")}>Makes sense</button>
           </div>
         </div>
       )}

@@ -1071,6 +1071,31 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
   .rl-publicweek .nt { grid-column: 2 / -1; white-space: normal; }
 }
 
+/* Onboarding for creators: what your page will look like, and the three things to know. */
+.rl-preview { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.rl-preview .shot { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: var(--rl-radius-lg); border: var(--rl-border-hairline) solid var(--rl-hairline); background: var(--rl-surface); }
+.rl-preview .hero { display: flex; align-items: center; gap: 10px; }
+.rl-preview .hero b { font: var(--rl-text-body-medium); }
+.rl-preview .hero i { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); color: var(--rl-text-muted); font-style: normal; }
+.rl-preview .hero .ini { display: grid; place-items: center; height: 100%; color: var(--rl-text-muted); }
+.rl-preview .pill { margin-left: auto; font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; padding: 5px 10px; border-radius: 999px; background: var(--rl-text); color: var(--rl-bg); white-space: nowrap; }
+.rl-preview .lbl { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; color: var(--rl-text-muted); }
+.rl-preview .wk { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.rl-preview .wk > li { --run-ink: var(--rl-hairline); display: flex; flex-direction: column; gap: 3px; padding: 7px 6px; border-radius: var(--rl-radius-sm, 6px); background: var(--rl-surface-sunken); border-top: 3px solid var(--run-ink); }
+.rl-preview .wk > li[data-run="easy"] { --run-ink: var(--rl-run-easy); }
+.rl-preview .wk > li[data-run="tempo"] { --run-ink: var(--rl-run-tempo); }
+.rl-preview .wk > li[data-run="intervals"] { --run-ink: var(--rl-run-intervals); }
+.rl-preview .wk > li[data-run="long"] { --run-ink: var(--rl-run-long); }
+.rl-preview .wk > li > span { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); color: var(--rl-text-muted); }
+.rl-preview .wk > li > b { font: var(--rl-text-body-sm); font-weight: 500; }
+.rl-preview .faces { display: flex; gap: 5px; }
+.rl-preview .faces > i { width: 22px; height: 22px; border-radius: 50%; background: var(--rl-surface-sunken); border: var(--rl-border-hairline) solid var(--rl-hairline); }
+
+.rl-how { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--rl-space-3); }
+.rl-how > li { display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start; }
+.rl-how .n { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--rl-text); color: var(--rl-bg); font: var(--rl-text-body-sm); font-weight: 600; }
+.rl-how b { font: var(--rl-text-body-medium); }
+
 /* Calendar days as drop targets: each cell is wrapped so it can take a dragged run and carry a remove button. */
 .rl-cal .cellwrap { position: relative; display: flex; flex-direction: column; min-width: 0; }
 .rl-cal .cellwrap > .cell { flex: 1; }
