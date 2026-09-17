@@ -236,6 +236,7 @@ export default function Landing() {
             <span className="t-title">Your followers can follow the plan. You keep 80 percent.</span>
           </div>
           <Link href="/creators" className="rl-btn rl-btn-secondary">For creators →</Link>
+          <Link href="/demo" className="rl-btn rl-btn-ghost">See it working →</Link>
         </div>
       </section>
 

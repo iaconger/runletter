@@ -7,7 +7,7 @@ import { ProgramCover } from "@/components/run/ProgramCover";
 import { getProfileByHandle, listPublishedPrograms, getMyAccess, listShoes, listCreatorFollowers, getCreatorWeek } from "@/lib/db/programs";
 import { dayTitle } from "@/components/run/RunPieces";
 import { RUN_TYPE_LABEL, addDays, dayDurationS, toISODate } from "@/lib/types";
-import { DEMO_CREW, DEMO_SHOES, demoWeek } from "@/lib/demo";
+import { demoCreator, demoCrewFor, demoPrograms, demoProfile, demoShoesFor, demoWeekFor, type DemoCreator } from "@/lib/demo";
 import { mondayOf } from "@/lib/calendar";
 import { JoinButton, priceLabel } from "@/components/run/JoinButton";
 import { PickedRotation, Rotation, shoesOf } from "@/components/studio/Rotation";
@@ -17,12 +17,15 @@ import type { Profile, Program } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-async function load(handle: string): Promise<{ c: Profile; programs: Program[]; example: boolean } | null> {
-  if (handle === sampleCreator.handle) return { c: sampleCreator, programs: [sampleProgram], example: true };
+async function load(handle: string): Promise<{ c: Profile; programs: Program[]; example: boolean; demo: DemoCreator | null } | null> {
+  // A made-up creator, so the page can be shown to somebody with nothing in their account yet.
+  const d = demoCreator(handle);
+  if (d) return { c: demoProfile(d), programs: demoPrograms(d, mondayOf(toISODate(new Date()))), example: true, demo: d };
+  if (handle === sampleCreator.handle) return { c: sampleCreator, programs: [sampleProgram], example: true, demo: null };
   if (!isConfigured()) return null;
   const c = await getProfileByHandle(handle);
   if (!c) return null;
-  return { c, programs: await listPublishedPrograms(c.id), example: false };
+  return { c, programs: await listPublishedPrograms(c.id), example: false, demo: null };
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ handle: string }> }) {
@@ -39,7 +42,7 @@ export default async function CreatorPage({ params, searchParams }: { params: Pr
   const { demo } = await searchParams;
   const r = await load(handle);
   if (!r) notFound();
-  const { c, programs, example } = r;
+  const { c, programs, example, demo: dc } = r;
   const letter = programs.find((p) => p.isLetter) ?? null;
   const access = letter && !example ? await getMyAccess(letter) : { signedIn: false, subscribed: false, purchased: false };
   const preview = demo === "1" || example;
@@ -47,10 +50,11 @@ export default async function CreatorPage({ params, searchParams }: { params: Pr
   const realCrew = example ? [] : await listCreatorFollowers(c.id);
   const realWeek = example ? null : await getCreatorWeek(c.id);
   // Made-up data on the sample creator, or with ?demo=1, so the page can be judged before it fills up.
-  const picked = preview && realPicked.length === 0 ? (DEMO_SHOES as unknown as typeof realPicked) : realPicked;
-  const crew = preview && realCrew.length === 0 ? (DEMO_CREW as unknown as typeof realCrew) : realCrew;
+  const who = dc?.handle ?? "sarah";
+  const picked = preview && realPicked.length === 0 ? (demoShoesFor(who) as unknown as typeof realPicked) : realPicked;
+  const crew = preview && realCrew.length === 0 ? (demoCrewFor(who, dc ? 14 : 8) as unknown as typeof realCrew) : realCrew;
   const thisWeek = preview && (!realWeek || realWeek.days.length === 0)
-    ? { programId: "demo", title: "This week", week: 1, weekStart: mondayOf(toISODate(new Date())), isLetter: true, days: demoWeek(mondayOf(toISODate(new Date()))) }
+    ? { programId: "demo", title: "This week", week: 1, weekStart: mondayOf(toISODate(new Date())), isLetter: true, days: demoWeekFor(who, mondayOf(toISODate(new Date()))) }
     : realWeek;
 
   return (
@@ -60,7 +64,7 @@ export default async function CreatorPage({ params, searchParams }: { params: Pr
           {!c.coverUrl && <Ink name="pace-group" style={{ position: "absolute", right: "-6%", top: "-10%", width: "min(52%, 300px)", opacity: 0.85, pointerEvents: "none" }} />}
           <Link href="/" className="rl-logo" style={{ color: "inherit" }} aria-label="RunLetter"><Mark size={28} /></Link>
           <div className="rl-row">
-            {example ? <Portrait name="sarah" size={64} /> : c.avatarUrl ? <span aria-hidden="true" style={{ width: 64, height: 64, borderRadius: "50%", overflow: "hidden", flex: "none", border: "2px solid var(--rl-paper-100)" }}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src={c.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /></span> : <span aria-hidden="true" style={{ width: 64, height: 64, borderRadius: "50%", background: "var(--rl-ink-900)", color: "var(--rl-paper-100)", display: "grid", placeItems: "center", font: "400 28px/1 var(--rl-font-display)" }}>{(c.displayName || c.handle)[0]?.toUpperCase()}</span>}
+            {example && !dc ? <Portrait name="sarah" size={64} /> : c.avatarUrl ? <span aria-hidden="true" style={{ width: 64, height: 64, borderRadius: "50%", overflow: "hidden", flex: "none", border: "2px solid var(--rl-paper-100)" }}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src={c.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /></span> : <span aria-hidden="true" style={{ width: 64, height: 64, borderRadius: "50%", background: "var(--rl-ink-900)", color: "var(--rl-paper-100)", display: "grid", placeItems: "center", font: "400 28px/1 var(--rl-font-display)" }}>{(c.displayName || c.handle)[0]?.toUpperCase()}</span>}
             <span className="t-label" style={{ opacity: 0.7 }}>@{c.handle}</span>
           </div>
           <h1 className="t-display-xl" style={{ margin: 0 }}>{c.displayName || `@${c.handle}`}</h1>
@@ -121,7 +125,7 @@ export default async function CreatorPage({ params, searchParams }: { params: Pr
         <section className="rl-page rl-stack" style={{ gap: "var(--rl-space-3)" }}>
           <div className="rl-between" style={{ alignItems: "baseline" }}>
             <span className="t-label c-muted">Running with {c.displayName.split(" ")[0]}</span>
-            <span className="rl-help">{crew.length}{crew.length === 24 ? "+" : ""} {crew.length === 1 ? "runner" : "runners"}</span>
+            <span className="rl-help">{dc ? `${dc.runners.toLocaleString()} runners` : `${crew.length}${crew.length === 24 ? "+" : ""} ${crew.length === 1 ? "runner" : "runners"}`}</span>
           </div>
           <ul className="rl-crewfaces">
             {crew.map((f) => (

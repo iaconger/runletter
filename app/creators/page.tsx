@@ -47,8 +47,8 @@ export default function CreatorsLanding() {
               <Link href="/signup?as=creator&next=/studio" className="rl-btn rl-btn-lg rl-btn-ink">
                 Start your Letter
               </Link>
-              <Link href="/c/sarah" className="rl-btn rl-btn-lg rl-btn-ghost">
-                See a creator page
+              <Link href="/demo" className="rl-btn rl-btn-lg rl-btn-ghost">
+                See it working
               </Link>
             </div>
             <p className="rl-help" style={{ color: "inherit", opacity: 0.7, margin: 0 }}>Free to use. You keep 80 percent of every subscription, all of it for your first 90 days.</p>
@@ -195,7 +195,7 @@ export default function CreatorsLanding() {
           <h2 className="t-display-xl" style={{ margin: 0, maxWidth: "14ch" }}>Your first program is one afternoon away.</h2>
           <div className="rl-row">
             <Link href="/signup?as=creator&next=/studio" className="rl-btn rl-btn-primary rl-btn-lg">Start a program</Link>
-            <Link href="/" className="rl-btn rl-btn-ghost rl-btn-lg">I&rsquo;m here to run</Link>
+            <Link href="/demo" className="rl-btn rl-btn-ghost rl-btn-lg">Walk through it first</Link>
           </div>
           <p className="rl-help">The first creator cohort is small on purpose. If you have a following that runs, we want to talk.</p>
         </div>

@@ -7,15 +7,15 @@ import { getMyProfile, listExtras, listScheduled, listMyCreators, listMyPlansInP
 import { createClient, isConfigured } from "@/lib/supabase/server";
 import { ago, refreshStravaInBackground } from "@/lib/integrations/autosync";
 import { SAMPLE_EXPLORE, rankRuns } from "@/lib/explore";
-import { RUN_TYPE_LABEL, toISODate } from "@/lib/types";
-import { distanceLabel, fmtDistance, toDistance } from "@/lib/units";
-import { DEMO_CREATORS, DEMO_ON_NOW, demoFollowedDays, demoMine } from "@/lib/demo";
+import { toISODate } from "@/lib/types";
+import { distanceLabel, fmtDistance } from "@/lib/units";
+import { DEMO_FOLLOWING, DEMO_ON_NOW, demoFollowedDays, demoMine } from "@/lib/demo";
+import { MonthGrid } from "@/components/runner/MonthGrid";
 
 export const metadata = { title: "Home" };
 export const dynamic = "force-dynamic";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-const DOW = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const RUNS = ["Run", "TrailRun", "VirtualRun"];
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
@@ -55,15 +55,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ k
   // Dummy data, on request only, so the screen can be judged before anyone has followed anybody.
   const mineShown = preview ? (demoMine(from, to) as unknown as typeof mine) : mine;
   const theirsShown = preview ? (demoFollowedDays(from, to) as unknown as typeof theirs) : theirs;
-  const followingShown = preview ? (DEMO_CREATORS as unknown as typeof following) : following;
+  const followingShown = preview ? (DEMO_FOLLOWING as unknown as typeof following) : following;
   const onNowShown = preview ? (DEMO_ON_NOW as unknown as typeof onNow) : onNow;
-
-  const byDateMine = new Map<string, typeof mine>();
-  for (const x of mineShown) byDateMine.set(x.date, [...(byDateMine.get(x.date) ?? []), x]);
-  const byDateTheirs = new Map<string, typeof theirs>();
-  for (const d of theirsShown) byDateTheirs.set(d.date, [...(byDateTheirs.get(d.date) ?? []), d]);
-  const byDateDropped = new Map<string, typeof dropped>();
-  for (const d of dropped) byDateDropped.set(d.date, [...(byDateDropped.get(d.date) ?? []), d]);
 
   const monthRuns = mineShown.filter((x) => RUNS.includes(x.sportType) && x.date.slice(0, 7) === iso(first).slice(0, 7));
   const monthM = monthRuns.reduce((a, x) => a + (x.distanceM ?? 0), 0);
@@ -149,40 +142,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ k
         </div>
       )}
 
-      <section className="rl-month" aria-label={`${MONTHS[first.getMonth()]} ${first.getFullYear()}`}>
-        <div className="dow" aria-hidden>{DOW.map((d) => <span key={d}>{d}</span>)}</div>
-        <div className="grid">
-          {Array.from({ length: cells }, (_, i) => {
-            const d = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + i);
-            const date = iso(d);
-            const out = d.getMonth() !== first.getMonth();
-            const ran = byDateMine.get(date) ?? [];
-            const plans = byDateTheirs.get(date) ?? [];
-            const drops = byDateDropped.get(date) ?? [];
-            return (
-              <div key={date} className="cell" data-out={out ? "true" : undefined} data-today={date === today ? "true" : undefined}>
-                <span className="n">{d.getDate()}</span>
-                {plans.map((p) => (
-                  <Link key={p.dayId} href={`/app/run/${p.dayId}`} className="plan" data-run={p.kind === "run" ? p.runType ?? "easy" : p.kind} title={`${p.creator.name} · ${p.kind === "run" ? p.runType ?? "run" : p.kind}`}>
-                    <b>{p.creator.name.split(" ")[0]}</b>
-                    <span>{p.kind === "rest" ? "Rest" : p.kind === "cross" ? "Cross" : p.runType ? RUN_TYPE_LABEL[p.runType as keyof typeof RUN_TYPE_LABEL] : "Run"}</span>
-                  </Link>
-                ))}
-                {drops.map((p) => (
-                  <Link key={p.id} href={`/app/run/${p.day.id}`} className="plan mine" data-run={p.day.runType ?? "easy"}>
-                    <b>Yours</b><span>{p.day.runType ? RUN_TYPE_LABEL[p.day.runType] : "Run"}</span>
-                  </Link>
-                ))}
-                {ran.map((x) => (
-                  <Link key={x.id} href={`/app/log/${x.id}`} className="did" title={x.name ?? x.sportType}>
-                    ✓ {x.distanceM ? `${toDistance(x.distanceM, units).toFixed(1)} ${distanceLabel(units)}` : x.sportType}
-                  </Link>
-                ))}
-              </div>
-            );
-          })}
-        </div>
-      </section>
+      <MonthGrid first={first} gridStart={gridStart} cells={cells} today={today} units={units} theirs={theirsShown as never} dropped={dropped as never} mine={mineShown as never} />
 
       {strava && (
         <span className="rl-help">
