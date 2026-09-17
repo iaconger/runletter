@@ -7,6 +7,8 @@ import { ProgramCover } from "@/components/run/ProgramCover";
 import { getProfileByHandle, listPublishedPrograms, getMyAccess, listShoes, listCreatorFollowers, getCreatorWeek } from "@/lib/db/programs";
 import { dayTitle } from "@/components/run/RunPieces";
 import { RUN_TYPE_LABEL, addDays, dayDurationS, toISODate } from "@/lib/types";
+import { DEMO_CREW, DEMO_SHOES, demoWeek } from "@/lib/demo";
+import { mondayOf } from "@/lib/calendar";
 import { JoinButton, priceLabel } from "@/components/run/JoinButton";
 import { PickedRotation, Rotation, shoesOf } from "@/components/studio/Rotation";
 import { isConfigured } from "@/lib/supabase/server";
@@ -32,16 +34,24 @@ export async function generateMetadata({ params }: { params: Promise<{ handle: s
 const DAYS_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const LINK_LABEL: Record<string, string> = { instagram: "Instagram", strava: "Strava", youtube: "YouTube", tiktok: "TikTok" };
 
-export default async function CreatorPage({ params }: { params: Promise<{ handle: string }> }) {
+export default async function CreatorPage({ params, searchParams }: { params: Promise<{ handle: string }>; searchParams: Promise<{ demo?: string }> }) {
   const { handle } = await params;
+  const { demo } = await searchParams;
   const r = await load(handle);
   if (!r) notFound();
   const { c, programs, example } = r;
   const letter = programs.find((p) => p.isLetter) ?? null;
   const access = letter && !example ? await getMyAccess(letter) : { signedIn: false, subscribed: false, purchased: false };
-  const picked = example ? [] : await listShoes(c.id);
-  const crew = example ? [] : await listCreatorFollowers(c.id);
-  const thisWeek = example ? null : await getCreatorWeek(c.id);
+  const preview = demo === "1" || example;
+  const realPicked = example ? [] : await listShoes(c.id);
+  const realCrew = example ? [] : await listCreatorFollowers(c.id);
+  const realWeek = example ? null : await getCreatorWeek(c.id);
+  // Made-up data on the sample creator, or with ?demo=1, so the page can be judged before it fills up.
+  const picked = preview && realPicked.length === 0 ? (DEMO_SHOES as unknown as typeof realPicked) : realPicked;
+  const crew = preview && realCrew.length === 0 ? (DEMO_CREW as unknown as typeof realCrew) : realCrew;
+  const thisWeek = preview && (!realWeek || realWeek.days.length === 0)
+    ? { programId: "demo", title: "This week", week: 1, weekStart: mondayOf(toISODate(new Date())), isLetter: true, days: demoWeek(mondayOf(toISODate(new Date()))) }
+    : realWeek;
 
   return (
     <main>

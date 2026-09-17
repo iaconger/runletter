@@ -697,3 +697,59 @@ export async function getCreatorWeek(creatorId: string): Promise<CreatorWeek | n
   const weekStart = start ? toISODate(addDays(start, (week - 1) * 7)) : today;
   return { programId: program.id, title: program.title, week, weekStart, isLetter: program.isLetter, days: program.days.filter((d) => d.week === week).sort((a, b) => a.day - b.day) };
 }
+
+export type FollowedCreator = { id: string; handle: string; name: string; avatarUrl: string | null; subscribed: boolean };
+
+/** The people this runner follows: subscriptions first, then anyone whose plan they bought. */
+export async function listMyCreators(): Promise<FollowedCreator[]> {
+  const supabase = await createClient();
+  const user = await currentUser();
+  if (!user) return [];
+  const [{ data: subs }, { data: buys }] = await Promise.all([
+    supabase.from("subscriptions").select("creator_id").eq("follower_id", user.id).eq("status", "active"),
+    supabase.from("purchases").select("program_id").eq("follower_id", user.id),
+  ]);
+  const subbed = new Set((subs ?? []).map((s) => s.creator_id));
+  let bought = new Set<string>();
+  if ((buys ?? []).length) {
+    const { data: progs } = await supabase.from("programs").select("creator_id").in("id", (buys ?? []).map((b) => b.program_id));
+    bought = new Set((progs ?? []).map((p) => p.creator_id));
+  }
+  const ids = [...new Set([...subbed, ...bought])].filter((id) => id !== user.id);
+  if (!ids.length) return [];
+  const { data: people } = await supabase.from("profiles").select("id, handle, display_name, avatar_url").in("id", ids);
+  return (people ?? [])
+    .map((p) => ({ id: p.id, handle: p.handle, name: p.display_name, avatarUrl: p.avatar_url, subscribed: subbed.has(p.id) }))
+    .sort((a, b) => Number(b.subscribed) - Number(a.subscribed) || a.name.localeCompare(b.name));
+}
+
+export type MyProgram = { enrollmentId: string; programId: string; title: string; isLetter: boolean; weeks: number; week: number; start: string; creator: { name: string; handle: string; avatarUrl: string | null }; doneThisWeek: number; runsThisWeek: number };
+
+/** Everything this runner is currently on: a creator's ongoing week, and any plan they are partway through. */
+export async function listMyPlansInProgress(today: string): Promise<MyProgram[]> {
+  const supabase = await createClient();
+  const user = await currentUser();
+  if (!user) return [];
+  const { data: enrols } = await supabase.from("enrollments").select("id, program_id, start_date").eq("follower_id", user.id).eq("status", "active");
+  const out: MyProgram[] = [];
+  for (const e of enrols ?? []) {
+    const p = await getProgram(e.program_id);
+    if (!p || p.creatorId === user.id) continue;
+    const c = await getProfileById(p.creatorId);
+    if (!c) continue;
+    const diff = Math.floor((addDays(today, 0).getTime() - addDays(e.start_date, 0).getTime()) / 86400000);
+    const week = Math.max(1, Math.floor(diff / 7) + 1);
+    if (!p.isLetter && week > p.weeks) continue; // a finished plan is not in progress
+    const days = p.days.filter((d) => d.week === week);
+    const runs = days.filter((d) => d.kind === "run");
+    const { data: comps } = runs.length
+      ? await supabase.from("completions").select("program_day_id").eq("enrollment_id", e.id).in("program_day_id", runs.map((d) => d.id))
+      : { data: [] };
+    out.push({
+      enrollmentId: e.id, programId: p.id, title: p.title, isLetter: p.isLetter, weeks: p.weeks, week, start: e.start_date,
+      creator: { name: c.displayName, handle: c.handle, avatarUrl: c.avatarUrl },
+      doneThisWeek: (comps ?? []).length, runsThisWeek: runs.length,
+    });
+  }
+  return out.sort((a, b) => Number(a.isLetter) - Number(b.isLetter));
+}

@@ -1129,6 +1129,28 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
   .rl-month .plan { flex-direction: row; gap: 6px; align-items: baseline; }
 }
 
+/* The people a runner follows, across the top of their month. */
+.rl-following { display: flex; gap: var(--rl-space-3); overflow-x: auto; padding-bottom: 4px; }
+.rl-following > a { display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; color: inherit; flex: none; width: 66px; }
+.rl-following .rl-avatar { width: 52px; height: 52px; }
+.rl-following .rl-avatar .ini { display: grid; place-items: center; height: 100%; color: var(--rl-text-muted); font: var(--rl-text-body-medium); }
+.rl-following .rl-avatar.plus { display: grid; place-items: center; border: var(--rl-border-hairline) dashed var(--rl-hairline); background: transparent; color: var(--rl-text-muted); font-size: 20px; }
+.rl-following .nm { font: var(--rl-text-body-sm); color: var(--rl-text-secondary); max-width: 66px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rl-following > a:hover .nm { color: var(--rl-text); }
+
+/* What a runner is currently on: a creator's week, or a plan partway through. */
+.rl-onnow { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.rl-onnow > li > a { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 12px; padding: 10px 14px; border-radius: var(--rl-radius-lg); border: var(--rl-border-hairline) solid var(--rl-hairline); background: var(--rl-surface); color: inherit; text-decoration: none; }
+.rl-onnow > li > a:hover { border-color: var(--rl-text-secondary); }
+.rl-onnow .rl-avatar { width: 40px; height: 40px; }
+.rl-onnow .rl-avatar .ini { display: grid; place-items: center; height: 100%; color: var(--rl-text-muted); }
+.rl-onnow b { font: var(--rl-text-body-medium); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rl-onnow .sub { font: var(--rl-text-body-sm); color: var(--rl-text-muted); }
+.rl-onnow .prog { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; min-width: 120px; }
+.rl-onnow .bar { display: block; width: 110px; height: 5px; border-radius: 5px; background: var(--rl-surface-sunken); overflow: hidden; }
+.rl-onnow .bar > i { display: block; height: 100%; background: var(--rl-accent); border-radius: 5px; }
+.rl-onnow .cnt { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; color: var(--rl-text-muted); font-variant-numeric: tabular-nums; }
+
 /* Calendar days as drop targets: each cell is wrapped so it can take a dragged run and carry a remove button. */
 .rl-cal .cellwrap { position: relative; display: flex; flex-direction: column; min-width: 0; }
 .rl-cal .cellwrap > .cell { flex: 1; }
