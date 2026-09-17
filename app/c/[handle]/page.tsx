@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { Mark } from "@/components/ui/Logo";
 import { Ink, Portrait } from "@/components/ui/Ink";
 import { ProgramCover } from "@/components/run/ProgramCover";
-import { getProfileByHandle, listPublishedPrograms, getMyAccess, listShoes, listCreatorFollowers } from "@/lib/db/programs";
+import { getProfileByHandle, listPublishedPrograms, getMyAccess, listShoes, listCreatorFollowers, getCreatorWeek } from "@/lib/db/programs";
+import { dayTitle } from "@/components/run/RunPieces";
+import { RUN_TYPE_LABEL, addDays, dayDurationS, toISODate } from "@/lib/types";
 import { JoinButton, priceLabel } from "@/components/run/JoinButton";
 import { PickedRotation, Rotation, shoesOf } from "@/components/studio/Rotation";
 import { isConfigured } from "@/lib/supabase/server";
@@ -27,6 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ handle: s
   return { title: r ? r.c.displayName || `@${handle}` : "Creator" };
 }
 
+const DAYS_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const LINK_LABEL: Record<string, string> = { instagram: "Instagram", strava: "Strava", youtube: "YouTube", tiktok: "TikTok" };
 
 export default async function CreatorPage({ params }: { params: Promise<{ handle: string }> }) {
@@ -38,6 +41,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
   const access = letter && !example ? await getMyAccess(letter) : { signedIn: false, subscribed: false, purchased: false };
   const picked = example ? [] : await listShoes(c.id);
   const crew = example ? [] : await listCreatorFollowers(c.id);
+  const thisWeek = example ? null : await getCreatorWeek(c.id);
 
   return (
     <main>
@@ -68,6 +72,41 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
           )}
         </div>
       </div>
+      {thisWeek && thisWeek.days.length > 0 && (
+        <section className="rl-page rl-stack" style={{ gap: "var(--rl-space-3)" }}>
+          <div className="rl-between" style={{ alignItems: "baseline", flexWrap: "wrap", gap: "var(--rl-space-2)" }}>
+            <div className="rl-stack" style={{ gap: 2 }}>
+              <span className="t-label c-muted rl-kicker">What {c.displayName.split(" ")[0]} is running</span>
+              <h2 className="t-title" style={{ margin: 0 }}>This week</h2>
+            </div>
+            {!access.subscribed && !access.purchased && (
+              <span className="rl-help">Subscribe to get these on your own watch.</span>
+            )}
+          </div>
+          <ol className="rl-publicweek">
+            {Array.from({ length: 7 }, (_, i) => {
+              const d = thisWeek.days.find((x) => x.day === i + 1) ?? null;
+              const date = toISODate(addDays(thisWeek.weekStart, i));
+              const mins = d && d.kind === "run" ? Math.round(dayDurationS(d) / 60) : 0;
+              const open = access.subscribed || access.purchased || access.own;
+              return (
+                <li key={i} data-run={d ? (d.kind === "run" ? d.runType ?? "easy" : d.kind) : undefined}>
+                  <span className="dy">{DAYS_SHORT[i]}<i>{Number(date.slice(8, 10))}</i></span>
+                  <span className="wh">
+                    {!d ? <span className="c-muted">–</span> : d.kind === "rest" ? "Rest" : d.kind === "cross" ? "Cross training"
+                      : <>{d.runType ? RUN_TYPE_LABEL[d.runType] : "Run"}{open && mins ? <em> · {mins} min</em> : null}</>}
+                  </span>
+                  {d?.note && <span className="nt">{d.note}</span>}
+                  {d?.kind === "run" && (open
+                    ? <Link href={`/app/run/${d.id}`} className="go">Open →</Link>
+                    : <span className="go locked">Subscribers</span>)}
+                </li>
+              );
+            })}
+          </ol>
+        </section>
+      )}
+
       {crew.length > 0 && (
         <section className="rl-page rl-stack" style={{ gap: "var(--rl-space-3)" }}>
           <div className="rl-between" style={{ alignItems: "baseline" }}>

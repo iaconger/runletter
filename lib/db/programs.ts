@@ -679,3 +679,21 @@ export async function listCreatorFollowers(creatorId: string, limit = 24): Promi
   const { data } = await supabase.rpc("creator_followers", { p_creator: creatorId, p_limit: limit });
   return (data ?? []).map((r) => ({ id: r.id, handle: r.handle, name: r.display_name, avatarUrl: r.avatar_url, since: r.since }));
 }
+
+export type CreatorWeek = { programId: string; title: string; week: number; weekStart: string; days: ProgramDay[]; isLetter: boolean };
+
+/** The week a creator is on right now, for their public page. Days come back for any published program;
+ *  the blocks inside them only for someone with access, which is what the subscription buys. */
+export async function getCreatorWeek(creatorId: string): Promise<CreatorWeek | null> {
+  const supabase = await createClient();
+  const { data: rows } = await supabase.from("programs").select("*").eq("creator_id", creatorId).eq("status", "published").order("is_letter", { ascending: false });
+  const row = (rows ?? [])[0];
+  if (!row) return null;
+  const program = await getProgram(row.id);
+  if (!program) return null;
+  const start = program.fixedStartDate;
+  const today = toISODate(new Date());
+  const week = start ? Math.max(1, Math.floor((addDays(today, 0).getTime() - addDays(start, 0).getTime()) / (7 * 86400000)) + 1) : 1;
+  const weekStart = start ? toISODate(addDays(start, (week - 1) * 7)) : today;
+  return { programId: program.id, title: program.title, week, weekStart, isLetter: program.isLetter, days: program.days.filter((d) => d.week === week).sort((a, b) => a.day - b.day) };
+}
