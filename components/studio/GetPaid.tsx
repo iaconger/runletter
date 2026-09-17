@@ -4,7 +4,7 @@ import Link from "next/link";
 import { getBilling } from "@/lib/db/billing";
 import { stripeEnabled } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { fmtPrice } from "@/lib/types";
+import { Price } from "@/components/ui/Price";
 
 export async function GetPaid({ userId, letterPriceCents, notice }: { userId: string; letterPriceCents: number | null; notice?: { stripe?: string; error?: string } }) {
   const enabled = stripeEnabled() && !!createAdminClient();
@@ -26,7 +26,7 @@ export async function GetPaid({ userId, letterPriceCents, notice }: { userId: st
       </div>
       {notice?.error && <span className="rl-help" role="alert" style={{ color: "var(--rl-danger, #b3261e)" }}>{notice.error}</span>}
       <div className="rl-row" style={{ gap: "var(--rl-space-2)" }}>
-        <span className="rl-chip">Letter {letterPriceCents ? fmtPrice(letterPriceCents, "mo") : "free"}</span>
+        <span className="rl-row" style={{ gap: 6, alignItems: "center" }}><span className="rl-help">Your week</span><Price cents={letterPriceCents} per="mo" size="sm" /></span>
         {b && <span className="rl-chip">RunLetter keeps {b.feePct}%</span>}
       </div>
       <div className="rl-row">

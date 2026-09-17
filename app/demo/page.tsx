@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Ink } from "@/components/ui/Ink";
 import { Mark } from "@/components/ui/Logo";
 import { DEMO_CREATORS, DEMO_RUNNERS } from "@/lib/demo";
-import { fmtPrice } from "@/lib/types";
+import { Price } from "@/components/ui/Price";
 
 export const metadata = { title: "See it working" };
 
@@ -63,7 +63,7 @@ export default function DemoIndex() {
                 </span>
                 <span className="rl-row" style={{ gap: 6, alignItems: "center", flex: "none" }}>
                   <span className="rl-chip">{c.runners.toLocaleString()} runners</span>
-                  <span className="rl-chip rl-chip-accent">{c.priceCents === 0 ? "Free" : `${fmtPrice(c.priceCents)}/mo`}</span>
+                  <Price cents={c.priceCents} per="mo" size="sm" />
                 </span>
               </Link>
             </li>

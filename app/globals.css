@@ -21,6 +21,13 @@
   --rl-moss-600: #256A3D;
   --rl-moss-100: #DDEDE2;
 
+  /* Neon: one colour, reserved for money. Nothing else in the system uses it, which is what makes a
+     price jump off the page. Always black type on it; it is unreadable as type on paper. */
+  --rl-neon-400: #E6FF74;
+  --rl-neon-500: #D4F53F;
+  --rl-neon-600: #BCDD1C;
+  --rl-neon-900: #3D4A00;
+
   /* semantic, light */
   --rl-bg: var(--rl-paper-100);
   --rl-surface: var(--rl-paper-50);
@@ -41,6 +48,11 @@
   --rl-success-soft: var(--rl-moss-100);
   --rl-on-success-soft: var(--rl-moss-600);
   --rl-focus: var(--rl-cobalt-600);
+  --rl-price: var(--rl-neon-500);
+  --rl-price-hover: var(--rl-neon-600);
+  --rl-on-price: var(--rl-ink-900);
+  /* The only readable way to set a price as type rather than as a fill. */
+  --rl-price-ink: var(--rl-neon-900);
 
   /* run types: one hue each, a soft fill for cells and an ink for type. Used by the calendar, day panel and legend. */
   --rl-run-easy: #256A3D;        --rl-run-easy-soft: #DDEDE2;
@@ -138,6 +150,10 @@
     --rl-success-soft: #1E3327;
     --rl-on-success-soft: #5FB57E;
     --rl-focus: var(--rl-cobalt-400);
+    --rl-price: var(--rl-neon-500);
+    --rl-price-hover: var(--rl-neon-400);
+    --rl-on-price: var(--rl-ink-900);
+    --rl-price-ink: var(--rl-neon-500);
     --rl-run-easy: #7FCB98;        --rl-run-easy-soft: #1E3327;
     --rl-run-long: #C9A6E3;        --rl-run-long-soft: #2A1F33;
     --rl-run-tempo: #E8B45A;       --rl-run-tempo-soft: #33270F;
@@ -169,6 +185,10 @@
   --rl-success-soft: #1E3327;
   --rl-on-success-soft: #5FB57E;
   --rl-focus: var(--rl-cobalt-400);
+  --rl-price: var(--rl-neon-500);
+  --rl-price-hover: var(--rl-neon-400);
+  --rl-on-price: var(--rl-ink-900);
+  --rl-price-ink: var(--rl-neon-500);
   --rl-run-easy: #7FCB98;        --rl-run-easy-soft: #1E3327;
   --rl-run-long: #C9A6E3;        --rl-run-long-soft: #2A1F33;
   --rl-run-tempo: #E8B45A;       --rl-run-tempo-soft: #33270F;
@@ -1304,3 +1324,34 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
   .rl-publicweek.rl-week-wide > li { grid-template-columns: 110px 1fr; }
   .rl-publicweek.rl-week-wide .nt { grid-column: 1 / -1; white-space: normal; }
 }
+
+/* ── Money ───────────────────────────────────────────────────────────────────────────────────────
+   Neon is reserved for prices and payouts. It appears nowhere else, so a number in it reads as money
+   without a label. Black type on the fill, always; the neon itself is only legible as type on night. */
+.rl-price {
+  display: inline-flex; align-items: baseline; gap: 5px; white-space: nowrap;
+  padding: 5px 12px; border-radius: var(--rl-radius-pill); border: 0;
+  background: var(--rl-price); color: var(--rl-on-price);
+  font: 500 16px/1.1 var(--rl-font-sans); font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
+}
+.rl-price .per {
+  font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; opacity: .6;
+}
+.rl-price-lg { padding: 8px 16px; font-size: 21px; }
+.rl-price-sm { padding: 4px 10px; font-size: 14px; }
+/* Free is not money, so it does not get the fill. */
+.rl-price-free {
+  background: transparent; color: var(--rl-price-ink);
+  border: var(--rl-border-hairline) solid var(--rl-price);
+}
+/* A price set as type, for a line of prose. */
+.rl-pricetext { color: var(--rl-price-ink); font-weight: var(--rl-weight-medium); font-variant-numeric: tabular-nums; }
+
+/* The one button that takes money. */
+.rl-btn-neon { background: var(--rl-price); color: var(--rl-on-price); border-color: transparent; }
+.rl-btn-neon:hover { background: var(--rl-price-hover); border-color: transparent; }
+
+/* Two prices side by side on the landing page. */
+.rl-pricerow { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--rl-space-5); width: 100%; }
+.rl-pricerow > div { display: flex; flex-direction: column; align-items: flex-start; gap: var(--rl-space-3); }
+.rl-pricerow .l { font: var(--rl-text-body-sm); color: var(--rl-text-secondary); max-width: 34ch; }

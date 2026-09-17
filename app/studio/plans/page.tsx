@@ -4,11 +4,11 @@ import { getMyProfile, listMyPrograms } from "@/lib/db/programs";
 import { isConfigured } from "@/lib/supabase/server";
 import { Goal, Level, GOAL_LABEL, dayDurationS } from "@/lib/types";
 import { createPlanAction } from "@/app/studio/actions";
+import { Price } from "@/components/ui/Price";
 
 export const metadata = { title: "Plans" };
 export const dynamic = "force-dynamic";
 
-const price = (cents: number | null) => (cents == null || cents === 0 ? "Free" : `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}`);
 
 export default async function Plans() {
   const [me, programs] = isConfigured() ? await Promise.all([getMyProfile(), listMyPrograms()]) : [null, []];
@@ -39,7 +39,7 @@ export default async function Plans() {
                     <span className="rl-help">{p.weeks} weeks · {written} written · {runs.length} runs{mins ? ` · ${Math.round(mins / 60)}h` : ""}</span>
                   </span>
                   <span className="rl-row" style={{ gap: 6, alignItems: "center" }}>
-                    <span className="rl-chip rl-chip-accent">{price(p.priceCents ?? null)}</span>
+                    <Price cents={p.priceCents} size="sm" />
                     <span className={`rl-chip ${p.status === "published" ? "rl-chip-success" : ""}`}>{p.status === "published" ? "On your page" : "Draft"}</span>
                   </span>
                 </Link>

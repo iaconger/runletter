@@ -1,10 +1,11 @@
 // Landing. Vibe: "Kitchen Table, Sunday Night". Hand-inked training journal meets railway timetable.
-// Sections: hero (flipbook + week timetable), how it works (01 02 03), the week arrives, devices, for creators, final CTA.
+// Kept deliberately short: hero, how it works, the day itself, who writes them, where it runs, price, CTA.
+// Every claim gets one sentence. If a section needs a paragraph to land, it is the wrong section.
 
 import Link from "next/link";
 import { Lockup } from "@/components/ui/Logo";
 import { HeaderTone } from "@/components/ui/HeaderTone";
-import { EXAMPLE_CREATORS, Ink, Portrait } from "@/components/ui/Ink";
+import { Ink } from "@/components/ui/Ink";
 import { CreatorRow } from "@/components/ui/CreatorRow";
 import { Flipbook } from "@/components/ui/Flipbook";
 import { RevealObserver } from "@/components/ui/Reveal";
@@ -31,15 +32,6 @@ function Timetable({ light = false }: { light?: boolean }) {
   );
 }
 
-function Noodle({ className = "" }: { className?: string }) {
-  return (
-    <svg className={`rl-noodle ${className}`} viewBox="0 0 200 40" preserveAspectRatio="none" fill="none" aria-hidden="true">
-      <path d="M4 30 C 60 30, 80 6, 140 8 S 190 22, 196 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeDasharray="3 5" />
-      <path d="M188 6 L 197 12 L 189 19" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 const delay = (ms: number) => ({ ["--reveal-delay" as string]: `${ms}ms` });
 
 export default function Landing() {
@@ -58,7 +50,7 @@ export default function Landing() {
             <Lockup height={22} />
           </Link>
           <nav className="rl-row">
-            <Link href="/c/sarah" className="rl-btn rl-btn-ghost rl-btn-sm rl-nav-secondary">Example creator</Link>
+            <Link href="/demo" className="rl-btn rl-btn-ghost rl-btn-sm rl-nav-secondary">See it working</Link>
             <Link href="/creators" className="rl-btn rl-btn-ghost rl-btn-sm rl-nav-secondary">For creators</Link>
             <Link href="/login" className="rl-btn rl-btn-ghost rl-btn-sm">Sign in</Link>
             <Link href="/signup" className="rl-btn rl-btn-primary rl-btn-sm">Sign up</Link>
@@ -80,26 +72,18 @@ export default function Landing() {
             <h1 className="t-display-hero rl-rise" style={{ maxWidth: "12ch", margin: 0, ["--rise-delay" as string]: "80ms" }}>
               Run what they&rsquo;re running.
             </h1>
-            <p className="t-title rl-rise" style={{ margin: 0, maxWidth: "30ch", ["--rise-delay" as string]: "160ms" }}>
-              Creators share their week. It lands on your watch. No AI, no plan, just their runs.
+            <p className="t-title rl-rise" style={{ margin: 0, maxWidth: "28ch", ["--rise-delay" as string]: "160ms" }}>
+              A real runner&rsquo;s week, on your watch every Monday.
             </p>
             <div className="rl-row rl-rise" style={{ alignItems: "center", gap: "var(--rl-space-5)", ["--rise-delay" as string]: "320ms" }}>
               <Link href="/signup" className="rl-btn rl-btn-lg rl-btn-paper rl-btn-shine">
                 Start free &rarr;
               </Link>
-              <Link href="/creators" className="rl-textlink" style={{ color: "inherit", opacity: 0.8 }}>
-                I&rsquo;m a creator &rarr;
+              <Link href="/demo" className="rl-textlink" style={{ color: "inherit", opacity: 0.8 }}>
+                See it working &rarr;
               </Link>
             </div>
-            <div className="rl-row rl-rise" style={{ gap: "var(--rl-space-3)", ["--rise-delay" as string]: "400ms" }}>
-              <span className="rl-avatar-row">
-                {EXAMPLE_CREATORS.slice(0, 4).map((c) => (
-                  <Portrait key={c.name} name={c.name} size={36} tone="paper" style={{ borderColor: "var(--rl-ink-900)", borderWidth: 2 }} />
-                ))}
-              </span>
-              <p className="rl-help" style={{ color: "inherit", opacity: 0.7, margin: 0 }}>Coaches, club captains, the runner whose posts get you out the door.</p>
-            </div>
-            <div className="rl-works rl-rise" style={{ ["--rise-delay" as string]: "480ms" }} aria-label="Works with">
+            <div className="rl-works rl-rise" style={{ ["--rise-delay" as string]: "400ms" }} aria-label="Works with">
               <span className="lbl">Works with</span>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <span className="wm"><img src="/brand/partners/strava-96.png" alt="" width={18} height={18} style={{ borderRadius: 4 }} />Strava</span>
@@ -111,7 +95,7 @@ export default function Landing() {
           <div aria-hidden="true" />
         </div>
         <div className="rl-page rl-wide rl-rise" style={{ paddingBlock: "var(--rl-space-10) 0", position: "relative", zIndex: 1, ["--rise-delay" as string]: "520ms" }}>
-          <p className="t-label" style={{ opacity: 0.6, margin: "0 0 var(--rl-space-2)" }}>Week 3 · Base building for busy people · what a week looks like</p>
+          <p className="t-label" style={{ opacity: 0.6, margin: "0 0 var(--rl-space-2)" }}>One creator&rsquo;s week</p>
           <div className="rl-track">
             <Flipbook tone="paper" width={120} className="rl-runner" />
             <div className="rl-tt-wrap"><Timetable light /></div>
@@ -127,39 +111,27 @@ export default function Landing() {
         </div>
         <div className="rl-steps">
           <div className="rl-step" data-reveal style={delay(0)}>
-            <div className="rl-step-head"><span className="n">01</span><Noodle /></div>
-            <h3 className="t-heading" style={{ margin: 0 }}>A creator writes the week</h3>
-            <p className="c-secondary" style={{ margin: 0 }}>Easy, tempo, intervals, long. In their own words, with a note on every day. Built in the studio, published Sunday.</p>
-            <Ink name="sequence" style={{ width: "100%", opacity: 0.85, marginTop: "var(--rl-space-2)" }} />
+            <div className="rl-step-head"><span className="n">01</span></div>
+            <h3 className="t-heading" style={{ margin: 0 }}>They write the week</h3>
+            <p className="c-secondary" style={{ margin: 0 }}>Seven days, in their own words, published Sunday night.</p>
           </div>
           <div className="rl-step" data-reveal style={delay(120)}>
-            <div className="rl-step-head"><span className="n">02</span><Noodle /></div>
-            <h3 className="t-heading" style={{ margin: 0 }}>It arrives before you need it</h3>
-            <p className="c-secondary" style={{ margin: 0 }}>Subscribe to the creator and the whole week is in your app the night before. Open it Monday. There is one thing to do.</p>
-            <Ink name="cadence" style={{ width: "100%", opacity: 0.7, marginTop: "var(--rl-space-6)" }} />
+            <div className="rl-step-head"><span className="n">02</span></div>
+            <h3 className="t-heading" style={{ margin: 0 }}>It lands before you need it</h3>
+            <p className="c-secondary" style={{ margin: 0 }}>Follow them and the whole week is there on Monday morning.</p>
           </div>
           <div className="rl-step" data-reveal style={delay(240)}>
             <div className="rl-step-head"><span className="n">03</span></div>
-            <h3 className="t-heading" style={{ margin: 0 }}>Send it to your watch and go</h3>
-            <p className="c-secondary" style={{ margin: 0 }}>One tap puts the intervals on your Garmin or Coros. Run. When it shows up on Strava, the day checks itself off.</p>
-            <Ink name="route" style={{ width: "100%", opacity: 0.85, marginTop: "var(--rl-space-2)" }} />
+            <h3 className="t-heading" style={{ margin: 0 }}>Send it to your watch</h3>
+            <p className="c-secondary" style={{ margin: 0 }}>One tap, then run. Strava ticks the day off for you.</p>
           </div>
         </div>
       </section>
 
-      {/* ---------- the week arrives ---------- */}
+      {/* ---------- one day, and the two things that make it different ---------- */}
       <section className="rl-hairline">
-        <div className="rl-page rl-wide" style={{ display: "grid", gap: "var(--rl-space-8)", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", alignItems: "start", paddingBlock: "var(--rl-space-12)" }}>
-          <div className="rl-stack" style={{ gap: "var(--rl-space-4)" }} data-reveal>
-            <span className="t-label c-muted">Sunday night</span>
-            <h2 className="t-display-lg" style={{ margin: 0 }}>The week shows up like a letter.</h2>
-            <p className="c-secondary" style={{ margin: 0, maxWidth: "44ch" }}>
-              Not a calendar to manage. Not a dashboard to check. Seven days from a coach who runs, posted to you before Monday, with a note on each one so you know why it matters.
-            </p>
-            <div className="rl-tt-wrap"><Timetable /></div>
-            <p className="rl-help">Example week from a creator&rsquo;s program. Yours comes from whoever you follow.</p>
-          </div>
-          <div className="rl-card" data-reveal style={delay(120)}>
+        <div className="rl-page rl-wide" style={{ display: "grid", gap: "var(--rl-space-8)", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", alignItems: "center", paddingBlock: "var(--rl-space-12)" }}>
+          <div className="rl-card" data-reveal>
             <span className="t-label c-muted">Thursday</span>
             <h3 className="t-display-lg" style={{ margin: 0 }}>{dayTitle(sampleToday)}</h3>
             <div className="rl-row">
@@ -173,25 +145,19 @@ export default function Landing() {
               <span className="rl-btn rl-btn-secondary" aria-hidden="true">Mark done</span>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* ---------- written by a person ---------- */}
-      <section className="rl-hairline">
-        <div className="rl-page rl-wide rl-human" data-reveal>
-          <div className="rl-stack" style={{ gap: "var(--rl-space-2)" }}>
-            <span className="t-label c-muted">Two promises</span>
-            <h2 className="t-display-lg" style={{ margin: 0 }}>You don&rsquo;t need a race.</h2>
-            <p className="t-body c-secondary" style={{ margin: 0, maxWidth: "44ch" }}>
-              Most weeks here aren&rsquo;t building to anything. They&rsquo;re someone&rsquo;s running: the Tuesday loop, the long one with coffee after. Follow the person, not the goal.
-            </p>
-          </div>
-          <div className="rl-stack" style={{ gap: "var(--rl-space-2)" }}>
-            <span className="t-label c-muted" aria-hidden="true">&nbsp;</span>
-            <h2 className="t-display-lg" style={{ margin: 0 }}>No AI writes the running.</h2>
-            <p className="t-body c-secondary" style={{ margin: 0, maxWidth: "44ch" }}>
-              Every week is written by the runner whose name is on it. We deliver it to your watch; we never generate it. If it says Sarah, Sarah wrote it.
-            </p>
+          <div className="rl-stack" style={{ gap: "var(--rl-space-6)", ...delay(120) }} data-reveal>
+            <div className="rl-stack" style={{ gap: "var(--rl-space-2)" }}>
+              <h2 className="t-display-lg" style={{ margin: 0 }}>You don&rsquo;t need a race.</h2>
+              <p className="t-body c-secondary" style={{ margin: 0, maxWidth: "40ch" }}>
+                Most weeks here aren&rsquo;t building to anything. Follow the person, not the goal.
+              </p>
+            </div>
+            <div className="rl-stack" style={{ gap: "var(--rl-space-2)" }}>
+              <h2 className="t-display-lg" style={{ margin: 0 }}>No AI writes the running.</h2>
+              <p className="t-body c-secondary" style={{ margin: 0, maxWidth: "40ch" }}>
+                If it says Sarah, Sarah wrote it. We deliver the week; we never generate it.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -204,10 +170,27 @@ export default function Landing() {
               <span className="t-label c-muted">Written by people who run</span>
               <h2 className="t-display-lg" style={{ margin: 0 }}>Follow the runner, not the app.</h2>
             </div>
-            <Link href="/creators" className="rl-btn rl-btn-ghost">I&rsquo;m a creator →</Link>
+            <Link href="/demo" className="rl-btn rl-btn-ghost">See it working →</Link>
           </div>
           <CreatorRow />
-          <p className="rl-help">Example creators. The first cohort is being recruited now, so these are the kinds of runners you&rsquo;ll find here, not the roster.</p>
+        </div>
+      </section>
+
+      {/* ---------- price ---------- */}
+      <section className="rl-hairline">
+        <div className="rl-page rl-wide rl-stack" style={{ gap: "var(--rl-space-5)", paddingBlock: "var(--rl-space-12)", alignItems: "flex-start" }} data-reveal>
+          <span className="t-label c-muted">What it costs</span>
+          <h2 className="t-display-lg" style={{ margin: 0, maxWidth: "20ch" }}>Free to use. You pay the runner, not us.</h2>
+          <div className="rl-pricerow">
+            <div>
+              <span className="rl-price rl-price-free rl-price-lg">Free</span>
+              <span className="l">The app, your watch export, your own running.</span>
+            </div>
+            <div>
+              <span className="rl-price rl-price-lg">$4&ndash;$9<span className="per">/mo</span></span>
+              <span className="l">A creator&rsquo;s week. They set the price, they keep 80 percent.</span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -216,27 +199,15 @@ export default function Landing() {
         <div className="rl-page rl-wide rl-stack" style={{ gap: "var(--rl-space-6)", paddingBlock: "var(--rl-space-12)" }} data-reveal>
           <div className="rl-stack" style={{ gap: "var(--rl-space-2)", maxWidth: "44ch" }}>
             <span className="t-label c-muted">Runs where you already run</span>
-            <h2 className="t-display-lg" style={{ margin: 0 }}>Your watch does the coaching. Strava keeps the score.</h2>
+            <h2 className="t-display-lg" style={{ margin: 0 }}>Your watch does the coaching.</h2>
           </div>
           <div className="rl-devices">
-            <div className="rl-device"><span className="rl-chip rl-chip-success" style={{ alignSelf: "flex-start" }}>Now</span><span className="t">Garmin</span><span className="s">Every structured run exports as a .FIT workout. Import to Garmin Connect, it syncs to the watch, the watch beeps you through the intervals.</span></div>
-            <div className="rl-device"><span className="rl-chip rl-chip-success" style={{ alignSelf: "flex-start" }}>Now</span><span className="t">Coros</span><span className="s">Same .FIT file, straight into the Coros app. Pace targets and rest blocks come with it.</span></div>
-            <div className="rl-device"><span className="rl-chip rl-chip-success" style={{ alignSelf: "flex-start" }}>Now</span><span className="t rl-row" style={{ gap: 8, alignItems: "center" }}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src="/brand/partners/strava-96.png" alt="" width={22} height={22} style={{ borderRadius: 5 }} />Strava</span><span className="s">Connect once. When your run lands on Strava, the day is marked done and your creator sees you did it.</span></div>
-            <div className="rl-device"><span className="rl-chip" style={{ alignSelf: "flex-start" }}>Coming</span><span className="t">Apple Watch</span><span className="s">Apple doesn&rsquo;t take workout files directly, so this needs a companion app. On the list, not in the box yet.</span></div>
+            <div className="rl-device"><span className="rl-chip rl-chip-success" style={{ alignSelf: "flex-start" }}>Now</span><span className="t">Garmin</span><span className="s">The intervals go on the watch and it beeps you through them.</span></div>
+            <div className="rl-device"><span className="rl-chip rl-chip-success" style={{ alignSelf: "flex-start" }}>Now</span><span className="t">Coros</span><span className="s">Same file, same pace targets.</span></div>
+            <div className="rl-device"><span className="rl-chip rl-chip-success" style={{ alignSelf: "flex-start" }}>Now</span><span className="t rl-row" style={{ gap: 8, alignItems: "center" }}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src="/brand/partners/strava-96.png" alt="" width={22} height={22} style={{ borderRadius: 5 }} />Strava</span><span className="s">Connect once and every day marks itself done.</span></div>
+            <div className="rl-device"><span className="rl-chip" style={{ alignSelf: "flex-start" }}>Coming</span><span className="t">Apple Watch</span><span className="s">Needs a companion app. On the list.</span></div>
           </div>
           <Ink name="intervals" style={{ width: "min(100%, 640px)", opacity: 0.8 }} />
-        </div>
-      </section>
-
-      {/* ---------- creators cross-link ---------- */}
-      <section className="rl-hairline">
-        <div className="rl-page rl-wide rl-band" data-reveal>
-          <div className="rl-stack" style={{ gap: 2 }}>
-            <span className="t-label c-muted">Coach a following?</span>
-            <span className="t-title">Your followers can follow the plan. You keep 80 percent.</span>
-          </div>
-          <Link href="/creators" className="rl-btn rl-btn-secondary">For creators →</Link>
-          <Link href="/demo" className="rl-btn rl-btn-ghost">See it working →</Link>
         </div>
       </section>
 
@@ -247,7 +218,7 @@ export default function Landing() {
           <h2 className="t-display-xl" style={{ margin: 0, maxWidth: "14ch" }}>Your first week is waiting.</h2>
           <div className="rl-row">
             <Link href="/signup" className="rl-btn rl-btn-lg rl-btn-paper">Create an account</Link>
-            <Link href="/signup?as=creator" className="rl-btn rl-btn-lg rl-btn-secondary">I&rsquo;m here to create</Link>
+            <Link href="/creators" className="rl-btn rl-btn-lg rl-btn-secondary">I&rsquo;m here to create</Link>
           </div>
         </div>
       </section>

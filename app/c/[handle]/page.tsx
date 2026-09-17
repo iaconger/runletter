@@ -10,6 +10,7 @@ import { RUN_TYPE_LABEL, addDays, dayDurationS, toISODate } from "@/lib/types";
 import { demoCreator, demoCrewFor, demoPrograms, demoProfile, demoShoesFor, demoWeekFor, type DemoCreator } from "@/lib/demo";
 import { mondayOf } from "@/lib/calendar";
 import { JoinButton, priceLabel } from "@/components/run/JoinButton";
+import { Price } from "@/components/ui/Price";
 import { PickedRotation, Rotation, shoesOf } from "@/components/studio/Rotation";
 import { isConfigured } from "@/lib/supabase/server";
 import { sampleCreator, sampleProgram } from "@/lib/sample";
@@ -71,9 +72,9 @@ export default async function CreatorPage({ params, searchParams }: { params: Pr
           {c.bio && <p className="t-body" style={{ margin: 0, maxWidth: "48ch" }}>{c.bio}</p>}
           <div className="rl-row">
             {letter ? (
-              <JoinButton program={letter} creator={c} access={access} back={`/c/${c.handle}`} example={example} className={`rl-btn rl-btn-lg ${c.coverUrl ? "rl-btn-paper" : "rl-btn-ink"}`} />
+              <JoinButton program={letter} creator={c} access={access} back={`/c/${c.handle}`} example={example} className="rl-btn rl-btn-lg rl-btn-neon" />
             ) : example ? (
-              <Link href="/signup" className={`rl-btn rl-btn-lg ${c.coverUrl ? "rl-btn-paper" : "rl-btn-ink"}`}>Subscribe · $7/mo</Link>
+              <Link href="/signup" className="rl-btn rl-btn-lg rl-btn-neon">Subscribe · $7/mo</Link>
             ) : null}
             {letter && <span className="rl-help" style={{ color: "inherit", opacity: 0.7 }}>{priceLabel(letter, c) === "Free" ? "A new week, every week." : "Monthly. Cancel any time."}</span>}
           </div>
@@ -159,7 +160,7 @@ export default async function CreatorPage({ params, searchParams }: { params: Pr
               <span className="rl-row">
                 <span className="rl-chip">{p.weeks} weeks</span>
                 <span className="rl-chip">{p.level}</span>
-                <span className="rl-chip rl-chip-accent">{p.isLetter ? priceLabel(p, c) : p.access === "creator_sub" ? "Included" : priceLabel(p, c)}</span>
+                {!p.isLetter && p.access === "creator_sub" ? <span className="rl-chip">Included</span> : <Price cents={p.priceCents} per={p.isLetter ? "mo" : undefined} size="sm" />}
               </span>
             </Link>
           ))
