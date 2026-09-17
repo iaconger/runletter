@@ -365,3 +365,46 @@ export async function removeShoeAction(formData: FormData): Promise<void> {
   if (id) await db.retireShoe(id);
   revalidatePath("/studio", "layout");
 }
+
+/** A standalone plan: a fixed block, bought once, built with the same week builder. */
+export async function createPlanAction(formData: FormData) {
+  const title = String(formData.get("title") ?? "").trim().slice(0, 80) || "New plan";
+  const weeks = Math.min(52, Math.max(1, Math.round(Number(formData.get("weeks")) || 8)));
+  const price = Math.max(0, Math.round(Number(formData.get("price") || 0) * 100));
+  const goal = Goal.safeParse(formData.get("goal"));
+  const level = Level.safeParse(formData.get("level"));
+  const id = await db.createProgram({
+    title, weeks, priceCents: price,
+    goal: goal.success ? goal.data : "other",
+    level: level.success ? level.data : "intermediate",
+    isLetter: false, access: "one_time",
+  });
+  revalidatePath("/studio", "layout");
+  redirect(`/studio/plans/${id}`);
+}
+
+/** Make a plan a week longer. The builder grows with it. */
+export async function addPlanWeekAction(formData: FormData): Promise<void> {
+  const id = String(formData.get("id") ?? "");
+  const p = id ? await db.getProgram(id) : null;
+  if (p && !p.isLetter) await db.updateProgram(p.id, { weeks: Math.min(52, p.weeks + 1) });
+  revalidatePath("/studio", "layout");
+}
+
+/** Title and price, from the plan builder. */
+export async function savePlanAction(formData: FormData): Promise<void> {
+  const id = String(formData.get("id") ?? "");
+  const title = String(formData.get("title") ?? "").trim().slice(0, 80);
+  const price = Math.max(0, Math.round(Number(formData.get("price") || 0) * 100));
+  if (!id) return;
+  await db.updateProgram(id, { ...(title ? { title } : {}), priceCents: price });
+  revalidatePath("/studio", "layout");
+}
+
+/** Put a plan on your page, or take it down. */
+export async function togglePlanAction(formData: FormData): Promise<void> {
+  const id = String(formData.get("id") ?? "");
+  const p = id ? await db.getProgram(id) : null;
+  if (p) await db.setProgramStatus(p.id, p.status === "published" ? "draft" : "published");
+  revalidatePath("/studio", "layout");
+}

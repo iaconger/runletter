@@ -82,3 +82,38 @@ export async function followedRuns(limit = 12): Promise<ExploreRun[]> {
   }
   return out;
 }
+
+export type FollowedDay = { date: string; dayId: string; creator: { id: string; name: string; handle: string; avatarUrl: string | null }; programId: string; runType: string | null; kind: string; note: string; minutes: number };
+
+/** What the creators you follow have posted, by date, for the runner's month view. Shape only: the numbers
+ *  inside each day still need access, which is what a subscription buys. */
+export async function followedDays(from: string, to: string): Promise<FollowedDay[]> {
+  if (!isConfigured()) return [];
+  const supabase = await createClient();
+  const user = await currentUser();
+  if (!user) return [];
+  const { data: subs } = await supabase.from("subscriptions").select("creator_id").eq("follower_id", user.id).eq("status", "active");
+  const creatorIds = [...new Set((subs ?? []).map((s) => s.creator_id))];
+  if (!creatorIds.length) return [];
+  const { data: programs } = await supabase.from("programs").select("id, creator_id, fixed_start_date, weeks, is_letter").eq("status", "published").in("creator_id", creatorIds);
+  const out: FollowedDay[] = [];
+  for (const pr of programs ?? []) {
+    if (!pr.fixed_start_date) continue;
+    const p = await getProgram(pr.id);
+    const c = p ? await getProfileById(p.creatorId) : null;
+    if (!p || !c) continue;
+    for (const d of p.days) {
+      const date = toISO(addDaysLocal(pr.fixed_start_date, (d.week - 1) * 7 + (d.day - 1)));
+      if (date < from || date > to) continue;
+      out.push({
+        date, dayId: d.id, programId: p.id,
+        creator: { id: c.id, name: c.displayName, handle: c.handle, avatarUrl: c.avatarUrl },
+        runType: d.runType ?? null, kind: d.kind, note: d.note ?? "",
+        minutes: Math.round(d.blocks.reduce((a, b) => a + (b.durationS ?? 0) * (b.repeatCount ?? 1), 0) / 60),
+      });
+    }
+  }
+  return out.sort((a, b) => (a.date < b.date ? -1 : 1));
+}
+const addDaysLocal = (iso: string, n: number) => { const [y, m, d] = iso.split("-").map(Number); return new Date(y!, m! - 1, d! + n); };
+const toISO = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;

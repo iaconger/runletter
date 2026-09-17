@@ -33,6 +33,17 @@ export default async function YourPage({ searchParams }: { searchParams: Promise
       </div>
       {profile && <ProfilePhotos userId={profile.id} avatarUrl={profile.avatarUrl} coverUrl={profile.coverUrl} />}
 
+      <section className="rl-card" style={{ gap: "var(--rl-space-2)" }} aria-label="Plans">
+        <div className="rl-between" style={{ alignItems: "baseline" }}>
+          <div className="rl-stack" style={{ gap: 2 }}>
+            <span className="t-label c-muted">Bought once, not a subscription</span>
+            <span className="t-heading">Standalone plans</span>
+          </div>
+          <Link href="/studio/plans" className="rl-btn rl-btn-secondary rl-btn-sm">Plans →</Link>
+        </div>
+        <span className="rl-help">A fixed block with a start and an end, built the same way as your week, any length. Separate from your subscription and entirely optional.</span>
+      </section>
+
       {profile && (
         <section className="rl-card" style={{ gap: "var(--rl-space-3)" }} aria-label="Shoes">
           <div className="rl-stack" style={{ gap: 2 }}>

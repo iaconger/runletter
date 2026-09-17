@@ -60,7 +60,7 @@ export default async function RunDetail({ params }: { params: Promise<{ id: stri
         <div className="img">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {cover && <img src={cover} alt="" />}
-          <span className="band">{type} · {mins} min</span>
+          <span className="band">Run with {r.creator.name.split(" ")[0]} · {type} · {mins} min</span>
         </div>
         <div className="top">
           <h1>{r.title}</h1>
@@ -81,7 +81,7 @@ export default async function RunDetail({ params }: { params: Promise<{ id: stri
           </div>
 
           <div className="rl-row">
-            <a className="rl-btn rl-btn-primary rl-btn-lg" href={r.fitHref} download>Send to watch</a>
+            <a className="rl-btn rl-btn-primary rl-btn-lg" href={r.fitHref} download>Run with {r.creator.name.split(" ")[0]} →</a>
             {enrolled && !enrolled.done && (
               <form action={markDoneAction}>
                 <input type="hidden" name="enrollmentId" value={enrolled.enrollmentId} />

@@ -1096,6 +1096,39 @@ button.rl-day:hover { border-color: var(--rl-text-secondary); }
 .rl-how .n { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--rl-text); color: var(--rl-bg); font: var(--rl-text-body-sm); font-weight: 600; }
 .rl-how b { font: var(--rl-text-body-medium); }
 
+/* The runner's month: what the people they follow are running, and what they ran themselves. */
+.rl-month { display: flex; flex-direction: column; gap: 6px; }
+.rl-month .dow { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; color: var(--rl-text-muted); }
+.rl-month .dow > span { padding-left: 4px; }
+.rl-month .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.rl-month .cell { display: flex; flex-direction: column; gap: 4px; min-height: 92px; padding: 6px; border-radius: var(--rl-radius-md); border: var(--rl-border-hairline) solid var(--rl-hairline); background: var(--rl-surface); }
+.rl-month .cell[data-out] { opacity: .45; }
+.rl-month .cell[data-today] { border-color: var(--rl-accent); }
+.rl-month .cell > .n { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); color: var(--rl-text-muted); font-variant-numeric: tabular-nums; }
+.rl-month .cell[data-today] > .n { color: var(--rl-accent); }
+.rl-month .plan { --run-ink: var(--rl-hairline); display: flex; flex-direction: column; gap: 1px; padding: 4px 6px; border-radius: 6px; border-left: 3px solid var(--run-ink); background: var(--rl-surface-sunken); color: inherit; text-decoration: none; }
+.rl-month .plan:hover { background: var(--rl-surface); outline: 1px solid var(--run-ink); }
+.rl-month .plan > b { font: var(--rl-text-label); letter-spacing: var(--rl-tracking-label); text-transform: uppercase; color: var(--rl-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rl-month .plan > span { font: var(--rl-text-body-sm); color: var(--run-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rl-month .plan[data-run="easy"] { --run-ink: var(--rl-run-easy); }
+.rl-month .plan[data-run="long"] { --run-ink: var(--rl-run-long); }
+.rl-month .plan[data-run="tempo"] { --run-ink: var(--rl-run-tempo); }
+.rl-month .plan[data-run="intervals"] { --run-ink: var(--rl-run-intervals); }
+.rl-month .plan[data-run="recovery"] { --run-ink: var(--rl-run-recovery); }
+.rl-month .plan[data-run="race"] { --run-ink: var(--rl-run-race); }
+.rl-month .plan[data-run="cross"] { --run-ink: var(--rl-run-cross); }
+.rl-month .plan.mine { border-left-style: dashed; }
+.rl-month .did { font: var(--rl-text-body-sm); color: var(--rl-text-secondary); text-decoration: none; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rl-month .did:hover { color: var(--rl-text); }
+@media (max-width: 720px) {
+  .rl-month .dow { display: none; }
+  .rl-month .grid { grid-template-columns: 1fr; }
+  .rl-month .cell { min-height: 0; flex-direction: row; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .rl-month .cell > .n { min-width: 2ch; }
+  .rl-month .cell:not([data-today]):empty { display: none; }
+  .rl-month .plan { flex-direction: row; gap: 6px; align-items: baseline; }
+}
+
 /* Calendar days as drop targets: each cell is wrapped so it can take a dragged run and carry a remove button. */
 .rl-cal .cellwrap { position: relative; display: flex; flex-direction: column; min-width: 0; }
 .rl-cal .cellwrap > .cell { flex: 1; }
